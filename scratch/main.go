@@ -22,23 +22,14 @@ func main() {
   if err != nil {
     panic(err)
   }
+  n := wrapNode(yamlnode)
   // Dump the tree for debugging.
   dump(yamlnode, "")
 
-  if len(yamlnode.Children) > 1 {
-    panic("unexpected child count")
-  }
+  fmt.Println("LOADING")
 
-  c := yamlnode.Children[0]
-  if c.Kind != yamlast.MappingNode {
-    panic("expected root document to be a mapping")
-  }
-
-  // Wrap the node tree in a node type that's easier to work with.
-  root := wrapNode(c).(mapping)
-
-  // Being recursively processing the tree.
-  doc(root)
+  d := loadDocument(n)
+  pretty.Println(d)
 }
 
 func fmtNode(n *yamlast.Node, indent string) string {
@@ -59,204 +50,301 @@ func fmtNode(n *yamlast.Node, indent string) string {
     indent + kind, n.Line + 1, n.Column, n.Value) //, n.Implicit)
 }
 
-// Dump the YAML tree for debugging.
 func dump(n *yamlast.Node, indent string) {
-  fmt.Printf("%s\n", fmtNode(n, indent))
+  fmt.Println(fmtNode(n, indent))
   for _, c := range n.Children {
     dump(c, indent + "  ")
   }
 }
 
-// doc determines which type of document this node is:
-// - CommandLineTool
-// - Workflow
-// - ExpressionTool
-func doc(m mapping) {
-  for _, kv := range m.Items() {
-    if kv.k.Value() == "class" {
-      val, ok := kv.v.(scalar)
-      if !ok {
-        panic("unexpected type for document class")
-      }
 
-      switch val.Value() {
 
-      case "CommandLineTool":
-        t := commandLineTool{}
-        loadMapping(m, &t, errorUnknown)
-        pretty.Println(t)
+type Document interface {
+  node
+  documentType()
+}
 
-      case "Workflow":
-      case "ExpressionTool":
+// isDoc helps mark a type as a Document type succintly.
+// It is unexported, so it doesn't add useless fields to the type using it.
+type isDoc interface {
+  documentType()
+}
 
-      default:
-        panic(fmt.Errorf("unexpected document class:", val.Value()))
-      }
-    }
-  }
+type Hint interface {
+  hintType()
+}
+
+type DockerRequirement struct {
+  Hint
+  node
+  DockerPull node
+}
+
+type ResourceRequirement struct {
+  Hint
+  node
+  CoresMin node
 }
 
 
+type CommandLineTool struct {
+  node
+  isDoc
 
+  Class,
+  CWLVersion,
+  ID item
 
-
-
-type hint struct {
-  Class node
-}
-
-func (h *hint) handleMapping(m mapping) {
-  loadMapping(m, h, allowUnknown)
-}
-
-type hints []hint
-func (hs *hints) handleSequence(s sequence) {
-  for _, child := range s.Children() {
-    h := hint{}
-    load(child, &h)
-    *hs = append(*hs, h)
-  }
-}
-
-
-
-
-
-
-type commandLineTool struct {
-  Class, CWLVersion, BaseCommand,
-  ID, Requirements, Label, Doc,
-  Stdin, Stdout, Stderr, SuccessCodes, TemporaryFailCodes,
+  BaseCommand,
+  Requirements,
+  Label,
+  Doc,
+  Stdin,
+  Stdout,
+  Stderr,
+  SuccessCodes,
+  TemporaryFailCodes,
   PermanentFailCodes node
 
-  Arguments commandArguments
-  Inputs commandInputs
-  Hints hints
-  Outputs commandOutputs
+  Hints []Hint
+  Arguments []CommandLineBinding
+  Inputs []CommandInputParameter
+  Outputs []CommandOutputParameter
 }
 
-type commandLineBinding struct {
+type CommandLineBinding struct {
+  node
+
   Position, Prefix, Separate, ItemSeparator, ValueFrom, ShellQuote, LoadContents node
 }
-func (c *commandLineBinding) handleScalar(s scalar) {
-  c.ValueFrom = s
+
+type CommandInputParameter struct {
+  node
+
+  ID node // scalar?
+  Default node
+  Type InputType
+  InputBinding CommandLineBinding
 }
-func (c *commandLineBinding) handleMapping(m mapping) {
-  loadMapping(m, c, errorUnknown)
+
+type CommandOutputParameter struct {
+  node
+
+  ID node
+  Type OutputType
+  OutputBinding CommandOutputBinding
+}
+
+type CommandOutputBinding struct {
+  node
+
+  Glob, LoadContents, OutputEval node
 }
 
 
-type commandArguments struct {
-  args []commandLineBinding
+
+func loadDocument(n node) Document {
+  doc := n.(document)
+  children := doc.Children()
+
+  if len(children) > 1 {
+    panic("unexpected child count")
+  }
+
+  m, ok := children[0].(mapping)
+  if !ok {
+    panic("expected root document to be a mapping")
+  }
+
+  switch findClass(m) {
+  case "CommandLineTool":
+    t := &CommandLineTool{node: n}
+    loadContext(m, t)
+    return t
+
+  case "Workflow":
+  case "ExpressionTool":
+  default:
+    panic("unknown class")
+  }
+  return nil
 }
-func (c *commandArguments) handleSequence(s sequence) {
-  for _, child := range s.Children() {
-    arg := commandLineBinding{}
-    load(child, &arg)
-    c.args = append(c.args, arg)
+
+
+func loadContext(n node, c interface{}) {
+  switch x := c.(type) {
+
+  case *CommandLineTool:
+    m := n.(mapping)
+    loadMapping(m, x)
+
+  case *[]Hint:
+    switch z := n.(type) {
+    case sequence:
+      for _, child := range z.Children() {
+        loadContext(child, x)
+      }
+
+    case mapping:
+      switch findClass(z) {
+      case "DockerRequirement":
+        d := DockerRequirement{node: n}
+        loadMapping(z, &d)
+        *x = append(*x, d)
+
+      case "ResourceRequirement":
+      default:
+      }
+    }
+
+  case *InputType:
+    switch z := n.(type) {
+    case scalar:
+      name := strings.ToLower(z.Value())
+      t, ok := inputTypesByName[name]
+      if !ok {
+        panic("unknown input type")
+      }
+      *x = t
+    case mapping:
+    case sequence:
+    }
+
+  case *OutputType:
+    switch z := n.(type) {
+    case scalar:
+      name := strings.ToLower(z.Value())
+      t, ok := outputTypesByName[name]
+      if !ok {
+        panic("unknown output type")
+      }
+      *x = t
+    case mapping:
+    case sequence:
+    }
+
+  case *[]CommandLineBinding:
+    switch z := n.(type) {
+    case sequence:
+      for _, child := range z.Children() {
+        b := CommandLineBinding{node: n}
+        loadContext(child, &b)
+        *x = append(*x, b)
+      }
+    }
+
+  case *CommandLineBinding:
+    switch z := n.(type) {
+    case scalar:
+      x.ValueFrom = z
+    case mapping:
+      loadMapping(z, x)
+    case sequence:
+    }
+
+  case *[]CommandInputParameter:
+    switch z := n.(type) {
+    case sequence:
+      for _, child := range z.Children() {
+        p := CommandInputParameter{node: n}
+        loadContext(child, &p)
+        *x = append(*x, p)
+      }
+
+    case mapping:
+    }
+
+  case *CommandInputParameter:
+    m := n.(mapping)
+    loadMapping(m, x)
+
+  case *[]CommandOutputParameter:
+    switch z := n.(type) {
+    case sequence:
+      for _, child := range z.Children() {
+        p := CommandOutputParameter{node: n}
+        loadContext(child, &p)
+        *x = append(*x, p)
+      }
+
+    case mapping:
+    }
+
+  case *CommandOutputParameter:
+    m := n.(mapping)
+    loadMapping(m, x)
+
+  case *CommandOutputBinding:
+    m := n.(mapping)
+    loadMapping(m, x)
+
+  default:
+    panic(fmt.Errorf("unhandled type: %s\n%s", c, n))
   }
 }
 
-type commandInputParameter struct {
-  ID scalar
-  Default node
-  //Type inputType
-  InputBinding commandLineBinding
-}
-
-func (c *commandInputParameter) handleMapping(m mapping) {
-  loadMapping(m, c, errorUnknown)
-}
-
-func (c *commandInputParameter) handleTypeMapping(m mapping) {
-}
-
-
-type inputType interface {
+type InputType interface {
   inputType()
 }
 
-type nullType struct {}
-func (nullType) inputType() {}
-
-type fileType struct {}
-func (fileType) inputType() {}
-
-type arrayType struct {
-  Items inputType
-}
-func (arrayType) inputType() {}
-
-
-
-type commandInputs []commandInputParameter
-func (c *commandInputs) handleSequence(s sequence) {
-  for _, child := range s.Children() {
-    i := commandInputParameter{}
-    load(child, &i)
-    *c = append(*c, i)
-  }
+type OutputType interface {
+  outputType()
 }
 
-
-type commandOutputs struct {}
-func (c *commandOutputs) handleSequence(s sequence) {
-  for _, child := range s.Children() {
-    p := commandOutputParameter{}
-    loadMapping(child.(mapping), &p, allowUnknown)
-  }
+type NullType struct {
+  InputType
+  OutputType
+}
+type IntType struct {
+  InputType
+  OutputType
+}
+type FileType struct {
+  InputType
+  OutputType
+}
+type DirectoryType struct {
+  InputType
+  OutputType
+}
+type ArrayType struct {
+  InputType
+  Items InputType
 }
 
-
-type commandOutputParameter struct {
-  ID, Type node
-  OutputBinding commandOutputBinding
-}
-
-
-
-type commandOutputBinding struct {
-  Glob, LoadContents, OutputEval node
-}
-func (c *commandOutputBinding) handleMapping(m mapping) {
-  loadMapping(m, c, errorUnknown)
-}
-
-
-
-
-
-type mappingHandler interface {
-  handleMapping(mapping)
-}
-
-type scalarHandler interface {
-  handleScalar(scalar)
-}
-
-type sequenceHandler interface {
-  handleSequence(sequence)
-}
-
-
-type loadMode int
-const (
-  allowUnknown loadMode = iota
-  errorUnknown
+var (
+  Null = NullType{}
+  Int = IntType{}
+  File = FileType{}
+  Directory = DirectoryType{}
 )
 
-// "t" must be a pointer to a struct.
-func loadMapping(m mapping, t interface{}, mode loadMode) {
-  pretty.Println("LOAD", t)
+var inputTypesByName = map[string]InputType{
+  "null": Null,
+  "int": Int,
+  "file": File,
+  "directory": Directory,
+}
+var outputTypesByName = map[string]OutputType{
+  "null": Null,
+  "int": Int,
+  "file": File,
+  "directory": Directory,
+}
 
-  typ := reflect.TypeOf(t).Elem()
-  val := reflect.ValueOf(t).Elem()
+
+// "dest" must be a pointer to a struct.
+func loadMapping(m mapping, dest interface{}) []item {
+  var unknown []item
+
+  destType := reflect.TypeOf(dest).Elem()
+  destVal := reflect.ValueOf(dest).Elem()
   // track which fields have been set in order to raise an error
   // when a field exists twice.
   already := map[string]bool{}
 
-  for _, kv := range m.Items() {
-    name := kv.k.Value()
+  for _, item := range m.Items() {
+    name := strings.ToLower(item.k.Value())
 
     if _, ok := already[name]; ok {
       panic("already set field")
@@ -264,121 +352,70 @@ func loadMapping(m mapping, t interface{}, mode loadMode) {
 
     // Find a matching field in the target struct.
     // Names are case insensitive.
-    tf, found := typ.FieldByNameFunc(func(n string) bool {
-      return strings.ToLower(n) == strings.ToLower(name)
-    })
+    var field reflect.StructField
+    var found bool
+    for i := 0; i < destType.NumField(); i++ {
+      f := destType.Field(i)
+      if strings.ToLower(f.Name) == name {
+        field = f
+        found = true
+        break
+      }
+    }
 
     if !found {
-      if mode == allowUnknown {
-        continue
-      }
-      panic(fmt.Errorf("unknown field: %s", name))
+      unknown = append(unknown, item)
+      continue
     }
-
-    i := val.FieldByIndex(tf.Index).Addr().Interface()
-
-
-    switch x := kv.v.(type) {
-    case mapping:
-      if h, ok := i.(mappingHandler); ok {
-        h.handleMapping(x)
-      } else {
-        pretty.Println(i, x)
-        val.FieldByIndex(tf.Index).Set(reflect.ValueOf(kv))
-      }
-
-    case sequence:
-      if h, ok := i.(sequenceHandler); ok {
-        h.handleSequence(x)
-      } else {
-        pretty.Println(i, x)
-        val.FieldByIndex(tf.Index).Set(reflect.ValueOf(kv))
-      }
-
-    case scalar:
-      if h, ok := i.(scalarHandler); ok {
-        h.handleScalar(x)
-      } else {
-        val.FieldByIndex(tf.Index).Set(reflect.ValueOf(kv))
-      }
-
-    default:
-      panic("unhandled node kind")
-    }
-
     already[name] = true
+
+    fieldVal := destVal.FieldByIndex(field.Index)
+
+    srcType := reflect.TypeOf(item)
+    if srcType.AssignableTo(field.Type) {
+      fieldVal.Set(reflect.ValueOf(item))
+      continue
+    }
+
+    i := destVal.FieldByIndex(field.Index).Addr().Interface()
+    loadContext(item.v, i)
   }
+  return unknown
 }
-
-func load(n node, i interface{}) {
-  switch x := n.(type) {
-  case mapping:
-    h, ok := i.(mappingHandler)
-    if !ok {
-      pretty.Println(i, h, ok)
-      panic(fmt.Errorf("unhandled mapping type:\n    %s", x))
-    }
-    h.handleMapping(x)
-
-  case sequence:
-    h, ok := i.(sequenceHandler)
-    if !ok {
-      pretty.Println(i, h, ok)
-      panic(fmt.Errorf("unhandled sequence type:\n    %s", x))
-    }
-    h.handleSequence(x)
-
-  case scalar:
-    h, ok := i.(scalarHandler)
-    if !ok {
-      pretty.Println(i, h, ok)
-      panic(fmt.Errorf("unhandled scalar type:\n    %s", x))
-    }
-    h.handleScalar(x)
-
-  default:
-    panic(fmt.Errorf("unhandled type:\n    %s", x))
-  }
-}
-
 
 
 
 type node interface {
   Line() int
   Column() int
-  String() string
 }
 
-type keyval struct {
+type item struct {
   k scalar
   v node
 }
-func (k keyval) Line() int {
+func (k item) Line() int {
   return k.k.Line()
 }
-func (k keyval) Column() int {
+func (k item) Column() int {
   return k.k.Column()
-}
-func (k keyval) String() string {
-  return "TODO"
 }
 
 type mapping struct {
   wrapper
 }
-func (m mapping) Items() []keyval {
+func (m mapping) Items() []item {
   children := m.wrapper.Children
 
   if len(children) % 2 != 0 {
     panic("expected mapping to have an even number of children")
   }
 
-  var ret []keyval
+  var ret []item
   for i := 0; i < len(children); i += 2 {
     k := wrapNode(children[i]).(scalar)
     v := wrapNode(children[i + 1])
-    ret = append(ret, keyval{k, v})
+    ret = append(ret, item{k, v})
   }
   return ret
 }
@@ -389,6 +426,17 @@ type sequence struct {
 func (s sequence) Children() []node {
   var children []node
   for _, c := range s.wrapper.Children {
+    children = append(children, wrapNode(c))
+  }
+  return children
+}
+
+type document struct {
+  wrapper
+}
+func (d document) Children() []node {
+  var children []node
+  for _, c := range d.wrapper.Children {
     children = append(children, wrapNode(c))
   }
   return children
@@ -410,14 +458,23 @@ func (n wrapper) Line() int {
 func (n wrapper) Column() int {
   return n.Node.Column
 }
-func (n wrapper) String() string {
-  return fmtNode(n.Node, "")
+
+func findClass(m mapping) string {
+  for _, kv := range m.Items() {
+    if kv.k.Value() == "class" {
+      if val, ok := kv.v.(scalar); ok {
+        return val.Value()
+      }
+    }
+  }
+  return ""
 }
 
-
 func wrapNode(y *yamlast.Node) node {
-  w := wrapper{y}
+  w := wrapper{Node: y}
   switch y.Kind {
+  case yamlast.DocumentNode:
+    return document{w}
   case yamlast.MappingNode:
     return mapping{w}
   case yamlast.ScalarNode:
