@@ -18,40 +18,40 @@ type Type interface {
   cwltype()
 }
 
-type isType struct {}
-func (isType) cwltype() {}
+type Primitive string
+func (Primitive) cwltype() {}
 
 var (
-  Null = isType{}
-  Boolean = isType{}
-  Int = isType{}
-  Float = isType{}
-  Long = isType{}
-  Double = isType{}
-  String = isType{}
-  FileType = isType{}
-  DirectoryType = isType{}
-  Stdout = isType{}
-  Stderr = isType{}
+  Null = Primitive("null")
+  Boolean = Primitive("boolean")
+  Int = Primitive("int")
+  Float = Primitive("float")
+  Long = Primitive("long")
+  Double = Primitive("double")
+  String = Primitive("string")
+  FileType = Primitive("File")
+  DirectoryType = Primitive("Directory")
+  Stdout = Primitive("stdout")
+  Stderr = Primitive("stderr")
 )
 
 type RecordType struct {
-  isType
 }
+func (RecordType) cwltype() {}
 
 type NamedType struct {
   Name string
-  isType
 }
+func (NamedType) cwltype() {}
 
 type EnumType struct {
-  isType
 }
+func (EnumType) cwltype() {}
 
 type ArrayType struct {
   Items Type
-  isType
 }
+func (ArrayType) cwltype() {}
 
 var TypesByLowercaseName = map[string]Type{
   "null": Null,

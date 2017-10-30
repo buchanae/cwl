@@ -34,14 +34,23 @@ func dump(n *yamlast.Node, indent string) {
   }
 }
 
-
-func findClass(n node) string {
+func findValue(n node, key string) (node, bool) {
+  if n.Kind != yamlast.MappingNode {
+    panic("")
+  }
   for i := 0; i < len(n.Children) - 1; i += 2 {
     k := n.Children[i]
     v := n.Children[i+1]
-    if strings.ToLower(k.Value) == "class" {
-      return strings.ToLower(v.Value)
+    if strings.ToLower(k.Value) == strings.ToLower(key) {
+      return v, true
     }
+  }
+  return nil, false
+}
+
+func findKey(n node, key string) string {
+  if v, ok := findValue(n, key); ok {
+    return strings.ToLower(v.Value)
   }
   return ""
 }

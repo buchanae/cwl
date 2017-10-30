@@ -64,10 +64,27 @@ func loadAny(l *loader, n node) interface{} {
 }
 
 func loadTypeMappingSlice(l *loader, n node) interface{} {
-  return nil
+  t := loadTypeMapping(l, n)
+  return []Type{t.(Type)}
 }
+
 func loadTypeMapping(l *loader, n node) interface{} {
-  return nil
+  typ := findKey(n, "type")
+  switch typ {
+  case "array":
+    i, ok := findValue(n, "items")
+    if !ok {
+      panic("")
+    }
+    a := ArrayType{}
+    l.load(i, &a.Items)
+    return a
+  case "record":
+    return RecordType{}
+  case "enum":
+    return EnumType{}
+  }
+  panic("")
 }
 
 func loadTypeScalarSlice(l *loader, n node) interface{} {
@@ -99,7 +116,7 @@ func loadDoc(l *loader, n node) Document {
     panic(fmt.Errorf("expected mapping node, got: %s", fmtNode(n, "")))
   }
 
-  class := findClass(m)
+  class := findKey(m, "class")
   switch class {
   case "commandlinetool":
     t := &CommandLineTool{}
@@ -148,7 +165,7 @@ func loadHintsMapping(l *loader, n node) interface{} {
 }
 
 func loadHintMapping(l *loader, n node) interface{} {
-  class := findClass(n)
+  class := findKey(n, "class")
   switch class {
   case "dockerrequirement":
   case "resourcerequirement":
