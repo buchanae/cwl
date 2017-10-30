@@ -1,0 +1,41 @@
+User interface
+- graphical
+  - cross GUI
+- text based
+  - cross language
+
+execution interface
+
+tool interface
+- simple to load/store
+
+
+
+one-way or two-way conversion?
+  - in
+    - supports tools being written by larger community in other languages
+    - might not have easy mapping for some concepts, such as secondaryFiles, expressions
+    - writing parsers/decoders is a headache
+    - encourages inconsistent landscape, hard to move between tools because languages are
+      all over the map
+      - encourages tool reuse
+      - how hard is it to rewrite tools in a central language?
+    - could leverage developer tools to convert from other workflow langs
+  - out
+    - might allow path to integration with existing/legacy tools that don't use the same lang
+
+  - two-way is likely to be lossy
+
+
+
+major theme is language coupled directly to engine
+
+
+users:
+- writing bash + SGE scripts
+- writing WDL
+- writing CWL
+- enterprise
+  - airflow
+  - nextflow
+  - nintex?
