@@ -94,7 +94,7 @@ type LongExpression struct {}
 type Glob struct {}
 
 type File struct {
-  Class CWLType
+  Class Type
   Location string
   Path string
   Basename string
@@ -109,7 +109,7 @@ type File struct {
 }
 
 type Directory struct {
-  Class CWLType
+  Class Type
   Location string
   Path string
   Basename string
@@ -140,7 +140,7 @@ type OutputEnumSchema struct {
 }
 
 type OutputArraySchemaItems struct {
-  CWLType
+  Type
 }
 
 type OutputArraySchema struct {

@@ -14,16 +14,53 @@ const (
   MergeFlattened
 )
 
-type CWLType string
-const (
-  NONE CWLType = "NONE"
-  Null = "null"
-  Boolean = "boolean"
-  Int = "int"
-  Long = "long"
-  Float = "float"
-  Double = "double"
-  String = "string"
-  FileType = "File"
-  DirectoryType = "Directory"
+type Type interface {
+  cwltype()
+}
+
+type isType struct {}
+func (isType) cwltype() {}
+
+var (
+  Null = isType{}
+  Boolean = isType{}
+  Int = isType{}
+  Float = isType{}
+  Long = isType{}
+  Double = isType{}
+  String = isType{}
+  FileType = isType{}
+  DirectoryType = isType{}
+  Stdout = isType{}
+  Stderr = isType{}
 )
+
+type RecordType struct {
+  isType
+}
+
+type NamedType struct {
+  Name string
+  isType
+}
+
+type EnumType struct {
+  isType
+}
+
+type ArrayType struct {
+  Items Type
+  isType
+}
+
+var TypesByLowercaseName = map[string]Type{
+  "null": Null,
+  "boolean": Boolean,
+  "int": Int,
+  "long": Long,
+  "float": Float,
+  "double": Double,
+  "string": String,
+  "file": FileType,
+  "directory": DirectoryType,
+}

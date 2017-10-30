@@ -42,8 +42,6 @@ type CommandLineBinding struct {
   ShellQuote bool
 }
 
-type InputType interface {}
-
 type CommandInput struct {
   ID string
   Label string
@@ -51,7 +49,7 @@ type CommandInput struct {
 
   InputBinding CommandLineBinding
   Default Any
-  Type InputType
+  Type []Type
 }
 
 type CommandOutputBinding struct {
@@ -59,8 +57,6 @@ type CommandOutputBinding struct {
   LoadContents bool
   OutputEval Expression
 }
-
-type CommandOutputType interface {}
 
 type CommandOutput struct {
   ID string
@@ -72,5 +68,5 @@ type CommandOutput struct {
   Formats []Expression
 
   OutputBinding CommandOutputBinding
-  Type []CommandOutputType
+  Type []Type
 }

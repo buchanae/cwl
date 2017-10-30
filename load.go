@@ -11,13 +11,19 @@ import (
 
 var l = &loader{
   handlers: map[string]handler{
-    "mapping -> []cwl.CommandInput": loadInputs,
-    "mapping -> []cwl.CommandOutput": loadOutputs,
-    "mapping -> []cwl.Hint": loadHints,
-    "mapping -> cwl.InputType": loadInputType,
+    "mapping -> []cwl.CommandInput": loadInputsMapping,
+    "mapping -> []cwl.CommandOutput": loadOutputsMapping,
+    "mapping -> []cwl.Hint": loadHintsMapping,
+    "mapping -> cwl.Hint": loadHintMapping,
+
+    "mapping -> cwl.Type": loadTypeMapping,
+    "scalar -> cwl.Type": loadTypeScalar,
+    "mapping -> []cwl.Type": loadTypeMappingSlice,
+    "scalar -> []cwl.Type": loadTypeScalarSlice,
+
     "mapping -> cwl.Any": loadAny,
-    "mapping -> []cwl.CommandOutputType": loadOutputTypeMapping,
     "scalar -> cwl.CommandLineBinding": loadBindingScalar,
+    "scalar -> []cwl.Expression": loadExpressionScalarSlice,
   },
 }
 
@@ -57,12 +63,30 @@ func loadAny(l *loader, n node) interface{} {
   return nil
 }
 
-func loadOutputTypeMapping(l *loader, n node) interface{} {
+func loadTypeMappingSlice(l *loader, n node) interface{} {
+  return nil
+}
+func loadTypeMapping(l *loader, n node) interface{} {
   return nil
 }
 
-func loadOutputType(l *loader, n node) interface{} {
+func loadTypeScalarSlice(l *loader, n node) interface{} {
+  t := loadTypeScalar(l, n)
+  if t != nil {
+    return []Type{t.(Type)}
+  }
   return nil
+}
+
+func loadTypeScalar(l *loader, n node) interface{} {
+  if t, ok := TypesByLowercaseName[strings.ToLower(n.Value)]; ok {
+    return t
+  }
+  return nil
+}
+
+func loadExpressionScalarSlice(l *loader, n node) interface{} {
+  return []Expression{Expression(n.Value)}
 }
 
 func loadDoc(l *loader, n node) Document {
@@ -93,57 +117,47 @@ func loadBindingScalar(l *loader, n node) interface{} {
   }
 }
 
-func loadInputs(l *loader, n node) interface{} {
+func loadInputsMapping(l *loader, n node) interface{} {
   pretty.Println("LOAD INPUTS", n)
   var inputs []CommandInput
 
-  switch n.Kind {
-  case yamlast.MappingNode:
-    for k, v := range tomap(n) {
-      i := CommandInput{ID: k}
-      l.load(v, &i)
-      inputs = append(inputs, i)
-    }
-
-  case yamlast.SequenceNode:
-    for _, c := range n.Children {
-      i := CommandInput{}
-      l.load(c, &i)
-      inputs = append(inputs, i)
-    }
-
-  default:
-    panic("")
+  for k, v := range tomap(n) {
+    i := CommandInput{ID: k}
+    l.load(v, &i)
+    inputs = append(inputs, i)
   }
 
   return inputs
 }
 
-func loadOutputs(l *loader, n node) interface{} {
+func loadOutputsMapping(l *loader, n node) interface{} {
   pretty.Println("LOAD OUTPUTS", n)
   var outputs []CommandOutput
 
-  switch n.Kind {
-  case yamlast.MappingNode:
-    for k, v := range tomap(n) {
-      o := CommandOutput{ID: k}
-      l.load(v, &o)
-      outputs = append(outputs, o)
-    }
-
-  case yamlast.SequenceNode:
-    for _, c := range n.Children {
-      o := CommandOutput{}
-      l.load(c, &o)
-      outputs = append(outputs, o)
-    }
-
-  default:
-    panic("")
+  for k, v := range tomap(n) {
+    o := CommandOutput{ID: k}
+    l.load(v, &o)
+    outputs = append(outputs, o)
   }
 
   return outputs
 }
+
+func loadHintsMapping(l *loader, n node) interface{} {
+  return nil
+}
+
+func loadHintMapping(l *loader, n node) interface{} {
+  class := findClass(n)
+  switch class {
+  case "dockerrequirement":
+  case "resourcerequirement":
+  }
+  return nil
+}
+
+
+
 
 func tomap(n node) map[string]node {
   if n.Kind != yamlast.MappingNode {
@@ -167,7 +181,6 @@ type loader struct {
 func (l *loader) load(n node, t interface{}) {
   typ := reflect.TypeOf(t).Elem()
   val := reflect.ValueOf(t).Elem()
-
 
   nodeKind := "unknown"
   switch n.Kind {
@@ -198,13 +211,17 @@ func (l *loader) load(n node, t interface{}) {
 
     if vt.AssignableTo(typ) {
       val.Set(reflect.ValueOf(n.Value))
+      return
     } else if vt.ConvertibleTo(typ) {
       val.Set(reflect.ValueOf(n.Value).Convert(typ))
+      return
     } else {
-      fmt.Println("COERCE SET", typ)
-      coerceSet(t, n.Value)
+      err := coerceSet(t, n.Value)
+      if err == nil {
+        return
+      }
+      fmt.Println("COERCE SET", t, typ, n.Value, err)
     }
-    return
   }
 
   switch {
@@ -219,12 +236,9 @@ func (l *loader) load(n node, t interface{}) {
   default:
     fmt.Println()
     pretty.Println(handlerName, t)
+    fmt.Println(fmtNode(n, ""))
     panic("")
   }
-}
-
-func loadHints(l *loader, n node) interface{} {
-  return nil
 }
 
 // "n" must be a mapping node.
@@ -249,8 +263,6 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) {
     k := n.Children[i]
     v := n.Children[i+1]
     name := strings.ToLower(k.Value)
-
-    fmt.Printf("%s %s\n", k.Value, v.Value)
 
     if _, ok := already[name]; ok {
       panic("duplicate field")
@@ -279,6 +291,8 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) {
     if !found {
       continue
     }
+
+    fmt.Printf("%s %s\n", k.Value, v.Value)
 
     fv := val.FieldByIndex(field.Index)
     l.load(v, fv.Addr().Interface())
