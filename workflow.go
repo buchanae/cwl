@@ -89,9 +89,6 @@ type WorkflowOutputParameter struct {
 }
 
 type Expression string
-type LongExpression struct {}
-
-type Glob struct {}
 
 type File struct {
   Class Type

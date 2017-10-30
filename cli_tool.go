@@ -3,8 +3,6 @@ package cwl
 type Document interface {
   doctype()
 }
-type isDoc struct {}
-func (isDoc) doctype() {}
 
 type CommandLineTool struct {
   Version string `cwl:"cwlVersion"`
@@ -28,9 +26,8 @@ type CommandLineTool struct {
   SuccessCodes []int
   TemporaryFailCodes []int
   PermanentFailCodes []int
-
-  isDoc
 }
+func (CommandLineTool) doctype() {}
 
 type CommandLineBinding struct {
   LoadContents bool

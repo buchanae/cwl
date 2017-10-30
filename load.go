@@ -13,8 +13,12 @@ var l = &loader{
   handlers: map[string]handler{
     "mapping -> []cwl.CommandInput": loadInputsMapping,
     "mapping -> []cwl.CommandOutput": loadOutputsMapping,
+    "scalar -> cwl.CommandOutput": loadOutputScalar,
     "mapping -> []cwl.Hint": loadHintsMapping,
     "mapping -> cwl.Hint": loadHintMapping,
+
+    "mapping -> []cwl.Requirement": loadHintsMapping,
+    "mapping -> cwl.Requirement": loadHintMapping,
 
     "mapping -> cwl.Type": loadTypeMapping,
     "scalar -> cwl.Type": loadTypeScalar,
@@ -25,6 +29,12 @@ var l = &loader{
     "scalar -> cwl.CommandLineBinding": loadBindingScalar,
     "scalar -> []cwl.Expression": loadExpressionScalarSlice,
   },
+}
+
+func loadOutputScalar(l *loader, n node) interface{} {
+  o := CommandOutput{}
+  l.load(n, &o.Type)
+  return o
 }
 
 func LoadFile(p string) {
@@ -53,10 +63,6 @@ func LoadFile(p string) {
   // Being recursively processing the tree.
   d := loadDoc(l, yamlnode)
   pretty.Println(d)
-}
-
-func loadInputType(l *loader, n node) interface{} {
-  return nil
 }
 
 func loadAny(l *loader, n node) interface{} {
@@ -92,10 +98,17 @@ func loadTypeScalarSlice(l *loader, n node) interface{} {
   if t != nil {
     return []Type{t.(Type)}
   }
-  return nil
+  panic("unhandled cwl type")
 }
 
 func loadTypeScalar(l *loader, n node) interface{} {
+  if strings.HasSuffix(n.Value, "[]") {
+    name := strings.TrimSuffix(n.Value, "[]")
+    if t, ok := TypesByLowercaseName[strings.ToLower(name)]; ok {
+      return ArrayType{Items: t}
+    }
+  }
+
   if t, ok := TypesByLowercaseName[strings.ToLower(n.Value)]; ok {
     return t
   }
@@ -168,7 +181,13 @@ func loadHintMapping(l *loader, n node) interface{} {
   class := findKey(n, "class")
   switch class {
   case "dockerrequirement":
+    d := DockerRequirement{}
+    l.load(n, &d)
+    return d
   case "resourcerequirement":
+    r := ResourceRequirement{}
+    l.load(n, &r)
+    return r
   }
   return nil
 }
@@ -216,7 +235,7 @@ func (l *loader) load(n node, t interface{}) {
     if res != nil {
       fmt.Println("LOAD", typ, t, handlerName, res)
       if !reflect.TypeOf(res).AssignableTo(typ) {
-        panic("")
+        panic(fmt.Errorf("can't assign value from handler"))
       }
       val.Set(reflect.ValueOf(res))
     }

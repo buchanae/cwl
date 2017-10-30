@@ -1,16 +1,37 @@
 package cwl
 
-type Hint struct {}
-type Requirement struct {}
+type Hint interface{
+  hint()
+}
+
+type Requirement interface {
+  requirement()
+}
 
 type DockerRequirement struct {
-  Pull string
-  Load string
-  File string
-  Import string
-  ImageID string
-  OutputDirectory string
+  Pull string `cwl:"dockerPull"`
+  Load string `cwl:"dockerLoad"`
+  File string `cwl:"dockerFile"`
+  Import string `cwl:"dockerImport"`
+  ImageID string `cwl:"dockerImageID"`
+  OutputDirectory string `cwl:"dockerOutputDirectory"`
 }
+func (DockerRequirement) requirement() {}
+func (DockerRequirement) hint() {}
+
+type ResourceRequirement struct {
+  CoresMin Expression
+  // TODO this is incorrectly denoted in the spec as int | string | expression
+  CoresMax Expression
+  RAMMin Expression
+  RAMMax Expression
+  TmpDirMin Expression
+  TmpDirMax Expression
+  OutDirMin Expression
+  OutDirMax Expression
+}
+func (ResourceRequirement) requirement() {}
+func (ResourceRequirement) hint() {}
 
 type EnvDef struct {}
 
@@ -25,18 +46,6 @@ type EnvironmentDef struct {
 }
 
 type ShellCommandRequirement struct {
-}
-
-type ResourceRequirement struct {
-  CoresMin LongExpression
-  // TODO this is incorrectly denoted in the spec as int | string | expression
-  CoresMax LongExpression
-  RAMMin LongExpression
-  RAMMax LongExpression
-  TmpDirMin LongExpression
-  TmpDirMax LongExpression
-  OutDirMin LongExpression
-  OutDirMax LongExpression
 }
 
 type InlineJavascriptRequirement struct {
