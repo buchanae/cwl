@@ -54,3 +54,17 @@ func findKey(n node, key string) string {
   }
   return ""
 }
+
+func tomap(n node) map[string]node {
+  if n.Kind != yamlast.MappingNode {
+    panic("")
+  }
+  m := map[string]node{}
+  for i := 0; i < len(n.Children) - 1; i += 2 {
+    k := n.Children[i]
+    v := n.Children[i+1]
+    m[k.Value] = v
+  }
+  return m
+}
+

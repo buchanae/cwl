@@ -9,34 +9,6 @@ import (
   "fmt"
 )
 
-var l = &loader{
-  handlers: map[string]handler{
-    "mapping -> []cwl.CommandInput": loadInputsMapping,
-    "mapping -> []cwl.CommandOutput": loadOutputsMapping,
-    "scalar -> cwl.CommandOutput": loadOutputScalar,
-    "mapping -> []cwl.Hint": loadHintsMapping,
-    "mapping -> cwl.Hint": loadHintMapping,
-
-    "mapping -> []cwl.Requirement": loadHintsMapping,
-    "mapping -> cwl.Requirement": loadHintMapping,
-
-    "mapping -> cwl.Type": loadTypeMapping,
-    "scalar -> cwl.Type": loadTypeScalar,
-    "mapping -> []cwl.Type": loadTypeMappingSlice,
-    "scalar -> []cwl.Type": loadTypeScalarSlice,
-
-    "mapping -> cwl.Any": loadAny,
-    "scalar -> cwl.CommandLineBinding": loadBindingScalar,
-    "scalar -> []cwl.Expression": loadExpressionScalarSlice,
-  },
-}
-
-func loadOutputScalar(l *loader, n node) interface{} {
-  o := CommandOutput{}
-  l.load(n, &o.Type)
-  return o
-}
-
 func LoadFile(p string) {
   b, _ := ioutil.ReadFile(p)
 
@@ -65,8 +37,38 @@ func LoadFile(p string) {
   pretty.Println(d)
 }
 
+
+var l = &loader{
+  handlers: map[string]handler{
+    "mapping -> []cwl.CommandInput": loadInputsMapping,
+    "mapping -> []cwl.CommandOutput": loadOutputsMapping,
+    "scalar -> cwl.CommandOutput": loadOutputScalar,
+    "mapping -> []cwl.Hint": loadHintsMapping,
+    "mapping -> cwl.Hint": loadHintMapping,
+
+    "mapping -> []cwl.Requirement": loadRequirementsMapping,
+    "mapping -> cwl.Requirement": loadHintMapping,
+
+    "mapping -> cwl.Type": loadTypeMapping,
+    "scalar -> cwl.Type": loadTypeScalar,
+    "mapping -> []cwl.Type": loadTypeMappingSlice,
+    "scalar -> []cwl.Type": loadTypeScalarSlice,
+
+    "mapping -> cwl.Any": loadAny,
+    "scalar -> cwl.CommandLineBinding": loadBindingScalar,
+    "scalar -> []cwl.Expression": loadExpressionScalarSlice,
+  },
+}
+
+func loadOutputScalar(l *loader, n node) interface{} {
+  o := CommandOutput{}
+  l.load(n, &o.Type)
+  return o
+}
+
 func loadAny(l *loader, n node) interface{} {
   return nil
+  panic("unhandled Any")
 }
 
 func loadTypeMappingSlice(l *loader, n node) interface{} {
@@ -112,7 +114,7 @@ func loadTypeScalar(l *loader, n node) interface{} {
   if t, ok := TypesByLowercaseName[strings.ToLower(n.Value)]; ok {
     return t
   }
-  return nil
+  panic("")
 }
 
 func loadExpressionScalarSlice(l *loader, n node) interface{} {
@@ -135,6 +137,11 @@ func loadDoc(l *loader, n node) Document {
     t := &CommandLineTool{}
     l.load(m, t)
     return t
+
+  case "workflow":
+    wf := &Workflow{}
+    l.load(m, wf)
+    return wf
 
   default:
     panic(fmt.Errorf("unknown document class: '%s'", class))
@@ -173,13 +180,29 @@ func loadOutputsMapping(l *loader, n node) interface{} {
   return outputs
 }
 
+func loadRequirementsMapping(l *loader, n node) interface{} {
+  var reqs []Requirement
+  for k, v := range tomap(n) {
+    reqs = append(reqs, loadHintByName(l, strings.ToLower(k), v).(Requirement))
+  }
+  return reqs
+}
+
 func loadHintsMapping(l *loader, n node) interface{} {
-  return nil
+  var hints []Hint
+  for k, v := range tomap(n) {
+    hints = append(hints, loadHintByName(l, strings.ToLower(k), v).(Hint))
+  }
+  return hints
 }
 
 func loadHintMapping(l *loader, n node) interface{} {
   class := findKey(n, "class")
-  switch class {
+  return loadHintByName(l, class, n)
+}
+
+func loadHintByName(l *loader, name string, n node) interface{} {
+  switch name {
   case "dockerrequirement":
     d := DockerRequirement{}
     l.load(n, &d)
@@ -188,25 +211,15 @@ func loadHintMapping(l *loader, n node) interface{} {
     r := ResourceRequirement{}
     l.load(n, &r)
     return r
+  case "inlinejavascriptrequirement":
+    j := InlineJavascriptRequirement{}
+    l.load(n, &j)
+    return j
+  default:
+    panic(fmt.Errorf("unknown hint name: %s", name))
   }
-  return nil
 }
 
-
-
-
-func tomap(n node) map[string]node {
-  if n.Kind != yamlast.MappingNode {
-    panic("")
-  }
-  m := map[string]node{}
-  for i := 0; i < len(n.Children) - 1; i += 2 {
-    k := n.Children[i]
-    v := n.Children[i+1]
-    m[k.Value] = v
-  }
-  return m
-}
 
 type handler func(l *loader, n node) interface{}
 type loader struct {
@@ -233,7 +246,6 @@ func (l *loader) load(n node, t interface{}) {
   if handler, ok := l.handlers[handlerName]; ok {
     res := handler(l, n)
     if res != nil {
-      fmt.Println("LOAD", typ, t, handlerName, res)
       if !reflect.TypeOf(res).AssignableTo(typ) {
         panic(fmt.Errorf("can't assign value from handler"))
       }
@@ -256,7 +268,6 @@ func (l *loader) load(n node, t interface{}) {
       if err == nil {
         return
       }
-      fmt.Println("COERCE SET", t, typ, n.Value, err)
     }
   }
 
@@ -280,7 +291,6 @@ func (l *loader) load(n node, t interface{}) {
 // "n" must be a mapping node.
 // "t" must be a pointer to a struct.
 func (l *loader) loadMappingToStruct(n node, t interface{}) {
-  pretty.Println("LOAD MAPPING", t)
 
   if n.Kind != yamlast.MappingNode {
     panic("")

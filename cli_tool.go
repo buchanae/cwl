@@ -62,7 +62,7 @@ type CommandOutput struct {
   Streamable bool
 
   SecondaryFiles []Expression
-  Formats []Expression
+  Format []Expression
 
   OutputBinding CommandOutputBinding
   Type []Type

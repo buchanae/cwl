@@ -51,6 +51,8 @@ type ShellCommandRequirement struct {
 type InlineJavascriptRequirement struct {
   ExpressionLib []string
 }
+func (InlineJavascriptRequirement) hint() {}
+func (InlineJavascriptRequirement) requirement() {}
 
 type SchemaDefRequirement struct {
   Types []InputSchema

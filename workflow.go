@@ -1,8 +1,8 @@
 package cwl
 
 type Workflow struct {
+  Version string `cwl:"cwlVersion"`
   ID string
-  Version string
   Label string
   Doc string
 
@@ -13,24 +13,24 @@ type Workflow struct {
   Outputs []WorkflowOutput
   Steps []WorkflowStep
 }
+func (Workflow) doctype() {}
 
 type WorkflowInput interface{}
-type WorkflowOutput interface{}
 
-type InputParameter struct {
+type Input struct {
   ID string
   Label string
-  Streamable bool
   Doc string
+  Streamable bool
 
-  Type InputParameterType
+  Type []Type
   //InputBinding CommandLineBinding
   Default Any
   SecondaryFiles []Expression
-  Format ParameterFormat
+  Format Format
 }
 
-type WorkflowOutputParameters struct {
+type WorkflowOutputs struct {
   ID string
   Type string
   OutputSource string
@@ -41,13 +41,13 @@ type WorkflowStep struct {
   Label string
   Doc string
 
+  Hints []Hint
+  Requirements []Requirement
+
   In []WorkflowStepInput
   Out []WorkflowStepOutput
 
   //Run WorkflowStepRun
-
-  Hints []Hint
-  Requirements []Requirement
   //Scatter Scatter
   //ScatterMethod ScatterMethod
 }
@@ -59,39 +59,26 @@ type WorkflowStepRun struct {
 }
 
 type Any interface{}
-type ParameterFormat struct {}
+type Format struct {}
 type OutputSources struct {}
 
-type OutputParameterType struct {}
-
-type InputParameterArray []InputParameter
-// TODO string value here is wrong
-type InputParameterMapToType map[string]string
-type InputParameterMap map[string]InputParameter
-
-type WorkflowOutputParameterArray []WorkflowOutputParameter
-// TODO string value here is wrong
-type WorkflowOutputParameterMapToType map[string]string
-type WorkflowOutputParameterMap map[string]WorkflowOutputParameter
-
-
-type WorkflowOutputParameter struct {
+type WorkflowOutput struct {
   ID string
   Label string
-  Streamable bool
   Doc string
+  Streamable bool
+
   //OutputBinding CommandOutputBinding
   OutputSource OutputSources
   LinkMerge LinkMergeMethod
-  Type OutputParameterType
+  Type []Type
   SecondaryFiles []Expression
-  Format ParameterFormat
+  Format Format
 }
 
 type Expression string
 
 type File struct {
-  Class Type
   Location string
   Path string
   Basename string
@@ -106,7 +93,6 @@ type File struct {
 }
 
 type Directory struct {
-  Class Type
   Location string
   Path string
   Basename string
