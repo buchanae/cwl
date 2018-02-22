@@ -1,29 +1,29 @@
 package cwl
 
 type ExpressionTool struct {
-  Version string `cwl:"cwlVersion"`
+	Version string `cwl:"cwlVersion"`
 
-  ID string
-  Label string
-  Doc string
+	ID    string
+	Label string
+	Doc   string
 
-  Hints []Hint
-  Requirements []Requirement
+	Hints        []Hint
+	Requirements []Requirement
 
-  //Inputs ExpressionToolInputs
-  //Outputs ExpressionToolOutputs
+	//Inputs ExpressionToolInputs
+	//Outputs ExpressionToolOutputs
 
-  Expression Expression
+	Expression Expression
 }
 
 type ExpressionToolOutput struct {
-  ID string
-  Label string
-  Doc string
-  Streamable bool
+	ID         string
+	Label      string
+	Doc        string
+	Streamable bool
 
-  SecondaryFiles []Expression
-  Format Format
-  //OutputBinding CommandOutputBinding
-  Type []Type
+	SecondaryFiles []Expression
+	Format         Format
+	//OutputBinding CommandOutputBinding
+	Type []Type
 }
