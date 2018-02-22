@@ -29,16 +29,6 @@ type CommandLineTool struct {
 }
 func (CommandLineTool) doctype() {}
 
-type CommandLineBinding struct {
-  LoadContents bool
-  Position int
-  Prefix string
-  Separate bool
-  ItemSeparator string
-  ValueFrom Expression
-  ShellQuote bool
-}
-
 type CommandInput struct {
   ID string
   Label string
@@ -49,10 +39,14 @@ type CommandInput struct {
   Type []Type
 }
 
-type CommandOutputBinding struct {
-  Glob []Expression
+type CommandLineBinding struct {
   LoadContents bool
-  OutputEval Expression
+  Position int
+  Prefix string
+  Separate bool
+  ItemSeparator string
+  ValueFrom Expression
+  ShellQuote bool
 }
 
 type CommandOutput struct {
@@ -66,4 +60,10 @@ type CommandOutput struct {
 
   OutputBinding CommandOutputBinding
   Type []Type
+}
+
+type CommandOutputBinding struct {
+  Glob []Expression
+  LoadContents bool
+  OutputEval Expression
 }

@@ -76,8 +76,6 @@ type WorkflowOutput struct {
   Format Format
 }
 
-type Expression string
-
 type File struct {
   Location string
   Path string

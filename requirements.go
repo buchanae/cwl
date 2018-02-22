@@ -9,6 +9,9 @@ type Requirement interface {
 }
 
 type DockerRequirement struct {
+  Hint
+  Requirement
+
   Pull string `cwl:"dockerPull"`
   Load string `cwl:"dockerLoad"`
   File string `cwl:"dockerFile"`
@@ -16,10 +19,11 @@ type DockerRequirement struct {
   ImageID string `cwl:"dockerImageID"`
   OutputDirectory string `cwl:"dockerOutputDirectory"`
 }
-func (DockerRequirement) requirement() {}
-func (DockerRequirement) hint() {}
 
 type ResourceRequirement struct {
+  Hint
+  Requirement
+
   CoresMin Expression
   // TODO this is incorrectly denoted in the spec as int | string | expression
   CoresMax Expression
@@ -30,8 +34,6 @@ type ResourceRequirement struct {
   OutDirMin Expression
   OutDirMax Expression
 }
-func (ResourceRequirement) requirement() {}
-func (ResourceRequirement) hint() {}
 
 type EnvDef struct {}
 

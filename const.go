@@ -1,5 +1,7 @@
 package cwl
 
+type Expression string
+
 type ScatterMethod int
 const (
   DotProduct ScatterMethod = iota
@@ -21,7 +23,7 @@ type Type interface {
 type Primitive string
 func (Primitive) cwltype() {}
 
-var (
+const (
   Null = Primitive("null")
   Boolean = Primitive("boolean")
   Int = Primitive("int")
@@ -63,4 +65,6 @@ var TypesByLowercaseName = map[string]Type{
   "string": String,
   "file": FileType,
   "directory": DirectoryType,
+  "stdout": Stdout,
+  "stderr": Stderr,
 }

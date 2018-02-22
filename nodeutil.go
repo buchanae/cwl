@@ -55,16 +55,20 @@ func findKey(n node, key string) string {
   return ""
 }
 
-func tomap(n node) map[string]node {
+type mapitem struct {
+  k string
+  v node
+}
+func itermap(n node) []mapitem {
+  items := []mapitem{}
   if n.Kind != yamlast.MappingNode {
-    panic("")
+    panic("expected mapping node")
   }
-  m := map[string]node{}
   for i := 0; i < len(n.Children) - 1; i += 2 {
     k := n.Children[i]
     v := n.Children[i+1]
-    m[k.Value] = v
+    items = append(items, mapitem{k.Value, v})
   }
-  return m
+  return items
 }
 

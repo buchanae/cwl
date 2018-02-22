@@ -9,34 +9,69 @@ import (
   "fmt"
 )
 
-func LoadFile(p string) {
-  b, _ := ioutil.ReadFile(p)
+func LoadFile(p string) (Document, error) {
+  b, err := ioutil.ReadFile(p)
+  if err != nil {
+    return nil, err
+  }
 
   // Dump the document string for debugging.
   fmt.Println(string(b))
+  return Load(b)
+}
 
+func Load(b []byte) (Document, error) {
   // Parse the YAML into an AST
   yamlnode, err := yamlast.Parse(b)
   if err != nil {
-    panic(err)
+    return nil, fmt.Errorf("parsing yaml: %s", err)
   }
+
+  if yamlnode == nil {
+    return nil, fmt.Errorf("empty yaml")
+  }
+
+  if len(yamlnode.Children) > 1 {
+    return nil, fmt.Errorf("unexpected child count")
+  }
+
   // Dump the tree for debugging.
   dump(yamlnode, "")
 
-  if len(yamlnode.Children) > 1 {
-    panic("unexpected child count")
-  }
-
-  c := yamlnode.Children[0]
-  if c.Kind != yamlast.MappingNode {
-    panic("expected root document to be a mapping")
-  }
-
   // Being recursively processing the tree.
-  d := loadDoc(l, yamlnode)
-  pretty.Println(d)
+  return loadDoc(l, yamlnode)
 }
 
+func loadDoc(l *loader, n node) (Document, error) {
+  if len(n.Children) != 1 {
+    return nil, fmt.Errorf("unexpected document children")
+  }
+
+  m := n.Children[0]
+  if m.Kind != yamlast.MappingNode {
+    return nil, fmt.Errorf("expected mapping node, got: %s", fmtNode(n, ""))
+  }
+
+  class := findKey(m, "class")
+  switch class {
+  case "commandlinetool":
+    t := &CommandLineTool{}
+    if err := l.load(m, t); err != nil {
+      return nil, err
+    }
+    return t, nil
+
+  case "workflow":
+    wf := &Workflow{}
+    if err := l.load(m, wf); err != nil {
+      return nil, err
+    }
+    return wf, nil
+
+  default:
+    return nil, fmt.Errorf("unknown document class: '%s'", class)
+  }
+}
 
 var l = &loader{
   handlers: map[string]handler{
@@ -60,23 +95,26 @@ var l = &loader{
   },
 }
 
-func loadOutputScalar(l *loader, n node) interface{} {
+func loadOutputScalar(l *loader, n node) (interface{}, error) {
   o := CommandOutput{}
-  l.load(n, &o.Type)
-  return o
+  err := l.load(n, &o.Type)
+  return o, err
 }
 
-func loadAny(l *loader, n node) interface{} {
-  return nil
+func loadAny(l *loader, n node) (interface{}, error) {
   panic("unhandled Any")
+  return nil, nil
 }
 
-func loadTypeMappingSlice(l *loader, n node) interface{} {
-  t := loadTypeMapping(l, n)
-  return []Type{t.(Type)}
+func loadTypeMappingSlice(l *loader, n node) (interface{}, error) {
+  t, err := loadTypeMapping(l, n)
+  if err != nil {
+    return nil, err
+  }
+  return []Type{t.(Type)}, nil
 }
 
-func loadTypeMapping(l *loader, n node) interface{} {
+func loadTypeMapping(l *loader, n node) (interface{}, error) {
   typ := findKey(n, "type")
   switch typ {
   case "array":
@@ -85,149 +123,160 @@ func loadTypeMapping(l *loader, n node) interface{} {
       panic("")
     }
     a := ArrayType{}
-    l.load(i, &a.Items)
-    return a
+    err := l.load(i, &a.Items)
+    return a, err
   case "record":
-    return RecordType{}
+    return RecordType{}, nil
   case "enum":
-    return EnumType{}
+    return EnumType{}, nil
   }
-  panic("")
+  panic("unknown type")
 }
 
-func loadTypeScalarSlice(l *loader, n node) interface{} {
-  t := loadTypeScalar(l, n)
+func loadTypeScalarSlice(l *loader, n node) (interface{}, error) {
+
+  if strings.HasSuffix(n.Value, "?") {
+    name := strings.TrimSuffix(n.Value, "?")
+    name = strings.ToLower(name)
+    t, ok := TypesByLowercaseName[name]
+    if ok {
+      return []Type{t.(Type), Null}, nil
+    }
+  }
+
+  t, err := loadTypeScalar(l, n)
+  if err != nil {
+    return nil, err
+  }
   if t != nil {
-    return []Type{t.(Type)}
+    return []Type{t.(Type)}, nil
   }
   panic("unhandled cwl type")
 }
 
-func loadTypeScalar(l *loader, n node) interface{} {
+// TODO is "string[]?" acceptable?
+func loadTypeScalar(l *loader, n node) (interface{}, error) {
   if strings.HasSuffix(n.Value, "[]") {
     name := strings.TrimSuffix(n.Value, "[]")
     if t, ok := TypesByLowercaseName[strings.ToLower(name)]; ok {
-      return ArrayType{Items: t}
+      return ArrayType{Items: t}, nil
     }
   }
 
-  if t, ok := TypesByLowercaseName[strings.ToLower(n.Value)]; ok {
-    return t
+  name := strings.ToLower(n.Value)
+  if t, ok := TypesByLowercaseName[name]; ok {
+    return t, nil
   }
-  panic("")
+  return nil, fmt.Errorf("unhandled scalar type: %s", n.Value)
 }
 
-func loadExpressionScalarSlice(l *loader, n node) interface{} {
-  return []Expression{Expression(n.Value)}
+func loadExpressionScalarSlice(l *loader, n node) (interface{}, error) {
+  return []Expression{Expression(n.Value)}, nil
 }
 
-func loadDoc(l *loader, n node) Document {
-  if len(n.Children) != 1 {
-    panic("")
-  }
 
-  m := n.Children[0]
-  if m.Kind != yamlast.MappingNode {
-    panic(fmt.Errorf("expected mapping node, got: %s", fmtNode(n, "")))
-  }
-
-  class := findKey(m, "class")
-  switch class {
-  case "commandlinetool":
-    t := &CommandLineTool{}
-    l.load(m, t)
-    return t
-
-  case "workflow":
-    wf := &Workflow{}
-    l.load(m, wf)
-    return wf
-
-  default:
-    panic(fmt.Errorf("unknown document class: '%s'", class))
-  }
-}
-
-func loadBindingScalar(l *loader, n node) interface{} {
+func loadBindingScalar(l *loader, n node) (interface{}, error) {
   return CommandLineBinding{
     ValueFrom: Expression(n.Value),
-  }
+  }, nil
 }
 
-func loadInputsMapping(l *loader, n node) interface{} {
+func loadInputsMapping(l *loader, n node) (interface{}, error) {
   pretty.Println("LOAD INPUTS", n)
   var inputs []CommandInput
 
-  for k, v := range tomap(n) {
+  for _, kv := range itermap(n) {
+    k := kv.k
+    v := kv.v
     i := CommandInput{ID: k}
-    l.load(v, &i)
+    if err := l.load(v, &i); err != nil {
+      return nil, err
+    }
     inputs = append(inputs, i)
   }
 
-  return inputs
+  return inputs, nil
 }
 
-func loadOutputsMapping(l *loader, n node) interface{} {
+func loadOutputsMapping(l *loader, n node) (interface{}, error) {
   pretty.Println("LOAD OUTPUTS", n)
   var outputs []CommandOutput
 
-  for k, v := range tomap(n) {
+  for _, kv := range itermap(n) {
+    k := kv.k
+    v := kv.v
     o := CommandOutput{ID: k}
-    l.load(v, &o)
+    if err := l.load(v, &o); err != nil {
+      return nil, err
+    }
     outputs = append(outputs, o)
   }
 
-  return outputs
+  return outputs, nil
 }
 
-func loadRequirementsMapping(l *loader, n node) interface{} {
+func loadRequirementsMapping(l *loader, n node) (interface{}, error) {
   var reqs []Requirement
-  for k, v := range tomap(n) {
-    reqs = append(reqs, loadHintByName(l, strings.ToLower(k), v).(Requirement))
+  for _, kv := range itermap(n) {
+    k := kv.k
+    v := kv.v
+    x, err := loadHintByName(l, strings.ToLower(k), v)
+    if err != nil {
+      return nil, err
+    }
+    req := x.(Requirement)
+    reqs = append(reqs, req)
   }
-  return reqs
+  return reqs, nil
 }
 
-func loadHintsMapping(l *loader, n node) interface{} {
+func loadHintsMapping(l *loader, n node) (interface{}, error) {
   var hints []Hint
-  for k, v := range tomap(n) {
-    hints = append(hints, loadHintByName(l, strings.ToLower(k), v).(Hint))
+  for _, kv := range itermap(n) {
+    k := kv.k
+    v := kv.v
+    h, err := loadHintByName(l, strings.ToLower(k), v)
+    if err != nil {
+      return nil, err
+    }
+    hint := h.(Hint)
+    hints = append(hints, hint)
   }
-  return hints
+  return hints, nil
 }
 
-func loadHintMapping(l *loader, n node) interface{} {
+func loadHintMapping(l *loader, n node) (interface{}, error) {
   class := findKey(n, "class")
   return loadHintByName(l, class, n)
 }
 
-func loadHintByName(l *loader, name string, n node) interface{} {
+func loadHintByName(l *loader, name string, n node) (interface{}, error) {
   switch name {
   case "dockerrequirement":
     d := DockerRequirement{}
-    l.load(n, &d)
-    return d
+    err := l.load(n, &d)
+    return d, err
   case "resourcerequirement":
     r := ResourceRequirement{}
-    l.load(n, &r)
-    return r
+    err := l.load(n, &r)
+    return r, err
   case "inlinejavascriptrequirement":
     j := InlineJavascriptRequirement{}
-    l.load(n, &j)
-    return j
+    err := l.load(n, &j)
+    return j, err
   default:
-    panic(fmt.Errorf("unknown hint name: %s", name))
+    return nil, fmt.Errorf("unknown hint name: %s", name)
   }
 }
 
 
-type handler func(l *loader, n node) interface{}
+type handler func(l *loader, n node) (interface{}, error)
 type loader struct {
   handlers map[string]handler
 }
 
 // "t" must be a pointer
-func (l *loader) load(n node, t interface{}) {
+func (l *loader) load(n node, t interface{}) error {
   typ := reflect.TypeOf(t).Elem()
   val := reflect.ValueOf(t).Elem()
 
@@ -239,19 +288,23 @@ func (l *loader) load(n node, t interface{}) {
     nodeKind = "sequence"
   case yamlast.ScalarNode:
     nodeKind = "scalar"
+  default:
+    panic("unknown node kind")
   }
   handlerName := nodeKind + " -> " + typ.String()
 
-
   if handler, ok := l.handlers[handlerName]; ok {
-    res := handler(l, n)
+    res, err := handler(l, n)
+    if err != nil {
+      return err
+    }
     if res != nil {
       if !reflect.TypeOf(res).AssignableTo(typ) {
-        panic(fmt.Errorf("can't assign value from handler"))
+        return fmt.Errorf("can't assign value from handler")
       }
       val.Set(reflect.ValueOf(res))
     }
-    return
+    return nil
   }
 
   if n.Kind == yamlast.ScalarNode {
@@ -259,44 +312,49 @@ func (l *loader) load(n node, t interface{}) {
 
     if vt.AssignableTo(typ) {
       val.Set(reflect.ValueOf(n.Value))
-      return
+      return nil
     } else if vt.ConvertibleTo(typ) {
       val.Set(reflect.ValueOf(n.Value).Convert(typ))
-      return
+      return nil
     } else {
       err := coerceSet(t, n.Value)
       if err == nil {
-        return
+        return nil
       }
     }
   }
 
   switch {
   case typ.Kind() == reflect.Struct && n.Kind == yamlast.MappingNode:
-    l.loadMappingToStruct(n, t)
+    return l.loadMappingToStruct(n, t)
   case typ.Kind() == reflect.Slice && n.Kind == yamlast.SequenceNode:
     for _, c := range n.Children {
       item := reflect.New(typ.Elem())
-      l.load(c, item.Interface())
+      err := l.load(c, item.Interface())
+      if err != nil {
+        return err
+      }
       val.Set(reflect.Append(val, item.Elem()))
     }
   default:
     fmt.Println()
     pretty.Println(handlerName, t)
     fmt.Println(fmtNode(n, ""))
-    panic("")
+    panic("unhandled type")
   }
+
+  return nil
 }
 
 // "n" must be a mapping node.
 // "t" must be a pointer to a struct.
-func (l *loader) loadMappingToStruct(n node, t interface{}) {
+func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 
   if n.Kind != yamlast.MappingNode {
-    panic("")
+    panic("expected mapping node")
   }
   if len(n.Children) % 2 != 0 {
-    panic("")
+    panic("expected even number of children in mapping")
   }
 
   typ := reflect.TypeOf(t).Elem()
@@ -341,6 +399,10 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) {
     fmt.Printf("%s %s\n", k.Value, v.Value)
 
     fv := val.FieldByIndex(field.Index)
-    l.load(v, fv.Addr().Interface())
+    err := l.load(v, fv.Addr().Interface())
+    if err != nil {
+      return err
+    }
   }
+  return nil
 }
