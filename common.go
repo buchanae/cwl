@@ -57,7 +57,7 @@ var TypesByLowercaseName = map[string]Type{
 	"stderr":    Stderr,
 }
 
-type RecordType struct {}
+type RecordType struct{}
 
 func (RecordType) cwltype() {}
 
@@ -67,7 +67,7 @@ type NamedType struct {
 
 func (NamedType) cwltype() {}
 
-type EnumType struct {}
+type EnumType struct{}
 
 func (EnumType) cwltype() {}
 

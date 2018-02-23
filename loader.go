@@ -3,8 +3,8 @@ package cwl
 import (
 	"fmt"
 	"github.com/commondream/yamlast"
-	"github.com/spf13/cast"
 	"github.com/kr/pretty"
+	"github.com/spf13/cast"
 	"reflect"
 	"strings"
 )
@@ -21,17 +21,17 @@ import (
 // is the value.
 var l = &loader{
 	handlers: map[string]handler{
-		"mapping -> []cwl.CommandInput":  loadInputsMapping,
+		"mapping -> []cwl.CommandInput":   loadInputsMapping,
 		"sequence -> []cwl.CommandInput":  loadInputsSeq,
-		"sequence -> []cwl.CommandOutput":  loadOutputsSeq,
-		"mapping -> []cwl.CommandOutput": loadOutputsMapping,
-		"scalar -> cwl.CommandOutput":    loadOutputScalar,
-		"mapping -> []cwl.Hint":          loadHintsMapping,
-		"mapping -> cwl.Hint":            loadReqMapping,
+		"sequence -> []cwl.CommandOutput": loadOutputsSeq,
+		"mapping -> []cwl.CommandOutput":  loadOutputsMapping,
+		"scalar -> cwl.CommandOutput":     loadOutputScalar,
+		"mapping -> []cwl.Hint":           loadHintsMapping,
+		"mapping -> cwl.Hint":             loadReqMapping,
 
 		"sequence -> []cwl.Requirement": loadRequirementsSeq,
-		"mapping -> []cwl.Requirement": loadRequirementsMapping,
-		"mapping -> cwl.Requirement":   loadReqMapping,
+		"mapping -> []cwl.Requirement":  loadRequirementsMapping,
+		"mapping -> cwl.Requirement":    loadReqMapping,
 
 		"mapping -> cwl.Type":   loadTypeMapping,
 		"scalar -> cwl.Type":    loadTypeScalar,
@@ -41,27 +41,27 @@ var l = &loader{
 		"mapping -> cwl.Any":               loadAny,
 		"scalar -> cwl.CommandLineBinding": loadBindingScalar,
 		"scalar -> []cwl.Expression":       loadExpressionScalarSlice,
-    "sequence -> []cwl.Expression":     loadExpressionSeq,
+		"sequence -> []cwl.Expression":     loadExpressionSeq,
 
-    "mapping -> []cwl.WorkflowInput": loadWorkflowInputs,
-    "mapping -> []cwl.WorkflowOutput": loadWorkflowOutputs,
-    "sequence -> string": concatStringSeq,
+		"mapping -> []cwl.WorkflowInput":  loadWorkflowInputs,
+		"mapping -> []cwl.WorkflowOutput": loadWorkflowOutputs,
+		"sequence -> string":              concatStringSeq,
 
-    "mapping -> []cwl.Step": loadWorkflowStepMapping,
-    "scalar -> cwl.StepOutput": loadStepOutputScalar,
-    "sequence -> []cwl.StepOutput": loadStepOutputSeq,
+		"mapping -> []cwl.Step":        loadWorkflowStepMapping,
+		"scalar -> cwl.StepOutput":     loadStepOutputScalar,
+		"sequence -> []cwl.StepOutput": loadStepOutputSeq,
 
-    "sequence -> []cwl.StepInput": loadStepInputSeq,
-    "mapping -> []cwl.StepInput": loadStepInputMap,
-    "mapping -> cwl.Document": loadDoc,
-    "scalar -> cwl.Document": loadDocumentRef,
+		"sequence -> []cwl.StepInput": loadStepInputSeq,
+		"mapping -> []cwl.StepInput":  loadStepInputMap,
+		"mapping -> cwl.Document":     loadDoc,
+		"scalar -> cwl.Document":      loadDocumentRef,
 
-    "sequence -> []cwl.CommandLineBinding": loadCommandLineBindingSeq,
-    "sequence -> []string": loadStringSeq,
+		"sequence -> []cwl.CommandLineBinding": loadCommandLineBindingSeq,
+		"sequence -> []string":                 loadStringSeq,
 	},
 }
 
-// handler defines the interface of a type coercion helper 
+// handler defines the interface of a type coercion helper
 type handler func(l *loader, n node) (interface{}, error)
 
 // loader helps deal with type coercion while loading a
@@ -80,12 +80,12 @@ type loader struct {
 //
 // "t" must be a pointer
 func (l *loader) load(n node, t interface{}) error {
-  // reflect the type and value of the destination.
+	// reflect the type and value of the destination.
 	typ := reflect.TypeOf(t).Elem()
 	val := reflect.ValueOf(t).Elem()
 
-  // get string version of the yaml node type
-  // for building the handler name.
+	// get string version of the yaml node type
+	// for building the handler name.
 	nodeKind := "unknown"
 	switch n.Kind {
 	case yamlast.MappingNode:
@@ -98,11 +98,11 @@ func (l *loader) load(n node, t interface{}) error {
 		panic("unknown node kind")
 	}
 
-  // describes the type conversion being requested,
-  // in order to look up a registered handler.
+	// describes the type conversion being requested,
+	// in order to look up a registered handler.
 	handlerName := nodeKind + " -> " + typ.String()
 
-  // look for a handler. if found, use it.
+	// look for a handler. if found, use it.
 	if handler, ok := l.handlers[handlerName]; ok {
 		res, err := handler(l, n)
 		if err != nil {
@@ -110,15 +110,15 @@ func (l *loader) load(n node, t interface{}) error {
 		}
 		if res != nil {
 			if !reflect.TypeOf(res).AssignableTo(typ) {
-        panic("can't assign value from handler")
+				panic("can't assign value from handler")
 			}
 			val.Set(reflect.ValueOf(res))
 		}
 		return nil
 	}
 
-  // try to handle obvious conversions that don't
-  // have a specific handler.
+	// try to handle obvious conversions that don't
+	// have a specific handler.
 	if n.Kind == yamlast.ScalarNode {
 		vt := reflect.TypeOf(n.Value)
 
@@ -137,13 +137,13 @@ func (l *loader) load(n node, t interface{}) error {
 	}
 
 	switch {
-  // Try to automatically load a YAML mapping into a struct type,
-  // without a defined handler.
+	// Try to automatically load a YAML mapping into a struct type,
+	// without a defined handler.
 	case typ.Kind() == reflect.Struct && n.Kind == yamlast.MappingNode:
 		return l.loadMappingToStruct(n, t)
 
-  // Try to automatically load a YAML sequence into a slice type,
-  // without a defined handler.
+		// Try to automatically load a YAML sequence into a slice type,
+		// without a defined handler.
 	case typ.Kind() == reflect.Slice && n.Kind == yamlast.SequenceNode:
 		for _, c := range n.Children {
 			item := reflect.New(typ.Elem())
@@ -155,11 +155,11 @@ func (l *loader) load(n node, t interface{}) error {
 		}
 	}
 
-  // No handler found. 
-  fmt.Println()
-  pretty.Println("output rec", t)
-  fmt.Println("input node", fmtNode(n, ""))
-  return fmt.Errorf("unhandled type: %s", handlerName)
+	// No handler found.
+	fmt.Println()
+	pretty.Println("output rec", t)
+	fmt.Println("input node", fmtNode(n, ""))
+	return fmt.Errorf("unhandled type: %s", handlerName)
 }
 
 // loadMappingToStruct essentially unmarshals a YAML mapping
@@ -188,7 +188,7 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 		name := strings.ToLower(k.Value)
 
 		if _, ok := already[name]; ok {
-      return fmt.Errorf("duplicate field found while loading mapping")
+			return fmt.Errorf("duplicate field found while loading mapping")
 		}
 		already[name] = true
 

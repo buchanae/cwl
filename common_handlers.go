@@ -7,8 +7,9 @@ import (
 )
 
 type DocumentRef struct {
-  URL string
+	URL string
 }
+
 func (DocumentRef) doctype() {}
 
 func loadDoc(l *loader, n node) (interface{}, error) {
@@ -38,46 +39,46 @@ func loadDoc(l *loader, n node) (interface{}, error) {
 }
 
 func loadDocumentRef(l *loader, n node) (interface{}, error) {
-  return DocumentRef{URL: n.Value}, nil
+	return DocumentRef{URL: n.Value}, nil
 }
 
 func loadStringSeq(l *loader, n node) (interface{}, error) {
-  strs := []string{}
-  for _, c := range n.Children {
-    strs = append(strs, c.Value)
-  }
-  return strs, nil
+	strs := []string{}
+	for _, c := range n.Children {
+		strs = append(strs, c.Value)
+	}
+	return strs, nil
 }
 
 func loadCommandLineBindingSeq(l *loader, n node) (interface{}, error) {
-  b := []CommandLineBinding{}
-  for _, c := range n.Children {
-    if c.Kind != yamlast.MappingNode {
-      return nil, fmt.Errorf("unhandled command line binding type")
-    }
-    clb := CommandLineBinding{}
-    err := l.load(c, &clb)
-    if err != nil {
-      return nil, err
-    }
-    b = append(b, clb)
-  }
-  return b, nil
+	b := []CommandLineBinding{}
+	for _, c := range n.Children {
+		if c.Kind != yamlast.MappingNode {
+			return nil, fmt.Errorf("unhandled command line binding type")
+		}
+		clb := CommandLineBinding{}
+		err := l.load(c, &clb)
+		if err != nil {
+			return nil, err
+		}
+		b = append(b, clb)
+	}
+	return b, nil
 }
 
 func concatStringSeq(l *loader, n node) (interface{}, error) {
-  s := ""
-  for _, c := range n.Children {
-    if c.Kind != yamlast.ScalarNode {
-      return nil, fmt.Errorf("unhandled string concat type")
-    }
-    if s != "" {
-      s += "\n" + c.Value
-    } else {
-      s = c.Value
-    }
-  }
-  return s, nil
+	s := ""
+	for _, c := range n.Children {
+		if c.Kind != yamlast.ScalarNode {
+			return nil, fmt.Errorf("unhandled string concat type")
+		}
+		if s != "" {
+			s += "\n" + c.Value
+		} else {
+			s = c.Value
+		}
+	}
+	return s, nil
 }
 
 func loadAny(l *loader, n node) (interface{}, error) {
@@ -150,15 +151,15 @@ func loadTypeScalar(l *loader, n node) (interface{}, error) {
 }
 
 func loadExpressionSeq(l *loader, n node) (interface{}, error) {
-  exprs := []Expression{}
-  for _, c := range n.Children {
-    if c.Kind != yamlast.ScalarNode {
-      return nil, fmt.Errorf("invalid yaml node type for expression")
-    }
+	exprs := []Expression{}
+	for _, c := range n.Children {
+		if c.Kind != yamlast.ScalarNode {
+			return nil, fmt.Errorf("invalid yaml node type for expression")
+		}
 
-    exprs = append(exprs, Expression(c.Value))
-  }
-  return exprs, nil
+		exprs = append(exprs, Expression(c.Value))
+	}
+	return exprs, nil
 }
 
 func loadExpressionScalarSlice(l *loader, n node) (interface{}, error) {

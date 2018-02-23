@@ -31,13 +31,13 @@ type CommandLineTool struct {
 func (CommandLineTool) doctype() {}
 
 type CommandInput struct {
-	ID    string
-	Label string
-	Doc   string
+	ID         string
+	Label      string
+	Doc        string
 	Streamable bool
-	Default      Any
+	Default    Any
 
-	Type         []Type
+	Type []Type
 
 	SecondaryFiles []Expression
 	Format         []Expression
@@ -61,7 +61,7 @@ type CommandOutput struct {
 	Doc        string
 	Streamable bool
 
-	Type          []Type
+	Type []Type
 
 	SecondaryFiles []Expression
 	Format         []Expression

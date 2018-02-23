@@ -37,7 +37,7 @@ type EnvVarRequirement struct {
 	EnvDef map[string]Expression
 }
 
-type ShellCommandRequirement struct {}
+type ShellCommandRequirement struct{}
 
 type InlineJavascriptRequirement struct {
 	ExpressionLib []string
@@ -57,10 +57,10 @@ type SoftwarePackage struct {
 	Specs   []string
 }
 
-type InitialWorkDirListing struct {}
+type InitialWorkDirListing struct{}
 
 type InitialWorkDirRequirement struct {
-  // TODO the most difficult union type
+	// TODO the most difficult union type
 	Listing InitialWorkDirListing
 }
 
@@ -70,38 +70,37 @@ type Dirent struct {
 	Writable  bool
 }
 
-type SubworkflowFeatureRequirement struct {}
+type SubworkflowFeatureRequirement struct{}
 
-type ScatterFeatureRequirement struct {}
+type ScatterFeatureRequirement struct{}
 
-type MultipleInputFeatureRequirement struct {}
+type MultipleInputFeatureRequirement struct{}
 
-type StepInputExpressionRequirement struct {}
-
+type StepInputExpressionRequirement struct{}
 
 // TODO how many of these could legitimately be used
 //      as a hint?
-func (DockerRequirement) hint()        {}
-func (DockerRequirement) requirement() {}
-func (ResourceRequirement) hint()        {}
-func (ResourceRequirement) requirement() {}
-func (EnvVarRequirement) hint()        {}
-func (EnvVarRequirement) requirement() {}
-func (ShellCommandRequirement) hint()        {}
-func (ShellCommandRequirement) requirement() {}
-func (InlineJavascriptRequirement) hint()        {}
-func (InlineJavascriptRequirement) requirement() {}
-func (SchemaDefRequirement) hint()        {}
-func (SchemaDefRequirement) requirement() {}
-func (SoftwareRequirement) hint()        {}
-func (SoftwareRequirement) requirement() {}
-func (InitialWorkDirRequirement) hint()        {}
-func (InitialWorkDirRequirement) requirement() {}
-func (SubworkflowFeatureRequirement) hint()        {}
-func (SubworkflowFeatureRequirement) requirement() {}
-func (ScatterFeatureRequirement) hint()        {}
-func (ScatterFeatureRequirement) requirement() {}
+func (DockerRequirement) hint()                      {}
+func (DockerRequirement) requirement()               {}
+func (ResourceRequirement) hint()                    {}
+func (ResourceRequirement) requirement()             {}
+func (EnvVarRequirement) hint()                      {}
+func (EnvVarRequirement) requirement()               {}
+func (ShellCommandRequirement) hint()                {}
+func (ShellCommandRequirement) requirement()         {}
+func (InlineJavascriptRequirement) hint()            {}
+func (InlineJavascriptRequirement) requirement()     {}
+func (SchemaDefRequirement) hint()                   {}
+func (SchemaDefRequirement) requirement()            {}
+func (SoftwareRequirement) hint()                    {}
+func (SoftwareRequirement) requirement()             {}
+func (InitialWorkDirRequirement) hint()              {}
+func (InitialWorkDirRequirement) requirement()       {}
+func (SubworkflowFeatureRequirement) hint()          {}
+func (SubworkflowFeatureRequirement) requirement()   {}
+func (ScatterFeatureRequirement) hint()              {}
+func (ScatterFeatureRequirement) requirement()       {}
 func (MultipleInputFeatureRequirement) hint()        {}
 func (MultipleInputFeatureRequirement) requirement() {}
-func (StepInputExpressionRequirement) hint()        {}
-func (StepInputExpressionRequirement) requirement() {}
+func (StepInputExpressionRequirement) hint()         {}
+func (StepInputExpressionRequirement) requirement()  {}

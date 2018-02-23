@@ -13,20 +13,21 @@ type Workflow struct {
 	Outputs []WorkflowOutput
 	Steps   []Step
 }
+
 func (Workflow) doctype() {}
 
 type WorkflowInput struct {
-	ID         string
-	Label      string
-  // TODO ensure that an array of strings can be loaded
+	ID    string
+	Label string
+	// TODO ensure that an array of strings can be loaded
 	Doc        string
 	Streamable bool
 
 	SecondaryFiles []Expression
 	Format         []Expression
-	InputBinding CommandLineBinding
-	Default      Any
-	Type         []Type
+	InputBinding   CommandLineBinding
+	Default        Any
+	Type           []Type
 }
 
 type WorkflowOutput struct {
@@ -34,7 +35,7 @@ type WorkflowOutput struct {
 	Label      string
 	Doc        string
 	Streamable bool
-	LinkMerge      LinkMergeMethod
+	LinkMerge  LinkMergeMethod
 
 	Type           []Type
 	SecondaryFiles []Expression
@@ -55,10 +56,10 @@ type Step struct {
 	In  []StepInput
 	Out []StepOutput
 
-  // TODO can be a file reference. need DocumentReference type.
+	// TODO can be a file reference. need DocumentReference type.
 	Run Document
 
-	Scatter []string
+	Scatter       []string
 	ScatterMethod ScatterMethod
 }
 
