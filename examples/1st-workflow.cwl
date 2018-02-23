@@ -72,7 +72,7 @@ steps:
           - ex
       extractfile: ex
     out:
-      - id: example_out
+      - example_out
     scatter: tarfile
   untar:
     run: tar-param.cwl

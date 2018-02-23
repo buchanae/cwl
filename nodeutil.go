@@ -6,8 +6,10 @@ import (
 	"strings"
 )
 
+// for brevity
 type node *yamlast.Node
 
+// used for debugging
 func fmtNode(n *yamlast.Node, indent string) string {
 	kind := "Unknown"
 	switch n.Kind {
@@ -34,9 +36,11 @@ func dump(n *yamlast.Node, indent string) {
 	}
 }
 
+// used for finding a value such as "class: Workflow" in a YAML mapping,
+// which is needed before document processing can begin.
 func findValue(n node, key string) (node, bool) {
 	if n.Kind != yamlast.MappingNode {
-		panic("")
+		panic("findValue requires a mapping node")
 	}
 	for i := 0; i < len(n.Children)-1; i += 2 {
 		k := n.Children[i]
@@ -60,6 +64,8 @@ type mapitem struct {
 	v node
 }
 
+// itermap turns a YAML mapping into a slice of key/value pairs.
+// a YAML mapping is a slice of [key1, value1, key2, value2, etc...]
 func itermap(n node) []mapitem {
 	items := []mapitem{}
 	if n.Kind != yamlast.MappingNode {

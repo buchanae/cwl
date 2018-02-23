@@ -12,6 +12,36 @@ func loadBindingScalar(l *loader, n node) (interface{}, error) {
 	}, nil
 }
 
+func loadInputsSeq(l *loader, n node) (interface{}, error) {
+	var inputs []CommandInput
+
+  for _, c := range n.Children {
+		i := CommandInput{}
+    err := l.load(c, &i)
+    if err != nil {
+			return nil, err
+		}
+		inputs = append(inputs, i)
+	}
+
+	return inputs, nil
+}
+
+func loadOutputsSeq(l *loader, n node) (interface{}, error) {
+	var outputs []CommandOutput
+
+  for _, c := range n.Children {
+		i := CommandOutput{}
+    err := l.load(c, &i)
+    if err != nil {
+			return nil, err
+		}
+		outputs = append(outputs, i)
+	}
+
+	return outputs, nil
+}
+
 func loadInputsMapping(l *loader, n node) (interface{}, error) {
 	var inputs []CommandInput
 

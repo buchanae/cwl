@@ -14,6 +14,9 @@ arguments: ["-d", $(runtime.outdir)]
 stdout: output.txt
 stderr: error.txt
 inputs:
+  scalar: string
+  list3: string[]
+  opt2: string?
   tarfile:
     type: File
     inputBinding:
@@ -44,6 +47,9 @@ inputs:
   num:
     type: int
 outputs:
+  scalar: string
+  list3: string[]
+  opt2: string?
   output1:
     type: stdout
   error1:

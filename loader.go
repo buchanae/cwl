@@ -22,13 +22,16 @@ import (
 var l = &loader{
 	handlers: map[string]handler{
 		"mapping -> []cwl.CommandInput":  loadInputsMapping,
+		"sequence -> []cwl.CommandInput":  loadInputsSeq,
+		"sequence -> []cwl.CommandOutput":  loadOutputsSeq,
 		"mapping -> []cwl.CommandOutput": loadOutputsMapping,
 		"scalar -> cwl.CommandOutput":    loadOutputScalar,
 		"mapping -> []cwl.Hint":          loadHintsMapping,
-		"mapping -> cwl.Hint":            loadHintMapping,
+		"mapping -> cwl.Hint":            loadReqMapping,
 
+		"sequence -> []cwl.Requirement": loadRequirementsSeq,
 		"mapping -> []cwl.Requirement": loadRequirementsMapping,
-		"mapping -> cwl.Requirement":   loadHintMapping,
+		"mapping -> cwl.Requirement":   loadReqMapping,
 
 		"mapping -> cwl.Type":   loadTypeMapping,
 		"scalar -> cwl.Type":    loadTypeScalar,
@@ -40,13 +43,21 @@ var l = &loader{
 		"scalar -> []cwl.Expression":       loadExpressionScalarSlice,
     "sequence -> []cwl.Expression":     loadExpressionSeq,
 
-    "scalar -> cwl.WorkflowInput": loadWorkflowInputScalar,
-    "scalar -> cwl.WorkflowOutput": loadWorkflowOutputScalar,
-    "mapping -> []cwl.WorkflowInput": loadWorkflowInputsMapping,
-    "mapping -> []cwl.WorkflowOutput": loadWorkflowOutputsMapping,
+    "mapping -> []cwl.WorkflowInput": loadWorkflowInputs,
+    "mapping -> []cwl.WorkflowOutput": loadWorkflowOutputs,
     "sequence -> string": concatStringSeq,
 
     "mapping -> []cwl.Step": loadWorkflowStepMapping,
+    "scalar -> cwl.StepOutput": loadStepOutputScalar,
+    "sequence -> []cwl.StepOutput": loadStepOutputSeq,
+
+    "sequence -> []cwl.StepInput": loadStepInputSeq,
+    "mapping -> []cwl.StepInput": loadStepInputMap,
+    "mapping -> cwl.Document": loadDoc,
+    "scalar -> cwl.Document": loadDocumentRef,
+
+    "sequence -> []cwl.CommandLineBinding": loadCommandLineBindingSeq,
+    "sequence -> []string": loadStringSeq,
 	},
 }
 
@@ -99,7 +110,7 @@ func (l *loader) load(n node, t interface{}) error {
 		}
 		if res != nil {
 			if !reflect.TypeOf(res).AssignableTo(typ) {
-				return fmt.Errorf("can't assign value from handler")
+        panic("can't assign value from handler")
 			}
 			val.Set(reflect.ValueOf(res))
 		}

@@ -16,6 +16,7 @@ const (
 	FlatCrossProduct
 )
 
+// TODO should be a string, so that it serializes nicely
 type LinkMergeMethod int
 
 const (

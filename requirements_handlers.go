@@ -3,14 +3,32 @@ package cwl
 import (
   "fmt"
   "strings"
+	"github.com/commondream/yamlast"
 )
+
+func loadRequirementsSeq(l *loader, n node) (interface{}, error) {
+	var reqs []Requirement
+  for _, c := range n.Children {
+    switch c.Kind {
+    case yamlast.MappingNode:
+      r, err := loadReqMapping(l, c)
+      if err != nil {
+        return nil, err
+      }
+      reqs = append(reqs, r.(Requirement))
+    default:
+      panic("unknown node kind")
+    }
+  }
+  return reqs, nil
+}
 
 func loadRequirementsMapping(l *loader, n node) (interface{}, error) {
 	var reqs []Requirement
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		x, err := loadHintByName(l, strings.ToLower(k), v)
+		x, err := loadReqByName(l, strings.ToLower(k), v)
 		if err != nil {
 			return nil, err
 		}
@@ -25,7 +43,7 @@ func loadHintsMapping(l *loader, n node) (interface{}, error) {
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		h, err := loadHintByName(l, strings.ToLower(k), v)
+		h, err := loadReqByName(l, strings.ToLower(k), v)
 		if err != nil {
 			return nil, err
 		}
@@ -35,12 +53,12 @@ func loadHintsMapping(l *loader, n node) (interface{}, error) {
 	return hints, nil
 }
 
-func loadHintMapping(l *loader, n node) (interface{}, error) {
+func loadReqMapping(l *loader, n node) (interface{}, error) {
 	class := findKey(n, "class")
-	return loadHintByName(l, class, n)
+	return loadReqByName(l, class, n)
 }
 
-func loadHintByName(l *loader, name string, n node) (interface{}, error) {
+func loadReqByName(l *loader, name string, n node) (interface{}, error) {
 	switch name {
 	case "dockerrequirement":
 		d := DockerRequirement{}
@@ -50,11 +68,22 @@ func loadHintByName(l *loader, name string, n node) (interface{}, error) {
 		r := ResourceRequirement{}
 		err := l.load(n, &r)
 		return r, err
+  case "envvarrequirement":
+  case "shellcommandrequirement":
+    s := ShellCommandRequirement{}
+    err := l.load(n, &s)
+    return s, err
 	case "inlinejavascriptrequirement":
 		j := InlineJavascriptRequirement{}
 		err := l.load(n, &j)
 		return j, err
-	default:
-		return nil, fmt.Errorf("unknown hint name: %s", name)
+  case "schemadefrequirement":
+  case "softwarerequirement":
+  case "initialworkdirrequirement":
+  case "subworkflowfeaturerequirement":
+  case "scatterfeaturerequirement":
+  case "multipleinputfeaturerequirement":
+  case "stepinputexpressionrequirement":
 	}
+  return nil, fmt.Errorf("unknown hint name: %s", name)
 }

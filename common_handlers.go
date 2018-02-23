@@ -6,28 +6,28 @@ import (
 	"strings"
 )
 
-func loadDoc(l *loader, n node) (Document, error) {
-	if len(n.Children) != 1 {
-		return nil, fmt.Errorf("unexpected document children")
-	}
+type DocumentRef struct {
+  URL string
+}
+func (DocumentRef) doctype() {}
 
-	m := n.Children[0]
-	if m.Kind != yamlast.MappingNode {
+func loadDoc(l *loader, n node) (interface{}, error) {
+	if n.Kind != yamlast.MappingNode {
 		return nil, fmt.Errorf("expected mapping node, got: %s", fmtNode(n, ""))
 	}
 
-	class := findKey(m, "class")
+	class := findKey(n, "class")
 	switch class {
 	case "commandlinetool":
 		t := &CommandLineTool{}
-		if err := l.load(m, t); err != nil {
+		if err := l.load(n, t); err != nil {
 			return nil, err
 		}
 		return t, nil
 
 	case "workflow":
 		wf := &Workflow{}
-		if err := l.load(m, wf); err != nil {
+		if err := l.load(n, wf); err != nil {
 			return nil, err
 		}
 		return wf, nil
@@ -37,17 +37,45 @@ func loadDoc(l *loader, n node) (Document, error) {
 	}
 }
 
-func loadExpressionSeq(l *loader, n node) (interface{}, error) {
-  return nil, nil
+func loadDocumentRef(l *loader, n node) (interface{}, error) {
+  return DocumentRef{URL: n.Value}, nil
+}
+
+func loadStringSeq(l *loader, n node) (interface{}, error) {
+  strs := []string{}
+  for _, c := range n.Children {
+    strs = append(strs, c.Value)
+  }
+  return strs, nil
+}
+
+func loadCommandLineBindingSeq(l *loader, n node) (interface{}, error) {
+  b := []CommandLineBinding{}
+  for _, c := range n.Children {
+    if c.Kind != yamlast.MappingNode {
+      return nil, fmt.Errorf("unhandled command line binding type")
+    }
+    clb := CommandLineBinding{}
+    err := l.load(c, &clb)
+    if err != nil {
+      return nil, err
+    }
+    b = append(b, clb)
+  }
+  return b, nil
 }
 
 func concatStringSeq(l *loader, n node) (interface{}, error) {
   s := ""
   for _, c := range n.Children {
     if c.Kind != yamlast.ScalarNode {
-      panic("unhandled seq type")
+      return nil, fmt.Errorf("unhandled string concat type")
     }
-    s += c.Value
+    if s != "" {
+      s += "\n" + c.Value
+    } else {
+      s = c.Value
+    }
   }
   return s, nil
 }
@@ -119,6 +147,18 @@ func loadTypeScalar(l *loader, n node) (interface{}, error) {
 		return t, nil
 	}
 	return nil, fmt.Errorf("unhandled scalar type: %s", n.Value)
+}
+
+func loadExpressionSeq(l *loader, n node) (interface{}, error) {
+  exprs := []Expression{}
+  for _, c := range n.Children {
+    if c.Kind != yamlast.ScalarNode {
+      return nil, fmt.Errorf("invalid yaml node type for expression")
+    }
+
+    exprs = append(exprs, Expression(c.Value))
+  }
+  return exprs, nil
 }
 
 func loadExpressionScalarSlice(l *loader, n node) (interface{}, error) {

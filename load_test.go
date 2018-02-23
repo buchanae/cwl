@@ -85,9 +85,276 @@ func TestStableMapOrder(t *testing.T) {
 }
 
 func TestLoadSimpleWf(t *testing.T) {
-	_, err := LoadFile("./examples/1st-workflow.cwl")
+	d, err := LoadFile("./examples/1st-workflow.cwl")
 	if err != nil {
 		t.Fatal(err)
+	}
+  e := &Workflow{
+      Version:      "v1.0",
+      ID:           "",
+      Label:        "",
+      Doc:          "",
+      Hints:        nil,
+      Requirements: nil,
+      Inputs:       []WorkflowInput{
+          {
+              ID:             "inp",
+              Label:          "",
+              Doc:            "",
+              Streamable:     false,
+              SecondaryFiles: nil,
+              Format:         nil,
+              InputBinding:   CommandLineBinding{},
+              Default:        nil,
+              Type:           []Type{
+                  FileType,
+              },
+          },
+          {
+              ID:             "ex",
+              Label:          "",
+              Doc:            "",
+              Streamable:     false,
+              SecondaryFiles: nil,
+              Format:         nil,
+              InputBinding:   CommandLineBinding{},
+              Default:        nil,
+              Type:           []Type{
+                  String,
+              },
+          },
+          {
+              ID:             "foo",
+              Label:          "",
+              Doc:            "doc1\ndoc2",
+              Streamable:     false,
+              SecondaryFiles: []Expression{".bai"},
+              Format:         []Expression{"fmt"},
+              InputBinding:   CommandLineBinding{},
+              Default:        nil,
+              Type:           nil,
+          },
+          {
+              ID:             "bar",
+              Label:          "",
+              Doc:            "docstring",
+              Streamable:     false,
+              SecondaryFiles: []Expression{".fai", ".bai"},
+              Format:         []Expression{"fm1", "fm2"},
+              InputBinding:   CommandLineBinding{},
+              Default:        nil,
+              Type:           nil,
+          },
+      },
+      Outputs: []WorkflowOutput{
+          {
+              ID:         "other",
+              Label:      "",
+              Doc:        "",
+              Streamable: false,
+              LinkMerge:  0,
+              Type:       []Type{
+                  ArrayType{
+                      Items: FileType,
+                  },
+              },
+              SecondaryFiles: nil,
+              Format:         nil,
+              OutputBinding:  CommandOutputBinding{},
+              OutputSource:   nil,
+          },
+          {
+              ID:         "classout",
+              Label:      "",
+              Doc:        "",
+              Streamable: false,
+              LinkMerge:  0,
+              Type:       []Type{
+                  FileType,
+              },
+              SecondaryFiles: nil,
+              Format:         nil,
+              OutputBinding:  CommandOutputBinding{},
+              OutputSource:   []string{"compile/classfile"},
+          },
+      },
+      Steps: []Step{
+          {
+              ID:           "subwf",
+              Label:        "",
+              Doc:          "",
+              Hints:        nil,
+              Requirements: nil,
+              In:           []StepInput{
+              },
+              Out: []StepOutput{
+                  {ID:"one"},
+              },
+              Run: &CommandLineTool{
+                  Version:      "",
+                  ID:           "",
+                  Label:        "",
+                  Doc:          "",
+                  Hints:        nil,
+                  Requirements: []Requirement{
+                      ShellCommandRequirement{},
+                  },
+                  Inputs:  nil,
+                  Outputs: []CommandOutput{
+                      {
+                          ID:         "one",
+                          Label:      "",
+                          Doc:        "doc1\ndoc2",
+                          Streamable: false,
+                          Type:       []Type{
+                              FileType,
+                          },
+                          SecondaryFiles: []Expression{".foo"},
+                          Format:         []Expression{"fmt"},
+                          OutputBinding:  CommandOutputBinding{
+                              Glob:         []Expression{"*.glob"},
+                              LoadContents: false,
+                              OutputEval:   "",
+                          },
+                      },
+                      {
+                          ID:         "arrouttest",
+                          Label:      "",
+                          Doc:        "docstring",
+                          Streamable: false,
+                          Type:       []Type{
+                              ArrayType{
+                                  Items: FileType,
+                              },
+                          },
+                          SecondaryFiles: []Expression{".fai", ".bai"},
+                          Format:         []Expression{"fm1", "fm2"},
+                          OutputBinding:  CommandOutputBinding{
+                              Glob:         []Expression{"*.glob1", "*.glob2"},
+                              LoadContents: false,
+                              OutputEval:   "",
+                          },
+                      },
+                  },
+                  BaseCommand: nil,
+                  Arguments:   []CommandLineBinding{
+                      {
+                        LoadContents:false,
+                        Position:0,
+                        Prefix:"",
+                        Separate:false,
+                        ItemSeparator:"",
+                        ValueFrom:"date\ntar cf hello.tar Hello.java\ndate\n",
+                        ShellQuote:false,
+                      },
+                  },
+                  Stdin:              "",
+                  Stderr:             "",
+                  Stdout:             "",
+                  SuccessCodes:       nil,
+                  TemporaryFailCodes: nil,
+                  PermanentFailCodes: nil,
+              },
+              Scatter:       nil,
+              ScatterMethod: 0,
+          },
+          {
+              ID:           "auntar",
+              Label:        "",
+              Doc:          "",
+              Hints:        nil,
+              Requirements: nil,
+              In:           []StepInput{
+                  {
+                      ID:        "tarfile",
+                      Source:    []string{"inp"},
+                      LinkMerge: 0,
+                      Default:   nil,
+                      ValueFrom: "",
+                  },
+                  {
+                      ID:        "other",
+                      Source:    []string{"ex"},
+                      LinkMerge: 0,
+                      Default:   nil,
+                      ValueFrom: "",
+                  },
+                  {
+                      ID:        "extractfile",
+                      Source:    []string{"ex"},
+                      LinkMerge: 0,
+                      Default:   nil,
+                      ValueFrom: "",
+                  },
+              },
+              Out: []StepOutput{
+                  {ID:"example_out"},
+              },
+              Run:           DocumentRef{URL:"tar-param.cwl"},
+              Scatter:       []string{"tarfile"},
+              ScatterMethod: 0,
+          },
+          {
+              ID:           "untar",
+              Label:        "",
+              Doc:          "",
+              Hints:        nil,
+              Requirements: nil,
+              In:           []StepInput{
+                  {
+                      ID:        "tarfile",
+                      Source:    []string{"inp"},
+                      LinkMerge: 0,
+                      Default:   nil,
+                      ValueFrom: "",
+                  },
+                  {
+                      ID:        "extractfile",
+                      Source:    []string{"ex"},
+                      LinkMerge: 0,
+                      Default:   nil,
+                      ValueFrom: "",
+                  },
+              },
+              Out: []StepOutput{
+                  {ID:"example_out"},
+              },
+              Run:           DocumentRef{URL:"tar-param.cwl"},
+              Scatter:       nil,
+              ScatterMethod: 0,
+          },
+          {
+              ID:           "compile",
+              Label:        "",
+              Doc:          "",
+              Hints:        nil,
+              Requirements: nil,
+              In:           []StepInput{
+                  {
+                      ID:        "src",
+                      Source:    []string{"untar/example_out"},
+                      LinkMerge: 0,
+                      Default:   nil,
+                      ValueFrom: "",
+                  },
+              },
+              Out: []StepOutput{
+                  {ID:"classfile"},
+              },
+              Run:           DocumentRef{URL:"arguments.cwl"},
+              Scatter:       nil,
+              ScatterMethod: 0,
+          },
+      },
+  }
+  pretty.Println(d)
+
+	if !reflect.DeepEqual(d, e) {
+		t.Error("different docs")
+		diff := deep.Equal(d, e)
+		for _, di := range diff {
+			t.Log(di)
+		}
 	}
 }
 
