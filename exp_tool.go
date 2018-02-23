@@ -23,7 +23,7 @@ type ExpressionToolOutput struct {
 	Streamable bool
 
 	SecondaryFiles []Expression
-	Format         Format
-	//OutputBinding CommandOutputBinding
+	Format         []Expression
+	OutputBinding CommandOutputBinding
 	Type []Type
 }

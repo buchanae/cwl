@@ -80,11 +80,18 @@ func TestLoadSimpleFile2(t *testing.T) {
 
 func TestStableMapOrder(t *testing.T) {
 	for i := 0; i < 20; i++ {
-		t.Run("", TestLoadSimpleFile3)
+		t.Run("", TestLoadCltAll)
 	}
 }
 
-func TestLoadSimpleFile3(t *testing.T) {
+func TestLoadSimpleWf(t *testing.T) {
+	_, err := LoadFile("./examples/1st-workflow.cwl")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadCltAll(t *testing.T) {
 	doc, err := LoadFile("./examples/clt-all.cwl")
 	if err != nil {
 		t.Fatal(err)

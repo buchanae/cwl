@@ -1,5 +1,11 @@
 package cwl
 
+type Any interface{}
+
+type Type interface {
+	cwltype()
+}
+
 type Expression string
 
 type ScatterMethod int
@@ -17,10 +23,6 @@ const (
 	MergeNested
 	MergeFlattened
 )
-
-type Type interface {
-	cwltype()
-}
 
 type Primitive string
 
@@ -40,28 +42,6 @@ const (
 	Stderr        = Primitive("stderr")
 )
 
-type RecordType struct {
-}
-
-func (RecordType) cwltype() {}
-
-type NamedType struct {
-	Name string
-}
-
-func (NamedType) cwltype() {}
-
-type EnumType struct {
-}
-
-func (EnumType) cwltype() {}
-
-type ArrayType struct {
-	Items Type
-}
-
-func (ArrayType) cwltype() {}
-
 var TypesByLowercaseName = map[string]Type{
 	"null":      Null,
 	"boolean":   Boolean,
@@ -74,4 +54,45 @@ var TypesByLowercaseName = map[string]Type{
 	"directory": DirectoryType,
 	"stdout":    Stdout,
 	"stderr":    Stderr,
+}
+
+type RecordType struct {}
+
+func (RecordType) cwltype() {}
+
+type NamedType struct {
+	Name string
+}
+
+func (NamedType) cwltype() {}
+
+type EnumType struct {}
+
+func (EnumType) cwltype() {}
+
+type ArrayType struct {
+	Items Type
+}
+
+func (ArrayType) cwltype() {}
+
+type File struct {
+	Location       string
+	Path           string
+	Basename       string
+	Dirname        string
+	Nameroot       string
+	Nameext        string
+	Checksum       string
+	Size           int64
+	Format         string
+	Contents       string
+	SecondaryFiles []Expression
+}
+
+type Directory struct {
+	Location string
+	Path     string
+	Basename string
+	Listing  []string
 }

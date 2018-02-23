@@ -11,33 +11,40 @@ type Workflow struct {
 
 	Inputs  []WorkflowInput
 	Outputs []WorkflowOutput
-	Steps   []WorkflowStep
+	Steps   []Step
 }
-
 func (Workflow) doctype() {}
 
-type WorkflowInput interface{}
+type WorkflowInput struct {
+	ID         string
+	Label      string
+  // TODO ensure that an array of strings can be loaded
+	Doc        string
+	Streamable bool
 
-type Input struct {
+	SecondaryFiles []Expression
+	Format         []Expression
+	InputBinding CommandLineBinding
+	Default      Any
+	Type         []Type
+}
+
+type WorkflowOutput struct {
 	ID         string
 	Label      string
 	Doc        string
 	Streamable bool
+	LinkMerge      LinkMergeMethod
 
-	Type []Type
-	//InputBinding CommandLineBinding
-	Default        Any
+	Type           []Type
 	SecondaryFiles []Expression
-	Format         Format
+	Format         []Expression
+
+	OutputBinding CommandOutputBinding
+	OutputSource  []string
 }
 
-type WorkflowOutputs struct {
-	ID           string
-	Type         string
-	OutputSource string
-}
-
-type WorkflowStep struct {
+type Step struct {
 	ID    string
 	Label string
 	Doc   string
@@ -45,143 +52,24 @@ type WorkflowStep struct {
 	Hints        []Hint
 	Requirements []Requirement
 
-	In  []WorkflowStepInput
-	Out []WorkflowStepOutput
+	In  []StepInput
+	Out []StepOutput
 
-	//Run WorkflowStepRun
-	//Scatter Scatter
-	//ScatterMethod ScatterMethod
+  // TODO can be a file reference. need DocumentReference type.
+	Run Document
+
+	Scatter []string
+	ScatterMethod ScatterMethod
 }
 
-type WorkflowStepOut struct {
-}
-
-type WorkflowStepRun struct {
-}
-
-type Any interface{}
-type Format struct{}
-type OutputSources struct{}
-
-type WorkflowOutput struct {
-	ID         string
-	Label      string
-	Doc        string
-	Streamable bool
-
-	//OutputBinding CommandOutputBinding
-	OutputSource   OutputSources
-	LinkMerge      LinkMergeMethod
-	Type           []Type
-	SecondaryFiles []Expression
-	Format         Format
-}
-
-type File struct {
-	Location       string
-	Path           string
-	Basename       string
-	Dirname        string
-	Nameroot       string
-	Nameext        string
-	Checksum       string
-	Size           int64
-	Format         string
-	Contents       string
-	SecondaryFiles []Expression
-}
-
-type Directory struct {
-	Location string
-	Path     string
-	Basename string
-	Listing  []string
-}
-
-type OutputRecordSchema struct {
-	Type   string
-	Fields []OutputRecordField
-	Label  string
-}
-
-type OutputRecordFieldType struct {
-}
-
-type OutputRecordField struct {
-	Name string
-	Type OutputRecordFieldType
-	Doc  string
-	//OutputBinding CommandOutputBinding
-}
-
-type OutputEnumSchema struct {
-	Symbols []string
-	Type    string
-	Label   string
-	//OutputBinding CommandOutputBinding
-}
-
-type OutputArraySchemaItems struct {
-	Type
-}
-
-type OutputArraySchema struct {
-	Items OutputArraySchemaItems
-	Type  string
-	Label string
-	//OutputBinding CommandOutputBinding
-}
-
-type Scatter struct {
-}
-
-type WorkflowStepInputSource struct {
-}
-
-type WorkflowStepInput struct {
+type StepInput struct {
 	ID        string
-	Source    WorkflowStepInputSource
+	Source    []string
 	LinkMerge LinkMergeMethod
 	Default   Any
 	ValueFrom Expression
 }
 
-type WorkflowStepOutput struct {
+type StepOutput struct {
 	ID string
-}
-
-type InputSchema struct {
-}
-
-type InputRecordSchema struct {
-	Type   string
-	Fields []InputRecordField
-	Label  string
-}
-
-type InputRecordFieldType struct {
-}
-
-type InputRecordField struct {
-	Name string
-	Type InputRecordFieldType
-	Doc  string
-	//InputBinding CommandLineBinding
-	Label string
-}
-
-type InputEnumSchema struct {
-	Symbols []string
-	Type    string
-	Label   string
-	//InputBinding CommandLineBinding
-}
-
-type InputArraySchemaItems struct{}
-
-type InputArraySchema struct {
-	Items InputArraySchemaItems
-	Type  string
-	Label string
-	//InputBinding CommandLineBinding
 }

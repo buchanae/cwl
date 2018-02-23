@@ -34,10 +34,15 @@ type CommandInput struct {
 	ID    string
 	Label string
 	Doc   string
+	Streamable bool
+	Default      Any
+
+	Type         []Type
+
+	SecondaryFiles []Expression
+	Format         []Expression
 
 	InputBinding CommandLineBinding
-	Default      Any
-	Type         []Type
 }
 
 type CommandLineBinding struct {
@@ -56,11 +61,12 @@ type CommandOutput struct {
 	Doc        string
 	Streamable bool
 
+	Type          []Type
+
 	SecondaryFiles []Expression
 	Format         []Expression
 
 	OutputBinding CommandOutputBinding
-	Type          []Type
 }
 
 type CommandOutputBinding struct {
