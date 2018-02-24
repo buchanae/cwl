@@ -33,12 +33,13 @@ func Load(b []byte) (Document, error) {
 	dump(yamlnode, "")
 
 	// Being recursively processing the tree.
-	d, err := loadDoc(l, yamlnode.Children[0])
+	var d Document
+	err = l.load(yamlnode.Children[0], &d)
 	if err != nil {
 		return nil, err
 	}
 	if d != nil {
-		return d.(Document), nil
+		return d, nil
 	}
 	return nil, nil
 }

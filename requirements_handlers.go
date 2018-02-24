@@ -6,12 +6,12 @@ import (
 	"strings"
 )
 
-func loadRequirementsSeq(l *loader, n node) (interface{}, error) {
+func (l *loader) SeqToRequirementSlice(n node) ([]Requirement, error) {
 	var reqs []Requirement
 	for _, c := range n.Children {
 		switch c.Kind {
 		case yamlast.MappingNode:
-			r, err := loadReqMapping(l, c)
+			r, err := l.MappingToRequirement(c)
 			if err != nil {
 				return nil, err
 			}
@@ -23,12 +23,12 @@ func loadRequirementsSeq(l *loader, n node) (interface{}, error) {
 	return reqs, nil
 }
 
-func loadRequirementsMapping(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToRequirementSlice(n node) ([]Requirement, error) {
 	var reqs []Requirement
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		x, err := loadReqByName(l, strings.ToLower(k), v)
+		x, err := l.loadReqByName(k, v)
 		if err != nil {
 			return nil, err
 		}
@@ -38,12 +38,12 @@ func loadRequirementsMapping(l *loader, n node) (interface{}, error) {
 	return reqs, nil
 }
 
-func loadHintsMapping(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToHintSlice(n node) ([]Hint, error) {
 	var hints []Hint
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		h, err := loadReqByName(l, strings.ToLower(k), v)
+		h, err := l.loadReqByName(k, v)
 		if err != nil {
 			return nil, err
 		}
@@ -53,13 +53,13 @@ func loadHintsMapping(l *loader, n node) (interface{}, error) {
 	return hints, nil
 }
 
-func loadReqMapping(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToRequirement(n node) (Requirement, error) {
 	class := findKey(n, "class")
-	return loadReqByName(l, class, n)
+	return l.loadReqByName(class, n)
 }
 
-func loadReqByName(l *loader, name string, n node) (interface{}, error) {
-	switch name {
+func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
+	switch strings.ToLower(name) {
 	case "dockerrequirement":
 		d := DockerRequirement{}
 		err := l.load(n, &d)

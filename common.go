@@ -1,14 +1,6 @@
 package cwl
 
-import (
-	"strings"
-)
-
 type Any interface{}
-
-type Type interface {
-	cwltype()
-}
 
 type Expression string
 
@@ -29,6 +21,10 @@ const (
 	MergeFlattened
 )
 
+type DocumentRef struct {
+	URL string
+}
+
 type Null struct{}
 type Boolean struct{}
 type Int struct{}
@@ -40,75 +36,24 @@ type FileType struct{}
 type DirectoryType struct{}
 type Stderr struct{}
 type Stdout struct{}
-type RecordType struct{}
-type EnumType struct{}
 
-type ArrayType struct {
-	Items Type
-}
-
-func (Null) cwltype()                {}
 func (Null) String() string          { return "null" }
-func (Boolean) cwltype()             {}
 func (Boolean) String() string       { return "boolean" }
-func (Int) cwltype()                 {}
 func (Int) String() string           { return "int" }
-func (Float) cwltype()               {}
 func (Float) String() string         { return "float" }
-func (Long) cwltype()                {}
 func (Long) String() string          { return "long" }
-func (Double) cwltype()              {}
 func (Double) String() string        { return "double" }
-func (String) cwltype()              {}
 func (String) String() string        { return "string" }
-func (FileType) cwltype()            {}
 func (FileType) String() string      { return "file" }
-func (DirectoryType) cwltype()       {}
 func (DirectoryType) String() string { return "directory" }
-func (Stderr) cwltype()              {}
 func (Stderr) String() string        { return "stderr" }
-func (Stdout) cwltype()              {}
 func (Stdout) String() string        { return "stdout" }
-func (RecordType) cwltype()          {}
-func (RecordType) String() string    { return "record" }
-func (EnumType) cwltype()            {}
-func (EnumType) String() string      { return "enum" }
-func (ArrayType) cwltype()           {}
-func (ArrayType) String() string     { return "array" }
-
-func GetTypeByName(name string) (Type, bool) {
-	switch strings.ToLower(name) {
-	case "null":
-		return Null{}, true
-	case "boolean":
-		return Boolean{}, true
-	case "int":
-		return Int{}, true
-	case "long":
-		return Long{}, true
-	case "float":
-		return Float{}, true
-	case "double":
-		return Double{}, true
-	case "string":
-		return String{}, true
-	case "file":
-		return FileType{}, true
-	case "directory":
-		return DirectoryType{}, true
-	case "stdout":
-		return Stdout{}, true
-	case "stderr":
-		return Stderr{}, true
-	case "record":
-		return RecordType{}, true
-	case "array":
-		return ArrayType{}, true
-	case "enum":
-		return EnumType{}, true
-	}
-	return nil, false
-}
+func (InputRecord) String() string   { return "record" }
+func (InputEnum) String() string     { return "enum" }
+func (InputArray) String() string    { return "array" }
+func (OutputRecord) String() string  { return "record" }
+func (OutputEnum) String() string    { return "enum" }
+func (OutputArray) String() string   { return "array" }
 
 type File struct {
 	Location       string
@@ -129,4 +74,136 @@ type Directory struct {
 	Path     string
 	Basename string
 	Listing  []string
+}
+
+type Document interface {
+	doctype()
+}
+
+func (CommandLineTool) doctype() {}
+func (Workflow) doctype()        {}
+func (DocumentRef) doctype()     {}
+
+type InputType interface {
+	String() string
+	inputtype()
+}
+
+func (Null) inputtype()          {}
+func (Boolean) inputtype()       {}
+func (Int) inputtype()           {}
+func (Float) inputtype()         {}
+func (Long) inputtype()          {}
+func (Double) inputtype()        {}
+func (String) inputtype()        {}
+func (FileType) inputtype()      {}
+func (DirectoryType) inputtype() {}
+func (InputRecord) inputtype()   {}
+func (InputEnum) inputtype()     {}
+func (InputArray) inputtype()    {}
+
+var inputTypesByName = map[string]InputType{}
+
+func init() {
+	ts := []InputType{
+		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
+		FileType{}, DirectoryType{}, InputRecord{}, InputArray{}, InputEnum{},
+	}
+	for _, t := range ts {
+		inputTypesByName[t.String()] = t
+	}
+}
+
+type OutputType interface {
+	String() string
+	outputtype()
+}
+
+func (Null) outputtype()          {}
+func (Boolean) outputtype()       {}
+func (Int) outputtype()           {}
+func (Float) outputtype()         {}
+func (Long) outputtype()          {}
+func (Double) outputtype()        {}
+func (String) outputtype()        {}
+func (FileType) outputtype()      {}
+func (DirectoryType) outputtype() {}
+func (Stderr) outputtype()        {}
+func (Stdout) outputtype()        {}
+func (OutputRecord) outputtype()  {}
+func (OutputEnum) outputtype()    {}
+func (OutputArray) outputtype()   {}
+
+var outputTypesByName = map[string]OutputType{}
+
+func init() {
+	ts := []OutputType{
+		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
+		FileType{}, DirectoryType{}, OutputRecord{}, OutputArray{}, OutputEnum{},
+	}
+	for _, t := range ts {
+		outputTypesByName[t.String()] = t
+	}
+}
+
+type Type interface {
+	cwltype()
+}
+
+func (Null) cwltype()          {}
+func (Boolean) cwltype()       {}
+func (Int) cwltype()           {}
+func (Float) cwltype()         {}
+func (Long) cwltype()          {}
+func (Double) cwltype()        {}
+func (String) cwltype()        {}
+func (FileType) cwltype()      {}
+func (DirectoryType) cwltype() {}
+func (Stderr) cwltype()        {}
+func (Stdout) cwltype()        {}
+func (InputRecord) cwltype()   {}
+func (InputEnum) cwltype()     {}
+func (InputArray) cwltype()    {}
+func (OutputRecord) cwltype()  {}
+func (OutputEnum) cwltype()    {}
+func (OutputArray) cwltype()   {}
+
+type Requirement interface {
+	requirement()
+}
+
+// TODO how many of these could legitimately be used
+//      as a hint?
+func (DockerRequirement) requirement()               {}
+func (ResourceRequirement) requirement()             {}
+func (EnvVarRequirement) requirement()               {}
+func (ShellCommandRequirement) requirement()         {}
+func (InlineJavascriptRequirement) requirement()     {}
+func (SchemaDefRequirement) requirement()            {}
+func (SoftwareRequirement) requirement()             {}
+func (InitialWorkDirRequirement) requirement()       {}
+func (SubworkflowFeatureRequirement) requirement()   {}
+func (ScatterFeatureRequirement) requirement()       {}
+func (MultipleInputFeatureRequirement) requirement() {}
+func (StepInputExpressionRequirement) requirement()  {}
+
+type Hint interface {
+	hint()
+}
+
+func (DockerRequirement) hint()               {}
+func (ResourceRequirement) hint()             {}
+func (EnvVarRequirement) hint()               {}
+func (ShellCommandRequirement) hint()         {}
+func (InlineJavascriptRequirement) hint()     {}
+func (SchemaDefRequirement) hint()            {}
+func (SoftwareRequirement) hint()             {}
+func (InitialWorkDirRequirement) hint()       {}
+func (SubworkflowFeatureRequirement) hint()   {}
+func (ScatterFeatureRequirement) hint()       {}
+func (MultipleInputFeatureRequirement) hint() {}
+func (StepInputExpressionRequirement) hint()  {}
+
+type WorkflowRequirement interface {
+	wfrequirement()
 }

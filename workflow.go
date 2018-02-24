@@ -14,8 +14,6 @@ type Workflow struct {
 	Steps   []Step
 }
 
-func (Workflow) doctype() {}
-
 type WorkflowInput struct {
 	ID    string
 	Label string
@@ -27,7 +25,7 @@ type WorkflowInput struct {
 	Format         []Expression
 	InputBinding   CommandLineBinding
 	Default        Any
-	Type           []Type
+	Type           []InputType
 }
 
 type WorkflowOutput struct {
@@ -37,7 +35,7 @@ type WorkflowOutput struct {
 	Streamable bool
 	LinkMerge  LinkMergeMethod
 
-	Type           []Type
+	Type           []OutputType
 	SecondaryFiles []Expression
 	Format         []Expression
 

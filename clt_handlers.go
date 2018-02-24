@@ -1,19 +1,19 @@
 package cwl
 
-func loadOutputScalar(l *loader, n node) (interface{}, error) {
+func (l *loader) ScalarToCommandOutput(n node) (CommandOutput, error) {
 	o := CommandOutput{}
 	err := l.load(n, &o.Type)
 	return o, err
 }
 
-func loadBindingScalar(l *loader, n node) (interface{}, error) {
+func (l *loader) ScalarToCommandLineBinding(n node) (CommandLineBinding, error) {
 	return CommandLineBinding{
 		ValueFrom: Expression(n.Value),
 		Separate:  true,
 	}, nil
 }
 
-func loadInputsSeq(l *loader, n node) (interface{}, error) {
+func (l *loader) SeqToCommandInputSlice(n node) ([]CommandInput, error) {
 	var inputs []CommandInput
 
 	for _, c := range n.Children {
@@ -28,7 +28,7 @@ func loadInputsSeq(l *loader, n node) (interface{}, error) {
 	return inputs, nil
 }
 
-func loadOutputsSeq(l *loader, n node) (interface{}, error) {
+func (l *loader) SeqToCommandOutputSlice(n node) ([]CommandOutput, error) {
 	var outputs []CommandOutput
 
 	for _, c := range n.Children {
@@ -43,7 +43,7 @@ func loadOutputsSeq(l *loader, n node) (interface{}, error) {
 	return outputs, nil
 }
 
-func loadInputsMapping(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToCommandInputSlice(n node) ([]CommandInput, error) {
 	var inputs []CommandInput
 
 	for _, kv := range itermap(n) {
@@ -59,7 +59,7 @@ func loadInputsMapping(l *loader, n node) (interface{}, error) {
 	return inputs, nil
 }
 
-func loadOutputsMapping(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToCommandOutputSlice(n node) ([]CommandOutput, error) {
 	var outputs []CommandOutput
 
 	for _, kv := range itermap(n) {

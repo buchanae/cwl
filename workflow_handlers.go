@@ -5,7 +5,7 @@ import (
 	"github.com/commondream/yamlast"
 )
 
-func loadWorkflowInputs(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToWorkflowInputSlice(n node) ([]WorkflowInput, error) {
 	var inputs []WorkflowInput
 
 	for _, kv := range itermap(n) {
@@ -35,7 +35,7 @@ func loadWorkflowInputs(l *loader, n node) (interface{}, error) {
 	return inputs, nil
 }
 
-func loadWorkflowOutputs(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToWorkflowOutputSlice(n node) ([]WorkflowOutput, error) {
 	var outputs []WorkflowOutput
 
 	for _, kv := range itermap(n) {
@@ -65,7 +65,7 @@ func loadWorkflowOutputs(l *loader, n node) (interface{}, error) {
 	return outputs, nil
 }
 
-func loadWorkflowStepMapping(l *loader, n node) (interface{}, error) {
+func (l *loader) MappingToStepSlice(n node) ([]Step, error) {
 	steps := []Step{}
 	for _, kv := range itermap(n) {
 		k := kv.k
@@ -80,24 +80,11 @@ func loadWorkflowStepMapping(l *loader, n node) (interface{}, error) {
 	return steps, nil
 }
 
-func loadStepOutputScalar(l *loader, n node) (interface{}, error) {
+func (l *loader) ScalarToStepOutput(n node) (StepOutput, error) {
 	return StepOutput{ID: n.Value}, nil
 }
 
-func loadStepOutputSeq(l *loader, n node) (interface{}, error) {
-	outs := []StepOutput{}
-	for _, c := range n.Children {
-		out := StepOutput{}
-		err := l.load(c, &out)
-		if err != nil {
-			return nil, err
-		}
-		outs = append(outs, out)
-	}
-	return outs, nil
-}
-
-func loadStepInputSeq(l *loader, n node) (interface{}, error) {
+func (l *loader) SeqToStepInputSlice(n node) ([]StepInput, error) {
 	ins := []StepInput{}
 	for _, c := range n.Children {
 		in := StepInput{}
@@ -111,7 +98,20 @@ func loadStepInputSeq(l *loader, n node) (interface{}, error) {
 	return ins, nil
 }
 
-func loadStepInputMap(l *loader, n node) (interface{}, error) {
+func (l *loader) SeqToStepOutputSlice(n node) ([]StepOutput, error) {
+	outs := []StepOutput{}
+	for _, c := range n.Children {
+		out := StepOutput{}
+		err := l.load(c, &out)
+		if err != nil {
+			return nil, err
+		}
+		outs = append(outs, out)
+	}
+	return outs, nil
+}
+
+func (l *loader) MappingToStepInputSlice(n node) ([]StepInput, error) {
 	ins := []StepInput{}
 	for _, kv := range itermap(n) {
 		k := kv.k

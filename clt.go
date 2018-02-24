@@ -1,9 +1,5 @@
 package cwl
 
-type Document interface {
-	doctype()
-}
-
 type CommandLineTool struct {
 	Version string `cwl:"cwlVersion"`
 	ID      string
@@ -28,8 +24,6 @@ type CommandLineTool struct {
 	PermanentFailCodes []int
 }
 
-func (CommandLineTool) doctype() {}
-
 type CommandLineBinding struct {
 	LoadContents  bool
 	Position      int
@@ -47,7 +41,7 @@ type CommandInput struct {
 	Streamable bool
 	Default    Any
 
-	Type []Type
+	Type []InputType
 
 	SecondaryFiles []Expression
 	Format         []Expression
@@ -61,7 +55,7 @@ type CommandOutput struct {
 	Doc        string
 	Streamable bool
 
-	Type []Type
+	Type []OutputType
 
 	SecondaryFiles []Expression
 	Format         []Expression

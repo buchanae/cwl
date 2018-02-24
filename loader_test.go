@@ -1,7 +1,6 @@
 package cwl
 
 import (
-	"github.com/go-test/deep"
 	"github.com/kr/pretty"
 	"reflect"
 	"testing"
@@ -21,7 +20,7 @@ func TestLoadSimpleFile(t *testing.T) {
 		Inputs: []CommandInput{
 			{
 				ID:   "message",
-				Type: []Type{String{}},
+				Type: []InputType{String{}},
 				InputBinding: CommandLineBinding{
 					Position: 1,
 				},
@@ -31,7 +30,7 @@ func TestLoadSimpleFile(t *testing.T) {
 
 	if !reflect.DeepEqual(c, e) {
 		t.Error("different docs")
-		diff := deep.Equal(c, e)
+		diff := pretty.Diff(c, e)
 		for _, d := range diff {
 			t.Log(d)
 		}
@@ -52,7 +51,7 @@ func TestLoadSimpleFile2(t *testing.T) {
 		Inputs: []CommandInput{
 			{
 				ID:   "tarfile",
-				Type: []Type{FileType{}},
+				Type: []InputType{FileType{}},
 				InputBinding: CommandLineBinding{
 					Position: 1,
 				},
@@ -61,7 +60,7 @@ func TestLoadSimpleFile2(t *testing.T) {
 		Outputs: []CommandOutput{
 			{
 				ID:   "example_out",
-				Type: []Type{FileType{}},
+				Type: []OutputType{FileType{}},
 				OutputBinding: CommandOutputBinding{
 					Glob: []Expression{"hello.txt"},
 				},
@@ -71,7 +70,7 @@ func TestLoadSimpleFile2(t *testing.T) {
 
 	if !reflect.DeepEqual(c, e) {
 		t.Error("different docs")
-		diff := deep.Equal(c, e)
+		diff := pretty.Diff(c, e)
 		for _, d := range diff {
 			t.Log(d)
 		}
@@ -92,7 +91,7 @@ func TestLoadMC3Wf(t *testing.T) {
 }
 
 func TestLoadSimpleWf(t *testing.T) {
-	d, err := LoadFile("./examples/1st-workflow.cwl")
+	d, err := LoadFile("./examples/1st-workflow.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +112,7 @@ func TestLoadSimpleWf(t *testing.T) {
 				Format:         nil,
 				InputBinding:   CommandLineBinding{},
 				Default:        nil,
-				Type: []Type{
+				Type: []InputType{
 					FileType{},
 				},
 			},
@@ -126,7 +125,7 @@ func TestLoadSimpleWf(t *testing.T) {
 				Format:         nil,
 				InputBinding:   CommandLineBinding{},
 				Default:        nil,
-				Type: []Type{
+				Type: []InputType{
 					String{},
 				},
 			},
@@ -160,9 +159,12 @@ func TestLoadSimpleWf(t *testing.T) {
 				Doc:        "",
 				Streamable: false,
 				LinkMerge:  0,
-				Type: []Type{
-					ArrayType{
-						Items: FileType{},
+				Type: []OutputType{
+					OutputArray{
+						Items: []OutputType{
+							FileType{},
+						},
+						OutputBinding: CommandOutputBinding{},
 					},
 				},
 				SecondaryFiles: nil,
@@ -176,7 +178,7 @@ func TestLoadSimpleWf(t *testing.T) {
 				Doc:        "",
 				Streamable: false,
 				LinkMerge:  0,
-				Type: []Type{
+				Type: []OutputType{
 					FileType{},
 				},
 				SecondaryFiles: nil,
@@ -212,7 +214,7 @@ func TestLoadSimpleWf(t *testing.T) {
 							Label:      "",
 							Doc:        "doc1\ndoc2",
 							Streamable: false,
-							Type: []Type{
+							Type: []OutputType{
 								FileType{},
 							},
 							SecondaryFiles: []Expression{".foo"},
@@ -228,9 +230,12 @@ func TestLoadSimpleWf(t *testing.T) {
 							Label:      "",
 							Doc:        "docstring",
 							Streamable: false,
-							Type: []Type{
-								ArrayType{
-									Items: FileType{},
+							Type: []OutputType{
+								OutputArray{
+									Items: []OutputType{
+										FileType{},
+									},
+									OutputBinding: CommandOutputBinding{},
 								},
 							},
 							SecondaryFiles: []Expression{".fai", ".bai"},
@@ -248,7 +253,7 @@ func TestLoadSimpleWf(t *testing.T) {
 							LoadContents:  false,
 							Position:      0,
 							Prefix:        "",
-							Separate:      false,
+							Separate:      true,
 							ItemSeparator: "",
 							ValueFrom:     "date\ntar cf hello.tar Hello.java\ndate\n",
 							ShellQuote:    false,
@@ -357,7 +362,7 @@ func TestLoadSimpleWf(t *testing.T) {
 
 	if !reflect.DeepEqual(d, e) {
 		t.Error("different docs")
-		diff := deep.Equal(d, e)
+		diff := pretty.Diff(d, e)
 		for _, di := range diff {
 			t.Log(di)
 		}
@@ -398,28 +403,34 @@ func TestLoadCltAll(t *testing.T) {
 		Inputs: []CommandInput{
 			{
 				ID:   "tarfile",
-				Type: []Type{FileType{}},
+				Type: []InputType{FileType{}},
 				InputBinding: CommandLineBinding{
 					Position: 1,
 				},
 			},
 			{
 				ID:   "extractfile",
-				Type: []Type{String{}},
+				Type: []InputType{String{}},
 				InputBinding: CommandLineBinding{
 					Position: 2,
 				},
 			},
 			{
 				ID:   "nullablefile",
-				Type: []Type{Null{}, String{}},
+				Type: []InputType{Null{}, String{}},
 				InputBinding: CommandLineBinding{
 					Position: 2,
 				},
 			},
 			{
-				ID:   "list",
-				Type: []Type{ArrayType{String{}}},
+				ID: "list",
+				Type: []InputType{
+					InputArray{
+						Items: []InputType{
+							String{},
+						},
+					},
+				},
 				InputBinding: CommandLineBinding{
 					Position:      3,
 					ItemSeparator: ",",
@@ -428,52 +439,70 @@ func TestLoadCltAll(t *testing.T) {
 				},
 			},
 			{
-				ID:   "list2",
-				Type: []Type{ArrayType{String{}}},
+				ID: "list2",
+				Type: []InputType{
+					InputArray{
+						Items: []InputType{
+							String{},
+						},
+					},
+				},
 			},
 			{
 				ID:   "optional_file",
-				Type: []Type{FileType{}, Null{}},
+				Type: []InputType{FileType{}, Null{}},
 			},
 			{
 				ID:   "flag",
-				Type: []Type{Boolean{}},
+				Type: []InputType{Boolean{}},
 			},
 			{
 				ID:   "num",
-				Type: []Type{Int{}},
+				Type: []InputType{Int{}},
 			},
 		},
 		Outputs: []CommandOutput{
 			{
 				ID:   "output1",
-				Type: []Type{Stdout{}},
+				Type: []OutputType{Stdout{}},
 			},
 			{
 				ID:   "error1",
-				Type: []Type{Stderr{}},
+				Type: []OutputType{Stderr{}},
 			},
 			{
 				ID:   "example_out",
-				Type: []Type{FileType{}},
+				Type: []OutputType{FileType{}},
 				OutputBinding: CommandOutputBinding{
 					Glob: []Expression{"$(inputs.extractfile)"},
 				},
 			},
 			{
-				ID:   "arrayoutput",
-				Type: []Type{ArrayType{FileType{}}},
+				ID: "arrayoutput",
+				Type: []OutputType{
+					OutputArray{
+						Items: []OutputType{
+							String{},
+						},
+					},
+				},
 			},
 			{
-				ID:   "arrayoutput2",
-				Type: []Type{ArrayType{String{}}},
+				ID: "arrayoutput2",
+				Type: []OutputType{
+					OutputArray{
+						Items: []OutputType{
+							String{},
+						},
+					},
+				},
 			},
 		},
 	}
 
 	if !reflect.DeepEqual(c, e) {
 		t.Error("different docs")
-		diff := deep.Equal(c, e)
+		diff := pretty.Diff(c, e)
 		for _, d := range diff {
 			t.Log(d)
 		}

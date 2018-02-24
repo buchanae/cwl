@@ -1,16 +1,5 @@
 package cwl
 
-type Hint interface {
-	hint()
-}
-
-type Requirement interface {
-	requirement()
-}
-type WorkflowRequirement interface {
-	wfrequirement()
-}
-
 type DockerRequirement struct {
 	Pull            string `cwl:"dockerPull"`
 	Load            string `cwl:"dockerLoad"`
@@ -43,6 +32,7 @@ type InlineJavascriptRequirement struct {
 	ExpressionLib []string
 }
 
+type InputSchema struct{}
 type SchemaDefRequirement struct {
 	Types []InputSchema
 }
@@ -77,30 +67,3 @@ type ScatterFeatureRequirement struct{}
 type MultipleInputFeatureRequirement struct{}
 
 type StepInputExpressionRequirement struct{}
-
-// TODO how many of these could legitimately be used
-//      as a hint?
-func (DockerRequirement) hint()                      {}
-func (DockerRequirement) requirement()               {}
-func (ResourceRequirement) hint()                    {}
-func (ResourceRequirement) requirement()             {}
-func (EnvVarRequirement) hint()                      {}
-func (EnvVarRequirement) requirement()               {}
-func (ShellCommandRequirement) hint()                {}
-func (ShellCommandRequirement) requirement()         {}
-func (InlineJavascriptRequirement) hint()            {}
-func (InlineJavascriptRequirement) requirement()     {}
-func (SchemaDefRequirement) hint()                   {}
-func (SchemaDefRequirement) requirement()            {}
-func (SoftwareRequirement) hint()                    {}
-func (SoftwareRequirement) requirement()             {}
-func (InitialWorkDirRequirement) hint()              {}
-func (InitialWorkDirRequirement) requirement()       {}
-func (SubworkflowFeatureRequirement) hint()          {}
-func (SubworkflowFeatureRequirement) requirement()   {}
-func (ScatterFeatureRequirement) hint()              {}
-func (ScatterFeatureRequirement) requirement()       {}
-func (MultipleInputFeatureRequirement) hint()        {}
-func (MultipleInputFeatureRequirement) requirement() {}
-func (StepInputExpressionRequirement) hint()         {}
-func (StepInputExpressionRequirement) requirement()  {}

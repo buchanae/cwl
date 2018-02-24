@@ -19,50 +19,7 @@ import (
 // the loader constructs a string describing the type
 // conversion being requested. the helper function
 // is the value.
-var l = &loader{
-	handlers: map[string]handler{
-		"mapping -> []cwl.CommandInput":   loadInputsMapping,
-		"sequence -> []cwl.CommandInput":  loadInputsSeq,
-		"sequence -> []cwl.CommandOutput": loadOutputsSeq,
-		"mapping -> []cwl.CommandOutput":  loadOutputsMapping,
-		"scalar -> cwl.CommandOutput":     loadOutputScalar,
-		"mapping -> []cwl.Hint":           loadHintsMapping,
-		"mapping -> cwl.Hint":             loadReqMapping,
-
-		"sequence -> []cwl.Requirement": loadRequirementsSeq,
-		"mapping -> []cwl.Requirement":  loadRequirementsMapping,
-		"mapping -> cwl.Requirement":    loadReqMapping,
-
-		"mapping -> cwl.Type":   loadTypeMapping,
-		"scalar -> cwl.Type":    loadTypeScalar,
-		"mapping -> []cwl.Type": loadTypeMappingSlice,
-		"scalar -> []cwl.Type":  loadTypeScalarSlice,
-
-		"mapping -> cwl.Any":               loadAny,
-		"scalar -> cwl.CommandLineBinding": loadBindingScalar,
-		"scalar -> []cwl.Expression":       loadExpressionScalarSlice,
-		"sequence -> []cwl.Expression":     loadExpressionSeq,
-
-		"mapping -> []cwl.WorkflowInput":  loadWorkflowInputs,
-		"mapping -> []cwl.WorkflowOutput": loadWorkflowOutputs,
-		"sequence -> string":              concatStringSeq,
-
-		"mapping -> []cwl.Step":        loadWorkflowStepMapping,
-		"scalar -> cwl.StepOutput":     loadStepOutputScalar,
-		"sequence -> []cwl.StepOutput": loadStepOutputSeq,
-
-		"sequence -> []cwl.StepInput": loadStepInputSeq,
-		"mapping -> []cwl.StepInput":  loadStepInputMap,
-		"mapping -> cwl.Document":     loadDoc,
-		"scalar -> cwl.Document":      loadDocumentRef,
-
-		"sequence -> []cwl.CommandLineBinding": loadCommandLineBindingSeq,
-		"sequence -> []string":                 loadStringSeq,
-	},
-}
-
-// handler defines the interface of a type coercion helper
-type handler func(l *loader, n node) (interface{}, error)
+var l = loader{}
 
 // loader helps deal with type coercion while loading a
 // CWL document, for example, dealing with the fact that
@@ -71,15 +28,16 @@ type handler func(l *loader, n node) (interface{}, error)
 // loader tries to detect obvious type coercions via reflect.
 // the non-obvious type coercions must have a registered
 // handler to do the work.
-type loader struct {
-	handlers map[string]handler
-}
+type loader struct{}
 
 // load is given a YAML node and a destination type,
 // e.g. yamlast.Mapping -> cwl.WorkflowInput.
 //
 // "t" must be a pointer
 func (l *loader) load(n node, t interface{}) error {
+	loaderTyp := reflect.TypeOf(l)
+	loaderVal := reflect.ValueOf(l)
+
 	// reflect the type and value of the destination.
 	typ := reflect.TypeOf(t).Elem()
 	val := reflect.ValueOf(t).Elem()
@@ -89,31 +47,35 @@ func (l *loader) load(n node, t interface{}) error {
 	nodeKind := "unknown"
 	switch n.Kind {
 	case yamlast.MappingNode:
-		nodeKind = "mapping"
+		nodeKind = "Mapping"
 	case yamlast.SequenceNode:
-		nodeKind = "sequence"
+		nodeKind = "Seq"
 	case yamlast.ScalarNode:
-		nodeKind = "scalar"
+		nodeKind = "Scalar"
 	default:
 		panic("unknown node kind")
 	}
 
 	// describes the type conversion being requested,
 	// in order to look up a registered handler.
-	handlerName := nodeKind + " -> " + typ.String()
+	typename := strings.Title(typ.Name())
+	if typ.Kind() == reflect.Slice {
+		typename = strings.Title(typ.Elem().Name())
+		typename += "Slice"
+	}
+	handlerName := nodeKind + "To" + typename
 
 	// look for a handler. if found, use it.
-	if handler, ok := l.handlers[handlerName]; ok {
-		res, err := handler(l, n)
-		if err != nil {
-			return err
+	if _, ok := loaderTyp.MethodByName(handlerName); ok {
+		m := loaderVal.MethodByName(handlerName)
+		nval := reflect.ValueOf(n)
+		outv := m.Call([]reflect.Value{nval})
+		errv := outv[1]
+		if !errv.IsNil() {
+			return errv.Interface().(error)
 		}
-		if res != nil {
-			if !reflect.TypeOf(res).AssignableTo(typ) {
-				panic("can't assign value from handler")
-			}
-			val.Set(reflect.ValueOf(res))
-		}
+		resv := outv[0]
+		val.Set(resv)
 		return nil
 	}
 

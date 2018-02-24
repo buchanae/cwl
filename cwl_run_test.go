@@ -11,25 +11,25 @@ func TestBuildCommand(t *testing.T) {
 		Inputs: []CommandInput{
 			{
 				ID:   "test1",
-				Type: []Type{String{}},
+				Type: []InputType{String{}},
 				InputBinding: CommandLineBinding{
 					Position: 3,
 				},
 			},
 			{
 				ID:   "test2",
-				Type: []Type{String{}},
+				Type: []InputType{String{}},
 				InputBinding: CommandLineBinding{
 					Position: 2,
 				},
 			},
 			{
 				ID:   "test3",
-				Type: []Type{String{}, Null{}},
+				Type: []InputType{String{}, Null{}},
 			},
 			{
 				ID:   "test4",
-				Type: []Type{String{}},
+				Type: []InputType{String{}},
 				InputBinding: CommandLineBinding{
 					Position: 3,
 					Prefix:   "-B",
@@ -37,7 +37,7 @@ func TestBuildCommand(t *testing.T) {
 			},
 			{
 				ID:   "test5",
-				Type: []Type{Int{}},
+				Type: []InputType{Int{}},
 				InputBinding: CommandLineBinding{
 					Position: 4,
 					Prefix:   "-C",
@@ -45,7 +45,7 @@ func TestBuildCommand(t *testing.T) {
 			},
 			{
 				ID:   "test6",
-				Type: []Type{Int{}},
+				Type: []InputType{Int{}},
 				InputBinding: CommandLineBinding{
 					Position: 5,
 					Prefix:   "-D",
@@ -54,7 +54,7 @@ func TestBuildCommand(t *testing.T) {
 			},
 			{
 				ID:   "test7",
-				Type: []Type{Boolean{}},
+				Type: []InputType{Boolean{}},
 				InputBinding: CommandLineBinding{
 					Position: 6,
 					Prefix:   "-E",
@@ -62,10 +62,18 @@ func TestBuildCommand(t *testing.T) {
 			},
 			{
 				ID:   "test8",
-				Type: []Type{Boolean{}},
+				Type: []InputType{Boolean{}},
 				InputBinding: CommandLineBinding{
 					Position: 7,
 					Prefix:   "-F",
+				},
+			},
+			{
+				ID:   "test9",
+				Type: []InputType{InputArray{Items: []InputType{String{}}}},
+				InputBinding: CommandLineBinding{
+					Position: 8,
+					Prefix:   "-G",
 				},
 			},
 		},
@@ -79,6 +87,9 @@ func TestBuildCommand(t *testing.T) {
 		"test6": "7",
 		"test7": "true",
 		"test8": "false",
+		"test9": []string{
+			"foo", "bar",
+		},
 	})
 	if err != nil {
 		t.Fatal(err)

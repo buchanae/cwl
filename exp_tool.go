@@ -25,5 +25,5 @@ type ExpressionToolOutput struct {
 	SecondaryFiles []Expression
 	Format         []Expression
 	OutputBinding  CommandOutputBinding
-	Type           []Type
+	Type           []OutputType
 }
