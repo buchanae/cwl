@@ -84,6 +84,13 @@ func TestStableMapOrder(t *testing.T) {
 	}
 }
 
+func TestLoadMC3Wf(t *testing.T) {
+	_, err := LoadFile("./examples/mc3-annotate.cwl")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLoadSimpleWf(t *testing.T) {
 	d, err := LoadFile("./examples/1st-workflow.cwl")
 	if err != nil {
