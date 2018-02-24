@@ -81,13 +81,13 @@ func loadReqByName(l *loader, name string, n node) (interface{}, error) {
 	case "softwarerequirement":
 	case "initialworkdirrequirement":
 	case "subworkflowfeaturerequirement":
-    return SubworkflowFeatureRequirement{}, nil
+		return SubworkflowFeatureRequirement{}, nil
 	case "scatterfeaturerequirement":
-    return ScatterFeatureRequirement{}, nil
+		return ScatterFeatureRequirement{}, nil
 	case "multipleinputfeaturerequirement":
-    return MultipleInputFeatureRequirement{}, nil
+		return MultipleInputFeatureRequirement{}, nil
 	case "stepinputexpressionrequirement":
-    return StepInputExpressionRequirement{}, nil
+		return StepInputExpressionRequirement{}, nil
 	}
 	return nil, fmt.Errorf("unknown hint name: %s", name)
 }

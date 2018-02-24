@@ -56,7 +56,9 @@ func loadCommandLineBindingSeq(l *loader, n node) (interface{}, error) {
 		if c.Kind != yamlast.MappingNode {
 			return nil, fmt.Errorf("unhandled command line binding type")
 		}
-		clb := CommandLineBinding{}
+		clb := CommandLineBinding{
+			Separate: true,
+		}
 		err := l.load(c, &clb)
 		if err != nil {
 			return nil, err
@@ -117,10 +119,9 @@ func loadTypeScalarSlice(l *loader, n node) (interface{}, error) {
 
 	if strings.HasSuffix(n.Value, "?") {
 		name := strings.TrimSuffix(n.Value, "?")
-		name = strings.ToLower(name)
-		t, ok := TypesByLowercaseName[name]
+		t, ok := GetTypeByName(name)
 		if ok {
-			return []Type{t.(Type), Null}, nil
+			return []Type{t.(Type), Null{}}, nil
 		}
 	}
 
@@ -136,17 +137,21 @@ func loadTypeScalarSlice(l *loader, n node) (interface{}, error) {
 
 // TODO is "string[]?" acceptable?
 func loadTypeScalar(l *loader, n node) (interface{}, error) {
-	if strings.HasSuffix(n.Value, "[]") {
-		name := strings.TrimSuffix(n.Value, "[]")
-		if t, ok := TypesByLowercaseName[strings.ToLower(name)]; ok {
+	name := n.Value
+
+	if strings.HasSuffix(name, "[]") {
+		name := strings.TrimSuffix(name, "[]")
+		t, ok := GetTypeByName(name)
+		if ok {
 			return ArrayType{Items: t}, nil
 		}
 	}
 
-	name := strings.ToLower(n.Value)
-	if t, ok := TypesByLowercaseName[name]; ok {
+	t, ok := GetTypeByName(name)
+	if ok {
 		return t, nil
 	}
+	// TODO should convert an unknown scalar into an IRI type reference
 	return nil, fmt.Errorf("unhandled scalar type: %s", n.Value)
 }
 

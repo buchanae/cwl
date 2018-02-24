@@ -1,5 +1,9 @@
 package cwl
 
+import (
+	"strings"
+)
+
 type Any interface{}
 
 type Type interface {
@@ -25,57 +29,86 @@ const (
 	MergeFlattened
 )
 
-type Primitive string
-
-func (Primitive) cwltype() {}
-
-const (
-	Null          = Primitive("null")
-	Boolean       = Primitive("boolean")
-	Int           = Primitive("int")
-	Float         = Primitive("float")
-	Long          = Primitive("long")
-	Double        = Primitive("double")
-	String        = Primitive("string")
-	FileType      = Primitive("File")
-	DirectoryType = Primitive("Directory")
-	Stdout        = Primitive("stdout")
-	Stderr        = Primitive("stderr")
-)
-
-var TypesByLowercaseName = map[string]Type{
-	"null":      Null,
-	"boolean":   Boolean,
-	"int":       Int,
-	"long":      Long,
-	"float":     Float,
-	"double":    Double,
-	"string":    String,
-	"file":      FileType,
-	"directory": DirectoryType,
-	"stdout":    Stdout,
-	"stderr":    Stderr,
-}
-
+type Null struct{}
+type Boolean struct{}
+type Int struct{}
+type Float struct{}
+type Long struct{}
+type Double struct{}
+type String struct{}
+type FileType struct{}
+type DirectoryType struct{}
+type Stderr struct{}
+type Stdout struct{}
 type RecordType struct{}
-
-func (RecordType) cwltype() {}
-
-type NamedType struct {
-	Name string
-}
-
-func (NamedType) cwltype() {}
-
 type EnumType struct{}
-
-func (EnumType) cwltype() {}
 
 type ArrayType struct {
 	Items Type
 }
 
-func (ArrayType) cwltype() {}
+func (Null) cwltype()                {}
+func (Null) String() string          { return "null" }
+func (Boolean) cwltype()             {}
+func (Boolean) String() string       { return "boolean" }
+func (Int) cwltype()                 {}
+func (Int) String() string           { return "int" }
+func (Float) cwltype()               {}
+func (Float) String() string         { return "float" }
+func (Long) cwltype()                {}
+func (Long) String() string          { return "long" }
+func (Double) cwltype()              {}
+func (Double) String() string        { return "double" }
+func (String) cwltype()              {}
+func (String) String() string        { return "string" }
+func (FileType) cwltype()            {}
+func (FileType) String() string      { return "file" }
+func (DirectoryType) cwltype()       {}
+func (DirectoryType) String() string { return "directory" }
+func (Stderr) cwltype()              {}
+func (Stderr) String() string        { return "stderr" }
+func (Stdout) cwltype()              {}
+func (Stdout) String() string        { return "stdout" }
+func (RecordType) cwltype()          {}
+func (RecordType) String() string    { return "record" }
+func (EnumType) cwltype()            {}
+func (EnumType) String() string      { return "enum" }
+func (ArrayType) cwltype()           {}
+func (ArrayType) String() string     { return "array" }
+
+func GetTypeByName(name string) (Type, bool) {
+	switch strings.ToLower(name) {
+	case "null":
+		return Null{}, true
+	case "boolean":
+		return Boolean{}, true
+	case "int":
+		return Int{}, true
+	case "long":
+		return Long{}, true
+	case "float":
+		return Float{}, true
+	case "double":
+		return Double{}, true
+	case "string":
+		return String{}, true
+	case "file":
+		return FileType{}, true
+	case "directory":
+		return DirectoryType{}, true
+	case "stdout":
+		return Stdout{}, true
+	case "stderr":
+		return Stderr{}, true
+	case "record":
+		return RecordType{}, true
+	case "array":
+		return ArrayType{}, true
+	case "enum":
+		return EnumType{}, true
+	}
+	return nil, false
+}
 
 type File struct {
 	Location       string

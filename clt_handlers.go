@@ -9,6 +9,7 @@ func loadOutputScalar(l *loader, n node) (interface{}, error) {
 func loadBindingScalar(l *loader, n node) (interface{}, error) {
 	return CommandLineBinding{
 		ValueFrom: Expression(n.Value),
+		Separate:  true,
 	}, nil
 }
 

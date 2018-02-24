@@ -21,7 +21,7 @@ func TestLoadSimpleFile(t *testing.T) {
 		Inputs: []CommandInput{
 			{
 				ID:   "message",
-				Type: []Type{String},
+				Type: []Type{String{}},
 				InputBinding: CommandLineBinding{
 					Position: 1,
 				},
@@ -52,7 +52,7 @@ func TestLoadSimpleFile2(t *testing.T) {
 		Inputs: []CommandInput{
 			{
 				ID:   "tarfile",
-				Type: []Type{FileType},
+				Type: []Type{FileType{}},
 				InputBinding: CommandLineBinding{
 					Position: 1,
 				},
@@ -61,7 +61,7 @@ func TestLoadSimpleFile2(t *testing.T) {
 		Outputs: []CommandOutput{
 			{
 				ID:   "example_out",
-				Type: []Type{FileType},
+				Type: []Type{FileType{}},
 				OutputBinding: CommandOutputBinding{
 					Glob: []Expression{"hello.txt"},
 				},
@@ -114,7 +114,7 @@ func TestLoadSimpleWf(t *testing.T) {
 				InputBinding:   CommandLineBinding{},
 				Default:        nil,
 				Type: []Type{
-					FileType,
+					FileType{},
 				},
 			},
 			{
@@ -127,7 +127,7 @@ func TestLoadSimpleWf(t *testing.T) {
 				InputBinding:   CommandLineBinding{},
 				Default:        nil,
 				Type: []Type{
-					String,
+					String{},
 				},
 			},
 			{
@@ -162,7 +162,7 @@ func TestLoadSimpleWf(t *testing.T) {
 				LinkMerge:  0,
 				Type: []Type{
 					ArrayType{
-						Items: FileType,
+						Items: FileType{},
 					},
 				},
 				SecondaryFiles: nil,
@@ -177,7 +177,7 @@ func TestLoadSimpleWf(t *testing.T) {
 				Streamable: false,
 				LinkMerge:  0,
 				Type: []Type{
-					FileType,
+					FileType{},
 				},
 				SecondaryFiles: nil,
 				Format:         nil,
@@ -213,7 +213,7 @@ func TestLoadSimpleWf(t *testing.T) {
 							Doc:        "doc1\ndoc2",
 							Streamable: false,
 							Type: []Type{
-								FileType,
+								FileType{},
 							},
 							SecondaryFiles: []Expression{".foo"},
 							Format:         []Expression{"fmt"},
@@ -230,7 +230,7 @@ func TestLoadSimpleWf(t *testing.T) {
 							Streamable: false,
 							Type: []Type{
 								ArrayType{
-									Items: FileType,
+									Items: FileType{},
 								},
 							},
 							SecondaryFiles: []Expression{".fai", ".bai"},
@@ -398,28 +398,28 @@ func TestLoadCltAll(t *testing.T) {
 		Inputs: []CommandInput{
 			{
 				ID:   "tarfile",
-				Type: []Type{FileType},
+				Type: []Type{FileType{}},
 				InputBinding: CommandLineBinding{
 					Position: 1,
 				},
 			},
 			{
 				ID:   "extractfile",
-				Type: []Type{String},
+				Type: []Type{String{}},
 				InputBinding: CommandLineBinding{
 					Position: 2,
 				},
 			},
 			{
 				ID:   "nullablefile",
-				Type: []Type{Null, String},
+				Type: []Type{Null{}, String{}},
 				InputBinding: CommandLineBinding{
 					Position: 2,
 				},
 			},
 			{
 				ID:   "list",
-				Type: []Type{ArrayType{String}},
+				Type: []Type{ArrayType{String{}}},
 				InputBinding: CommandLineBinding{
 					Position:      3,
 					ItemSeparator: ",",
@@ -429,44 +429,44 @@ func TestLoadCltAll(t *testing.T) {
 			},
 			{
 				ID:   "list2",
-				Type: []Type{ArrayType{String}},
+				Type: []Type{ArrayType{String{}}},
 			},
 			{
 				ID:   "optional_file",
-				Type: []Type{FileType, Null},
+				Type: []Type{FileType{}, Null{}},
 			},
 			{
 				ID:   "flag",
-				Type: []Type{Boolean},
+				Type: []Type{Boolean{}},
 			},
 			{
 				ID:   "num",
-				Type: []Type{Int},
+				Type: []Type{Int{}},
 			},
 		},
 		Outputs: []CommandOutput{
 			{
 				ID:   "output1",
-				Type: []Type{Stdout},
+				Type: []Type{Stdout{}},
 			},
 			{
 				ID:   "error1",
-				Type: []Type{Stderr},
+				Type: []Type{Stderr{}},
 			},
 			{
 				ID:   "example_out",
-				Type: []Type{FileType},
+				Type: []Type{FileType{}},
 				OutputBinding: CommandOutputBinding{
 					Glob: []Expression{"$(inputs.extractfile)"},
 				},
 			},
 			{
 				ID:   "arrayoutput",
-				Type: []Type{ArrayType{FileType}},
+				Type: []Type{ArrayType{FileType{}}},
 			},
 			{
 				ID:   "arrayoutput2",
-				Type: []Type{ArrayType{String}},
+				Type: []Type{ArrayType{String{}}},
 			},
 		},
 	}
