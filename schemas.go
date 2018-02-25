@@ -2,10 +2,10 @@ package cwl
 
 type InputRecord struct {
 	Label  string
-	Fields []InputRecordField
+	Fields []InputField
 }
 
-type InputRecordField struct {
+type InputField struct {
 	Name         string
 	Doc          string
 	Label        string
@@ -27,10 +27,10 @@ type InputArray struct {
 
 type OutputRecord struct {
 	Label  string
-	Fields []OutputRecordField
+	Fields []OutputField
 }
 
-type OutputRecordField struct {
+type OutputField struct {
 	Name          string
 	Doc           string
 	Type          []OutputType

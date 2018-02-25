@@ -178,6 +178,11 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 		}
 
 		fv := val.FieldByIndex(field.Index)
+
+		if !fv.CanSet() {
+			continue
+		}
+
 		err := l.load(v, fv.Addr().Interface())
 		if err != nil {
 			return err

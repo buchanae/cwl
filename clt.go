@@ -28,10 +28,37 @@ type CommandLineBinding struct {
 	LoadContents  bool
 	Position      int
 	Prefix        string
-	Separate      bool
 	ItemSeparator string
 	ValueFrom     Expression
-	ShellQuote    bool
+
+	separate      bool
+	separateSet   bool
+	shellQuote    bool
+	shellQuoteSet bool
+}
+
+func (c *CommandLineBinding) Separate() bool {
+	if !c.separateSet {
+		return true
+	}
+	return c.separate
+}
+
+func (c *CommandLineBinding) SetSeparate(b bool) {
+	c.separate = b
+	c.separateSet = true
+}
+
+func (c *CommandLineBinding) ShellQuote() bool {
+	if !c.shellQuoteSet {
+		return true
+	}
+	return c.shellQuote
+}
+
+func (c *CommandLineBinding) SetShellQuote(b bool) {
+	c.shellQuote = b
+	c.shellQuoteSet = true
 }
 
 type CommandInput struct {

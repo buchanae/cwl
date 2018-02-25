@@ -9,7 +9,6 @@ func (l *loader) ScalarToCommandOutput(n node) (CommandOutput, error) {
 func (l *loader) ScalarToCommandLineBinding(n node) (CommandLineBinding, error) {
 	return CommandLineBinding{
 		ValueFrom: Expression(n.Value),
-		Separate:  true,
 	}, nil
 }
 

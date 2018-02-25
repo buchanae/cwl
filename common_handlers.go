@@ -52,9 +52,7 @@ func (l *loader) SeqToCommandLineBindingSlice(n node) ([]CommandLineBinding, err
 		if c.Kind != yamlast.MappingNode {
 			return nil, fmt.Errorf("unhandled command line binding type")
 		}
-		clb := CommandLineBinding{
-			Separate: true,
-		}
+		clb := CommandLineBinding{}
 		err := l.load(c, &clb)
 		if err != nil {
 			return nil, err
@@ -79,31 +77,58 @@ func (l *loader) SeqToString(n node) (string, error) {
 	return s, nil
 }
 
-func (l *loader) MappingToTypeSlice(n node) ([]Type, error) {
-	t, err := l.MappingToType(n)
+func (l *loader) MappingToInputTypeSlice(n node) ([]InputType, error) {
+	t, err := l.MappingToInputType(n)
 	if err != nil {
 		return nil, err
 	}
-	return []Type{t.(Type)}, nil
+	return []InputType{t}, nil
 }
 
-func (l *loader) MappingToType(n node) (Type, error) {
+func (l *loader) SeqToInputTypeSlice(n node) ([]InputType, error) {
+	var out []InputType
+	for _, c := range n.Children {
+		var t InputType
+		err := l.load(c, &t)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, t)
+	}
+	return out, nil
+}
+
+func (l *loader) MappingToInputType(n node) (InputType, error) {
 	typ := findKey(n, "type")
 	switch typ {
 	case "array":
-		i, ok := findValue(n, "items")
-		if !ok {
-			panic("")
-		}
 		a := InputArray{}
-		err := l.load(i, &a.Items)
+		err := l.load(n, &a)
 		return a, err
 	case "record":
-		return InputRecord{}, nil
+		rec := InputRecord{}
+		err := l.load(n, &rec)
+		return rec, err
 	case "enum":
 		return InputEnum{}, nil
 	}
 	panic("unknown type")
+}
+
+func (l *loader) MappingToInputFieldSlice(n node) ([]InputField, error) {
+	var fields []InputField
+
+	for _, kv := range itermap(n) {
+		k := kv.k
+		v := kv.v
+		i := InputField{Name: k}
+		err := l.load(v, &i)
+		if err != nil {
+			return nil, err
+		}
+		fields = append(fields, i)
+	}
+	return fields, nil
 }
 
 func (l *loader) ScalarToInputTypeSlice(n node) ([]InputType, error) {

@@ -253,10 +253,8 @@ func TestLoadSimpleWf(t *testing.T) {
 							LoadContents:  false,
 							Position:      0,
 							Prefix:        "",
-							Separate:      true,
 							ItemSeparator: "",
 							ValueFrom:     "date\ntar cf hello.tar Hello.java\ndate\n",
-							ShellQuote:    false,
 						},
 					},
 					Stdin:              "",
@@ -434,7 +432,6 @@ func TestLoadCltAll(t *testing.T) {
 				InputBinding: CommandLineBinding{
 					Position:      3,
 					ItemSeparator: ",",
-					Separate:      true,
 					Prefix:        "-A",
 				},
 			},

@@ -6,16 +6,32 @@ arguments:
   - valueFrom: "-Arg2"
 
 inputs:
+  nil:
+    type: "string?"
+    inputBinding:
+      prefix: "-Null"
+
   # TODO cwltool acts very strangely when these complex types
   #      start getting mixed together
   arrparam:
     inputBinding:
       position: 100
+      prefix: "-Zarr"
     type:
       type: array
       items: string
       inputBinding:
         position: 1000
+
+  flag:
+    type: boolean
+    inputBinding:
+      prefix: "-off"
+
+  onflag:
+    type: boolean
+    inputBinding:
+      prefix: "-on"
 
   zdependent_parameters:
     #inputBinding: {}

@@ -3,8 +3,13 @@ package cwl
 import (
 	"fmt"
 	"github.com/commondream/yamlast"
+	"github.com/kr/pretty"
 	"strings"
 )
+
+func debug(i ...interface{}) {
+	pretty.Println(i...)
+}
 
 // for brevity
 type node *yamlast.Node
@@ -24,7 +29,7 @@ func fmtNode(n *yamlast.Node, indent string) string {
 	case yamlast.ScalarNode:
 		kind = "Scalar"
 	}
-	return fmt.Sprintf("%-20s Line/col: %3d %3d %40q",
+	return fmt.Sprintf("%-30s Line/col: %3d %3d %40q",
 		indent+kind, n.Line+1, n.Column, n.Value) //, n.Implicit)
 }
 
