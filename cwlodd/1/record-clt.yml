@@ -34,8 +34,6 @@ inputs:
         fields:
           recA:
             type: string
-            inputBinding:
-              prefix: "-rz"
 
   flag:
     type: boolean

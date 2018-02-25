@@ -16,10 +16,16 @@ func TestBuildCommand(t *testing.T) {
 	debug(clt)
 
 	args, err := buildCommand(clt, map[string]interface{}{
-		"arrparam": []interface{}{"five", "six"},
-		"nil":      "foo",
-		"flag":     false,
-		"onflag":   true,
+		"arrparam": []interface{}{"five", "six", 1},
+		"arrrec": []interface{}{
+			map[string]interface{}{
+				"recA": "bar",
+				"recB": "baz",
+			},
+		},
+		"nil":    "foo",
+		"flag":   false,
+		"onflag": true,
 		"zdependent_parameters": map[string]interface{}{
 			"itemA": "one",
 			"itemB": "two",
@@ -28,6 +34,7 @@ func TestBuildCommand(t *testing.T) {
 			"itemC": "three",
 			"itemD": "four",
 		},
+		"extra": "foo",
 	})
 	if err != nil {
 		t.Fatal(err)

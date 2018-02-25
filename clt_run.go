@@ -11,7 +11,7 @@ func buildCommand(clt *CommandLineTool, vals map[string]interface{}) ([]string, 
 
 	for i, arg := range clt.Arguments {
 		// TODO evaluate expressions
-		b := &binding{arg, argType{}, string(arg.ValueFrom), sortKey{arg.Position, i}}
+		b := &binding{arg, argType{}, string(arg.ValueFrom), sortKey{arg.Position, i}, nil}
 		arr = append(arr, b)
 	}
 
@@ -20,7 +20,7 @@ func buildCommand(clt *CommandLineTool, vals map[string]interface{}) ([]string, 
 
 		b := walk(in, vals[in.ID], k)
 		if b == nil {
-			return nil, fmt.Errorf("no valid binding found for input: %s, %s", in.ID)
+			return nil, fmt.Errorf("no valid binding found for input: %s", in.ID)
 		}
 		arr = append(arr, b...)
 	}
@@ -33,6 +33,7 @@ func buildCommand(clt *CommandLineTool, vals map[string]interface{}) ([]string, 
 	for _, b := range arr {
 		args = append(args, b.args()...)
 	}
+	debug(args)
 
 	return args, nil
 }
@@ -61,7 +62,10 @@ Loop:
 				out = append(out, b...)
 			}
 			if out != nil {
-				out = append(out, &binding{clb, z, val, key})
+				nested := make(bindings, len(out))
+				copy(nested, out)
+				b := &binding{clb, z, val, key, nested}
+				out = append(out, b)
 				return out
 			}
 
@@ -88,6 +92,10 @@ Loop:
 				out = append(out, b...)
 			}
 			if out != nil {
+				nested := make(bindings, len(out))
+				copy(nested, out)
+				b := &binding{clb, z, val, key, nested}
+				out = append(out, b)
 				return out
 			}
 
@@ -95,57 +103,58 @@ Loop:
 			if val == nil {
 				continue Loop
 			}
-			_, err := cast.ToBoolE(val)
+			v, err := cast.ToBoolE(val)
 			if err != nil {
 				continue Loop
 			}
 			return bindings{
-				{clb, z, val, key},
+				{clb, z, v, key, nil},
 			}
 
 		case Int:
-			_, err := cast.ToInt32E(val)
+			v, err := cast.ToInt32E(val)
 			if err != nil {
 				continue Loop
 			}
 			return bindings{
-				{clb, z, val, key},
+				{clb, z, v, key, nil},
 			}
 
 		case Long:
-			_, err := cast.ToInt64E(val)
+			v, err := cast.ToInt64E(val)
 			if err != nil {
 				continue Loop
 			}
 			return bindings{
-				{clb, z, val, key},
+				{clb, z, v, key, nil},
 			}
 
 		case Float:
-			_, err := cast.ToFloat32E(val)
+			v, err := cast.ToFloat32E(val)
 			if err != nil {
 				continue Loop
 			}
 			return bindings{
-				{clb, z, val, key},
+				{clb, z, v, key, nil},
 			}
 
 		case Double:
-			_, err := cast.ToFloat64E(val)
+			v, err := cast.ToFloat64E(val)
 			if err != nil {
 				continue Loop
 			}
 			return bindings{
-				{clb, z, val, key},
+				{clb, z, v, key, nil},
 			}
 
 		case String:
-			if val == nil {
+			v, err := cast.ToStringE(val)
+			if err != nil {
 				continue Loop
 			}
 
 			return bindings{
-				{clb, z, val, key},
+				{clb, z, v, key, nil},
 			}
 
 		case FileType:
@@ -164,21 +173,11 @@ Loop:
 		for _, t := range types {
 			if z, ok := t.(Null); ok {
 				return bindings{
-					{clb, z, nil, key},
+					{clb, z, nil, key, nil},
 				}
 			}
 		}
 	}
 
 	return nil
-}
-
-func prefixArg(prefix, arg string, sep bool) []string {
-	if prefix == "" {
-		return []string{arg}
-	}
-	if sep {
-		return []string{prefix, arg}
-	}
-	return []string{prefix + arg}
 }

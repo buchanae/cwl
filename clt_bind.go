@@ -1,5 +1,9 @@
 package cwl
 
+import (
+	"fmt"
+)
+
 type bindable interface {
 	bindable() ([]InputType, CommandLineBinding)
 }
@@ -27,18 +31,25 @@ type binding struct {
 	// used to determine the ordering of command line flags.
 	// http://www.commonwl.org/v1.0/CommandLineTool.html#Input_binding
 	sortKey sortKey
+	nested  bindings
 }
 
 func (b *binding) args() []string {
 	switch b.typ.(type) {
+
 	case InputArray:
-		return []string{b.clb.Prefix}
+		// TODO item separator, and figure out what an array of records is
+		return prefixArg(b.clb.Prefix, "", b.clb.Separate())
+
+	case InputRecord:
+		return prefixArg(b.clb.Prefix, "", b.clb.Separate())
+
 	case argType:
-		strval := b.value.(string)
+		strval := fmt.Sprintf("%s", b.value)
 		return prefixArg(b.clb.Prefix, strval, b.clb.Separate())
 
 	case String, Int, Long, Float, Double:
-		strval := b.value.(string)
+		strval := fmt.Sprintf("%s", b.value)
 		return prefixArg(b.clb.Prefix, strval, b.clb.Separate())
 
 	case Boolean:
@@ -55,6 +66,24 @@ func (b *binding) args() []string {
 		return []string{b.clb.Prefix}
 	}
 	return nil
+}
+
+func prefixArg(prefix, arg string, sep bool) []string {
+	switch {
+	case prefix == "" && arg == "":
+		return nil
+
+	case prefix == "":
+		return []string{arg}
+
+	case arg == "":
+		return []string{prefix}
+
+	case sep:
+		return []string{prefix, arg}
+	default:
+		return []string{prefix + arg}
+	}
 }
 
 type sortKey []interface{}

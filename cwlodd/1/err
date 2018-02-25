@@ -1,0 +1,186 @@
+/Users/buchanae/src/github.com/buchanae/cwl/venv/bin/cwltool 1.0.20180224135035
+Resolved 'examples/record-clt.yml' to 'file:///Users/buchanae/src/github.com/buchanae/cwl/examples/record-clt.yml'
+examples/record-clt-inputs.yml:15:3: invalid field `itemD`, expected one of: 'itemC'
+examples/record-clt-inputs.yml:17:1: invalid field `extra`, expected one of: 'arrparam', 'arrrec', 'exclusive_parameters', 'flag', 'nil', 'onflag', 'zdependent_parameters'
+examples/record-clt-inputs.yml:15:3: invalid field `itemD`, expected one of: 'itemC'
+[job record-clt.yml] initializing from file:///Users/buchanae/src/github.com/buchanae/cwl/examples/record-clt.yml
+[job record-clt.yml] {
+    "nil": "foo", 
+    "arrparam": [
+        "five", 
+        "six"
+    ], 
+    "arrrec": [
+        {
+            "recA": "bar"
+        }
+    ], 
+    "flag": false, 
+    "onflag": true, 
+    "zdependent_parameters": {
+        "itemA": "one", 
+        "itemB": "two"
+    }, 
+    "exclusive_parameters": {
+        "itemC": "three", 
+        "itemD": "four"
+    }, 
+    "extra": "foo"
+}
+[job record-clt.yml] path mappings is {}
+[job record-clt.yml] command line bindings is [
+    {
+        "position": [
+            -1000000, 
+            0
+        ], 
+        "datum": "echo"
+    }, 
+    {
+        "valueFrom": "-Arg", 
+        "position": [
+            0, 
+            0
+        ]
+    }, 
+    {
+        "valueFrom": "-Arg2", 
+        "position": [
+            0, 
+            1
+        ]
+    }, 
+    {
+        "prefix": "-Zarr", 
+        "itemSeparator": ",", 
+        "position": [
+            0, 
+            "arrparam"
+        ], 
+        "datum": [
+            "five", 
+            "six"
+        ]
+    }, 
+    {
+        "position": [
+            0, 
+            "arrparam", 
+            0, 
+            -1000, 
+            "arrparam", 
+            "arrparam"
+        ], 
+        "datum": "five"
+    }, 
+    {
+        "position": [
+            0, 
+            "arrparam", 
+            1, 
+            -1000, 
+            "arrparam", 
+            "arrparam"
+        ], 
+        "datum": "six"
+    }, 
+    {
+        "prefix": "-Zrec", 
+        "itemSeparator": ",", 
+        "position": [
+            0, 
+            "arrrec"
+        ], 
+        "datum": [
+            {
+                "recA": "bar"
+            }
+        ]
+    }, 
+    {
+        "prefix": "-rz", 
+        "position": [
+            0, 
+            "arrrec", 
+            0, 
+            0, 
+            "recA"
+        ], 
+        "datum": "bar"
+    }, 
+    {
+        "prefix": "-off", 
+        "position": [
+            0, 
+            "flag"
+        ], 
+        "datum": false
+    }, 
+    {
+        "position": [
+            0, 
+            "itemA"
+        ], 
+        "prefix": "-A", 
+        "datum": "one"
+    }, 
+    {
+        "prefix": "-B", 
+        "position": [
+            0, 
+            "itemB"
+        ], 
+        "datum": "two"
+    }, 
+    {
+        "prefix": "-C", 
+        "position": [
+            0, 
+            "itemC"
+        ], 
+        "datum": "three"
+    }, 
+    {
+        "prefix": "-Null", 
+        "position": [
+            0, 
+            "nil"
+        ], 
+        "datum": "foo"
+    }, 
+    {
+        "prefix": "-on", 
+        "position": [
+            0, 
+            "onflag"
+        ], 
+        "datum": true
+    }
+]
+[job record-clt.yml] /private/tmp/docker_tmpfv1hFX$ echo \
+    -Arg \
+    -Arg2 \
+    -Zarr \
+    five,six \
+    five \
+    six \
+    -Zrec \
+    'ordereddict([('"'"'recA'"'"', '"'"'bar'"'"')])' \
+    -rz \
+    bar \
+    -A \
+    one \
+    -B \
+    two \
+    -C \
+    three \
+    -Null \
+    foo \
+    -on
+-Arg -Arg2 -Zarr five,six five six -Zrec ordereddict([('recA', 'bar')]) -rz bar -A one -B two -C three -Null foo -on
+[job record-clt.yml] completed success
+[job record-clt.yml] {}
+[job record-clt.yml] Removing input staging directory /private/var/folders/kw/m6dz8snx7h33ppbkbllnqt48bkhsqx/T/tmpRFTBXw
+[job record-clt.yml] Removing temporary directory /private/var/folders/kw/m6dz8snx7h33ppbkbllnqt48bkhsqx/T/tmpYNgpgD
+Removing intermediate output directory /private/tmp/docker_tmpfv1hFX
+Final process status is success

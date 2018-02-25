@@ -5,7 +5,6 @@ arrparam:
   - six
 arrrec:
   - recA: "bar"
-  - recA: "baz"
 flag: false
 onflag: true
 zdependent_parameters:
