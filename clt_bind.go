@@ -39,7 +39,6 @@ func (b *binding) args() []string {
 	switch b.typ.(type) {
 
 	case InputArray:
-		// TODO item separator, and figure out what an array of records is
 		strval := ""
 		if b.clb.ItemSeparator != "" {
 			var nested []string
@@ -60,6 +59,14 @@ func (b *binding) args() []string {
 	case String, Int, Long, Float, Double:
 		strval := fmt.Sprintf("%s", b.value)
 		return prefixArg(b.clb.Prefix, strval, b.clb.Separate())
+
+	case FileType:
+		f := b.value.(File)
+		return prefixArg(b.clb.Prefix, f.Path, b.clb.Separate())
+
+	case DirectoryType:
+		d := b.value.(File)
+		return prefixArg(b.clb.Prefix, d.Path, b.clb.Separate())
 
 	case Boolean:
 		bv := b.value.(bool)

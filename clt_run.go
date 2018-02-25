@@ -158,12 +158,22 @@ Loop:
 			}
 
 		case FileType:
-			// TODO need to get map and unmarshal (loader?)
-			//      into File struct
+			v, ok := val.(File)
+			if !ok {
+				continue Loop
+			}
+			return bindings{
+				{clb, z, v, key, nil},
+			}
 
 		case DirectoryType:
-			// TODO need to get map and unmarshal (loader?)
-			//      into Directory struct
+			v, ok := val.(Directory)
+			if !ok {
+				continue Loop
+			}
+			return bindings{
+				{clb, z, v, key, nil},
+			}
 
 		}
 	}

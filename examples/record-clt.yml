@@ -37,6 +37,16 @@ inputs:
             inputBinding:
               prefix: "-rz"
 
+  fp:
+    # TODO revisi this line, which is corrupt type: File:
+    type: File
+    inputBinding:
+      prefix: "-fp"
+
+  fpnil:
+    type: File?
+    inputBinding:
+      prefix: "-FPNIL"
   flag:
     type: boolean
     inputBinding:

@@ -23,6 +23,9 @@ func TestBuildCommand(t *testing.T) {
 				"recB": "baz",
 			},
 		},
+		"fp": File{
+			Path: "path/to/file.txt",
+		},
 		"nil":    "foo",
 		"flag":   false,
 		"onflag": true,
