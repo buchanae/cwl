@@ -2,6 +2,7 @@ package cwl
 
 import (
 	"fmt"
+	"strings"
 )
 
 type bindable interface {
@@ -39,7 +40,15 @@ func (b *binding) args() []string {
 
 	case InputArray:
 		// TODO item separator, and figure out what an array of records is
-		return prefixArg(b.clb.Prefix, "", b.clb.Separate())
+		strval := ""
+		if b.clb.ItemSeparator != "" {
+			var nested []string
+			for _, nb := range b.nested {
+				nested = append(nested, nb.args()...)
+			}
+			strval = strings.Join(nested, b.clb.ItemSeparator)
+		}
+		return prefixArg(b.clb.Prefix, strval, b.clb.Separate())
 
 	case InputRecord:
 		return prefixArg(b.clb.Prefix, "", b.clb.Separate())
