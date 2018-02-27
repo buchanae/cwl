@@ -2,6 +2,7 @@ package expr
 
 import (
 	"regexp"
+	"strings"
 	//"github.com/robertkrimen/otto"
 	//"github.com/buchanae/cwl"
 )
@@ -19,8 +20,21 @@ func Parse(e string) []*Part {
 		return nil
 	}
 
+	// javascript function expression
+	if strings.HasPrefix(e, "${") && strings.HasSuffix(e, "}") {
+		return []*Part{
+			{
+				Raw:   e,
+				Expr:  e[2 : len(e)-1],
+				Start: 0,
+				End:   len(e),
+			},
+		}
+	}
+
 	var parts []*Part
 
+	// parse parameter reference
 	last := 0
 	matches := rx.FindAllStringSubmatchIndex(e, -1)
 	for _, match := range matches {

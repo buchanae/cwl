@@ -109,6 +109,23 @@ func TestParseString(t *testing.T) {
 				{Raw: "$()", Expr: "", Start: 0, End: 3},
 			},
 		},
+		{
+			input: "${}",
+			expect: []*Part{
+				{Raw: "${}", Expr: "", Start: 0, End: 3},
+			},
+		},
+		{
+			input: "${foo bar $(bas)}",
+			expect: []*Part{
+				{
+					Raw:   "${foo bar $(bas)}",
+					Expr:  "foo bar $(bas)",
+					Start: 0,
+					End:   17,
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
