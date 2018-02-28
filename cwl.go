@@ -30,7 +30,7 @@ func Load(b []byte) (Document, error) {
 	}
 
 	// Dump the tree for debugging.
-	dump(yamlnode, "")
+	//dump(yamlnode, "")
 
 	// Being recursively processing the tree.
 	var d Document

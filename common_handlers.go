@@ -47,7 +47,7 @@ func (l *loader) SeqToStringSlice(n node) ([]string, error) {
 }
 
 func (l *loader) SeqToCommandLineBindingSlice(n node) ([]CommandLineBinding, error) {
-	b := []CommandLineBinding{}
+	var b []CommandLineBinding
 	for _, c := range n.Children {
 		if c.Kind != yamlast.MappingNode {
 			return nil, fmt.Errorf("unhandled command line binding type")
@@ -85,6 +85,14 @@ func (l *loader) MappingToInputTypeSlice(n node) ([]InputType, error) {
 	return []InputType{t}, nil
 }
 
+func (l *loader) MappingToOutputTypeSlice(n node) ([]OutputType, error) {
+	t, err := l.MappingToOutputType(n)
+	if err != nil {
+		return nil, err
+	}
+	return []OutputType{t}, nil
+}
+
 func (l *loader) SeqToInputTypeSlice(n node) ([]InputType, error) {
 	var out []InputType
 	for _, c := range n.Children {
@@ -111,6 +119,23 @@ func (l *loader) MappingToInputType(n node) (InputType, error) {
 		return rec, err
 	case "enum":
 		return InputEnum{}, nil
+	}
+	panic("unknown type")
+}
+
+func (l *loader) MappingToOutputType(n node) (OutputType, error) {
+	typ := findKey(n, "type")
+	switch typ {
+	case "array":
+		a := OutputArray{}
+		err := l.load(n, &a)
+		return a, err
+	case "record":
+		rec := OutputRecord{}
+		err := l.load(n, &rec)
+		return rec, err
+	case "enum":
+		return OutputEnum{}, nil
 	}
 	panic("unknown type")
 }
@@ -225,10 +250,36 @@ func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {
 	return []Expression{Expression(n.Value)}, nil
 }
 
+var inputTypesByName = map[string]InputType{}
+
+func init() {
+	ts := []InputType{
+		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
+		FileType{}, DirectoryType{}, InputRecord{}, InputArray{}, InputEnum{},
+	}
+	for _, t := range ts {
+		name := strings.ToLower(t.String())
+		inputTypesByName[name] = t
+	}
+}
+
 func getInputTypeByName(name string) (InputType, bool) {
 	name = strings.ToLower(name)
 	t, ok := inputTypesByName[name]
 	return t, ok
+}
+
+var outputTypesByName = map[string]OutputType{}
+
+func init() {
+	ts := []OutputType{
+		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
+		FileType{}, DirectoryType{}, OutputRecord{}, OutputArray{}, OutputEnum{},
+	}
+	for _, t := range ts {
+		name := strings.ToLower(t.String())
+		outputTypesByName[name] = t
+	}
 }
 
 func getOutputTypeByName(name string) (OutputType, bool) {

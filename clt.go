@@ -1,35 +1,35 @@
 package cwl
 
 type CommandLineTool struct {
-	Version string `cwl:"cwlVersion"`
-	ID      string
-	Label   string
-	Doc     string
+	Version string `json:"cwlVersion,omitempty",cwl:"cwlVersion"`
+	ID      string `json:"id,omitempty"`
+	Label   string `json:"label,omitempty"`
+	Doc     string `json:"doc,omitempty"`
 
-	Hints        []Hint
-	Requirements []Requirement
+	Hints        []Hint        `json:"hints,omitempty"`
+	Requirements []Requirement `json:"requirements,omitempty"`
 
-	Inputs  []CommandInput
-	Outputs []CommandOutput
+	Inputs  []CommandInput  `json:"inputs,omitempty"`
+	Outputs []CommandOutput `json:"outputs,omitempty"`
 
-	BaseCommand []string
-	Arguments   []CommandLineBinding
+	BaseCommand []string              `json:"baseCommand,omitempty"`
+	Arguments   []*CommandLineBinding `json:"arguments,omitempty"`
 
-	Stdin  Expression
-	Stderr Expression
-	Stdout Expression
+	Stdin  Expression `json:"stdin,omitempty"`
+	Stderr Expression `json:"stderr,omitempty"`
+	Stdout Expression `json:"stdout,omitempty"`
 
-	SuccessCodes       []int
-	TemporaryFailCodes []int
-	PermanentFailCodes []int
+	SuccessCodes       []int `json:"successCodes,omitempty"`
+	TemporaryFailCodes []int `json:",omitempty"`
+	PermanentFailCodes []int `json:",omitempty"`
 }
 
 type CommandLineBinding struct {
-	LoadContents  bool
-	Position      int
-	Prefix        string
-	ItemSeparator string
-	ValueFrom     Expression
+	LoadContents  bool       `json:"loadContents,omitempty"`
+	Position      int        `json:"position,omitempty"`
+	Prefix        string     `json:"prefix,omitempty"`
+	ItemSeparator string     `json:"itemSeparator,omitempty"`
+	ValueFrom     Expression `json:"valueFrom,omitempty"`
 
 	separate      bool
 	separateSet   bool
@@ -62,36 +62,36 @@ func (c *CommandLineBinding) SetShellQuote(b bool) {
 }
 
 type CommandInput struct {
-	ID         string
-	Label      string
-	Doc        string
-	Streamable bool
-	Default    Any
+	ID         string `json:"id,omitempty"`
+	Label      string `json:"label,omitempty"`
+	Doc        string `json:"doc,omitempty"`
+	Streamable bool   `json:"streamable,omitempty"`
+	Default    Any    `json:"default,omitempty"`
 
-	Type []InputType
+	Type []InputType `json:"type,omitempty"`
 
-	SecondaryFiles []Expression
-	Format         []Expression
+	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
+	Format         []Expression `json:"format,omitempty"`
 
-	InputBinding CommandLineBinding
+	InputBinding *CommandLineBinding `json:"inputBinding,omitempty"`
 }
 
 type CommandOutput struct {
-	ID         string
-	Label      string
-	Doc        string
-	Streamable bool
+	ID         string `json:"id,omitempty"`
+	Label      string `json:"label,omitempty"`
+	Doc        string `json:"doc,omitempty"`
+	Streamable bool   `json:"streamable,omitempty"`
 
-	Type []OutputType
+	Type []OutputType `json:"type,omitempty"`
 
-	SecondaryFiles []Expression
-	Format         []Expression
+	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
+	Format         []Expression `json:"format,omitempty"`
 
-	OutputBinding CommandOutputBinding
+	OutputBinding *CommandOutputBinding `json:"outputBinding,omitempty"`
 }
 
 type CommandOutputBinding struct {
-	Glob         []Expression
-	LoadContents bool
-	OutputEval   Expression
+	Glob         []Expression `json:"glob,omitempty"`
+	LoadContents bool         `json:"loadContents,omitempty"`
+	OutputEval   Expression   `json:"outputEval,omitempty"`
 }

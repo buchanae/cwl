@@ -25,6 +25,10 @@ type DocumentRef struct {
 	URL string
 }
 
+func (d DocumentRef) MarshalText() ([]byte, error) {
+	return []byte(d.URL), nil
+}
+
 type Null struct{}
 type Boolean struct{}
 type Int struct{}
@@ -44,8 +48,8 @@ func (Float) String() string         { return "float" }
 func (Long) String() string          { return "long" }
 func (Double) String() string        { return "double" }
 func (String) String() string        { return "string" }
-func (FileType) String() string      { return "file" }
-func (DirectoryType) String() string { return "directory" }
+func (FileType) String() string      { return "File" }
+func (DirectoryType) String() string { return "Directory" }
 func (Stderr) String() string        { return "stderr" }
 func (Stdout) String() string        { return "stdout" }
 func (InputRecord) String() string   { return "record" }
@@ -54,6 +58,18 @@ func (InputArray) String() string    { return "array" }
 func (OutputRecord) String() string  { return "record" }
 func (OutputEnum) String() string    { return "enum" }
 func (OutputArray) String() string   { return "array" }
+
+func (Null) MarshalText() ([]byte, error)          { return []byte("null"), nil }
+func (Boolean) MarshalText() ([]byte, error)       { return []byte("boolean"), nil }
+func (Int) MarshalText() ([]byte, error)           { return []byte("int"), nil }
+func (Float) MarshalText() ([]byte, error)         { return []byte("float"), nil }
+func (Long) MarshalText() ([]byte, error)          { return []byte("long"), nil }
+func (Double) MarshalText() ([]byte, error)        { return []byte("double"), nil }
+func (String) MarshalText() ([]byte, error)        { return []byte("string"), nil }
+func (FileType) MarshalText() ([]byte, error)      { return []byte("File"), nil }
+func (DirectoryType) MarshalText() ([]byte, error) { return []byte("Directory"), nil }
+func (Stderr) MarshalText() ([]byte, error)        { return []byte("stderr"), nil }
+func (Stdout) MarshalText() ([]byte, error)        { return []byte("stdout"), nil }
 
 type File struct {
 	Location       string
@@ -102,18 +118,6 @@ func (InputRecord) inputtype()   {}
 func (InputEnum) inputtype()     {}
 func (InputArray) inputtype()    {}
 
-var inputTypesByName = map[string]InputType{}
-
-func init() {
-	ts := []InputType{
-		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
-		FileType{}, DirectoryType{}, InputRecord{}, InputArray{}, InputEnum{},
-	}
-	for _, t := range ts {
-		inputTypesByName[t.String()] = t
-	}
-}
-
 type OutputType interface {
 	String() string
 	outputtype()
@@ -133,18 +137,6 @@ func (Stdout) outputtype()        {}
 func (OutputRecord) outputtype()  {}
 func (OutputEnum) outputtype()    {}
 func (OutputArray) outputtype()   {}
-
-var outputTypesByName = map[string]OutputType{}
-
-func init() {
-	ts := []OutputType{
-		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
-		FileType{}, DirectoryType{}, OutputRecord{}, OutputArray{}, OutputEnum{},
-	}
-	for _, t := range ts {
-		outputTypesByName[t.String()] = t
-	}
-}
 
 type Type interface {
 	cwltype()

@@ -1,74 +1,74 @@
 package cwl
 
 type Workflow struct {
-	Version string `cwl:"cwlVersion"`
-	ID      string
-	Label   string
-	Doc     string
+	Version string `json:"cwlVersion,omitempty",cwl:"cwlVersion"`
+	ID      string `json:"id,omitempty"`
+	Label   string `json:"label,omitempty"`
+	Doc     string `json:"doc,omitempty"`
 
-	Hints        []Hint
-	Requirements []Requirement
+	Hints        []Hint        `json:"hints,omitempty"`
+	Requirements []Requirement `json:"requirements,omitempty"`
 
-	Inputs  []WorkflowInput
-	Outputs []WorkflowOutput
-	Steps   []Step
+	Inputs  []WorkflowInput  `json:"inputs,omitempty"`
+	Outputs []WorkflowOutput `json:"outputs,omitempty"`
+	Steps   []Step           `json:"steps,omitempty"`
 }
 
 type WorkflowInput struct {
-	ID    string
-	Label string
+	ID    string `json:"id,omitempty"`
+	Label string `json:"label,omitempty"`
 	// TODO ensure that an array of strings can be loaded
-	Doc        string
-	Streamable bool
+	Doc        string `json:"doc,omitempty"`
+	Streamable bool   `json:"streamable,omitempty"`
 
-	SecondaryFiles []Expression
-	Format         []Expression
-	InputBinding   CommandLineBinding
-	Default        Any
-	Type           []InputType
+	SecondaryFiles []Expression        `json:"secondaryFiles,omitempty"`
+	Format         []Expression        `json:"format,omitempty"`
+	InputBinding   *CommandLineBinding `json:"inputBinding,omitempty"`
+	Default        Any                 `json:"default,omitempty"`
+	Type           []InputType         `json:"type,omitempty"`
 }
 
 type WorkflowOutput struct {
-	ID         string
-	Label      string
-	Doc        string
-	Streamable bool
-	LinkMerge  LinkMergeMethod
+	ID         string          `json:"id,omitempty"`
+	Label      string          `json:"label,omitempty"`
+	Doc        string          `json:"doc,omitempty"`
+	Streamable bool            `json:"streamable,omitempty"`
+	LinkMerge  LinkMergeMethod `json:"linkMerge,omitempty"`
 
-	Type           []OutputType
-	SecondaryFiles []Expression
-	Format         []Expression
+	Type           []OutputType `json:"type,omitempty"`
+	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
+	Format         []Expression `json:"format,omitempty"`
 
-	OutputBinding CommandOutputBinding
-	OutputSource  []string
+	OutputBinding *CommandOutputBinding `json:"outputBinding,omitempty"`
+	OutputSource  []string              `json:"outputSource,omitempty"`
 }
 
 type Step struct {
-	ID    string
-	Label string
-	Doc   string
+	ID    string `json:"id,omitempty"`
+	Label string `json:"label,omitempty"`
+	Doc   string `json:"doc,omitempty"`
 
-	Hints        []Hint
-	Requirements []Requirement
+	Hints        []Hint        `json:"hints,omitempty"`
+	Requirements []Requirement `json:"requirements,omitempty"`
 
-	In  []StepInput
-	Out []StepOutput
+	In  []StepInput  `json:"in,omitempty"`
+	Out []StepOutput `json:"out,omitempty"`
 
 	// TODO can be a file reference. need DocumentReference type.
-	Run Document
+	Run Document `json:"run,omitempty"`
 
-	Scatter       []string
-	ScatterMethod ScatterMethod
+	Scatter       []string      `json:"scatter,omitempty"`
+	ScatterMethod ScatterMethod `json:"scatterMethod,omitempty"`
 }
 
 type StepInput struct {
-	ID        string
-	Source    []string
-	LinkMerge LinkMergeMethod
-	Default   Any
-	ValueFrom Expression
+	ID        string          `json:"id,omitempty"`
+	Source    []string        `json:"source,omitempty"`
+	LinkMerge LinkMergeMethod `json:"linkMerge,omitempty"`
+	Default   Any             `json:"default,omitempty"`
+	ValueFrom Expression      `json:"valueFrom,omitempty"`
 }
 
 type StepOutput struct {
-	ID string
+	ID string `json:"id,omitempty"`
 }

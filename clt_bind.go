@@ -6,16 +6,16 @@ import (
 )
 
 type bindable interface {
-	bindable() ([]InputType, CommandLineBinding)
+	bindable() ([]InputType, *CommandLineBinding)
 }
 
-func (c CommandInput) bindable() ([]InputType, CommandLineBinding) {
+func (c CommandInput) bindable() ([]InputType, *CommandLineBinding) {
 	return c.Type, c.InputBinding
 }
-func (i InputArray) bindable() ([]InputType, CommandLineBinding) {
+func (i InputArray) bindable() ([]InputType, *CommandLineBinding) {
 	return i.Items, i.InputBinding
 }
-func (i InputField) bindable() ([]InputType, CommandLineBinding) {
+func (i InputField) bindable() ([]InputType, *CommandLineBinding) {
 	return i.Type, i.InputBinding
 }
 
@@ -23,7 +23,7 @@ func (i InputField) bindable() ([]InputType, CommandLineBinding) {
 // to a concrete input value. this information is used while building
 // command line args.
 type binding struct {
-	clb CommandLineBinding
+	clb *CommandLineBinding
 	// the bound type (resolved by matching the input value to one of many allowed types)
 	// can be nil, which means no matching type could be determined.
 	typ InputType

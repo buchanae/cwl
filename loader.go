@@ -162,6 +162,7 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 			f := typ.Field(i)
 
 			n := f.Name
+			// TODO try to use json instead
 			if alt, ok := f.Tag.Lookup("cwl"); ok {
 				n = alt
 			}
