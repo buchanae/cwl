@@ -4,21 +4,19 @@ type Any interface{}
 
 type Expression string
 
-type ScatterMethod int
+type ScatterMethod string
 
 const (
-	DotProduct ScatterMethod = iota
-	NestedCrossProduct
-	FlatCrossProduct
+	DotProduct         ScatterMethod = "dotproduct"
+	NestedCrossProduct               = "nested_crossproduct"
+	FlatCrossProduct                 = "flat_crossproduct"
 )
 
-// TODO should be a string, so that it serializes nicely
-type LinkMergeMethod int
+type LinkMergeMethod string
 
 const (
-	Unknown LinkMergeMethod = iota
-	MergeNested
-	MergeFlattened
+	MergeNested    LinkMergeMethod = "merge_nested"
+	MergeFlattened                 = "merge_flattened"
 )
 
 type DocumentRef struct {

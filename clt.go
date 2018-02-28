@@ -1,10 +1,10 @@
 package cwl
 
 type CommandLineTool struct {
-	Version string `json:"cwlVersion,omitempty",cwl:"cwlVersion"`
-	ID      string `json:"id,omitempty"`
-	Label   string `json:"label,omitempty"`
-	Doc     string `json:"doc,omitempty"`
+	CWLVersion string `json:"cwlVersion,omitempty"`
+	ID         string `json:"id,omitempty"`
+	Label      string `json:"label,omitempty"`
+	Doc        string `json:"doc,omitempty"`
 
 	Hints        []Hint        `json:"hints,omitempty"`
 	Requirements []Requirement `json:"requirements,omitempty"`
