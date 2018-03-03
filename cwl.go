@@ -43,3 +43,35 @@ func Load(b []byte) (Document, error) {
 	}
 	return nil, nil
 }
+
+func LoadInputValuesFile(p string) (InputValues, error) {
+	b, err := ioutil.ReadFile(p)
+	if err != nil {
+		return nil, err
+	}
+	return LoadInputValues(b)
+}
+
+func LoadInputValues(b []byte) (InputValues, error) {
+	// Parse the YAML into an AST
+	yamlnode, err := yamlast.Parse(b)
+	if err != nil {
+		return nil, fmt.Errorf("parsing yaml: %s", err)
+	}
+
+	if yamlnode == nil {
+		return nil, fmt.Errorf("empty yaml")
+	}
+
+	if len(yamlnode.Children) > 1 {
+		return nil, fmt.Errorf("unexpected child count")
+	}
+
+	v := InputValues{}
+	err = l.load(yamlnode.Children[0], &v)
+
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}

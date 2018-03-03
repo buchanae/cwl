@@ -1,7 +1,5 @@
 package cwl
 
-type Any interface{}
-
 type Expression string
 
 type ScatterMethod string
@@ -68,27 +66,6 @@ func (FileType) MarshalText() ([]byte, error)      { return []byte("File"), nil 
 func (DirectoryType) MarshalText() ([]byte, error) { return []byte("Directory"), nil }
 func (Stderr) MarshalText() ([]byte, error)        { return []byte("stderr"), nil }
 func (Stdout) MarshalText() ([]byte, error)        { return []byte("stdout"), nil }
-
-type File struct {
-	Location       string
-	Path           string
-	Basename       string
-	Dirname        string
-	Nameroot       string
-	Nameext        string
-	Checksum       string
-	Size           int64
-	Format         string
-	Contents       string
-	SecondaryFiles []Expression
-}
-
-type Directory struct {
-	Location string
-	Path     string
-	Basename string
-	Listing  []string
-}
 
 type Document interface {
 	doctype()

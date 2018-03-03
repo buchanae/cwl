@@ -8,7 +8,8 @@ import (
 
 // BuildCommand builds command line arguments for an invocation a tool
 // given a set of input values.
-func BuildCommand(clt *CommandLineTool, vals map[string]interface{}) ([]string, error) {
+func BuildCommand(clt *CommandLineTool, vals InputValues) ([]string, error) {
+	debug(vals)
 	args := bindings{}
 
 	// Add "arguments"
@@ -75,7 +76,7 @@ Loop:
 		switch z := t.(type) {
 
 		case InputArray:
-			vals, ok := val.([]interface{})
+			vals, ok := val.([]InputValue)
 			if !ok {
 				// input value is not an array.
 				continue Loop
@@ -102,7 +103,7 @@ Loop:
 			}
 
 		case InputRecord:
-			vals, ok := val.(map[string]interface{})
+			vals, ok := val.(map[string]InputValue)
 			if !ok {
 				// input value is not a record.
 				continue Loop
@@ -192,6 +193,7 @@ Loop:
 			}
 
 		case FileType:
+			debug(val)
 			v, ok := val.(File)
 			if !ok {
 				continue Loop

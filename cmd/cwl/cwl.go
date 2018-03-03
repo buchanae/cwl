@@ -3,7 +3,6 @@ package main
 import (
   "fmt"
   "encoding/json"
-  "io/ioutil"
   "github.com/buchanae/cwl"
   "os"
   "github.com/spf13/cobra"
@@ -58,18 +57,7 @@ func init() {
 }
 
 func build(path, inputsPath string) error {
-  fh, err := os.Open(inputsPath)
-  if err != nil {
-    return err
-  }
-
-  b, err := ioutil.ReadAll(fh)
-  if err != nil {
-    return err
-  }
-
-  vals := map[string]interface{}{}
-  err = json.Unmarshal(b, &vals)
+  vals, err := cwl.LoadInputValuesFile(inputsPath)
   if err != nil {
     return err
   }

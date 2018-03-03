@@ -5,7 +5,7 @@
     "recB": "baz"
   }],
   "fp": {
-    "type": "File",
+    "class": "File",
     "path": "path/to/file.txt"
   },
   "nil": "foo",

@@ -3,7 +3,7 @@ class: CommandLineTool
 baseCommand: echo
 inputs:
   message:
-    type: string
+    type: File
     inputBinding:
       position: 1
 outputs: []
