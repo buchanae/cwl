@@ -2,6 +2,7 @@ package cwl
 
 type CommandLineTool struct {
 	CWLVersion string `json:"cwlVersion,omitempty"`
+	Class      string `json:"class,omitempty"`
 	ID         string `json:"id,omitempty"`
 	Label      string `json:"label,omitempty"`
 	Doc        string `json:"doc,omitempty"`

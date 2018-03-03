@@ -6,10 +6,32 @@ func (l *loader) ScalarToCommandOutput(n node) (CommandOutput, error) {
 	return o, err
 }
 
-func (l *loader) ScalarToCommandLineBinding(n node) (CommandLineBinding, error) {
-	return CommandLineBinding{
+func (l *loader) ScalarToCommandLineBindingPtr(n node) (*CommandLineBinding, error) {
+	return &CommandLineBinding{
 		ValueFrom: Expression(n.Value),
 	}, nil
+}
+
+func (l *loader) MappingToCommandLineBindingPtr(n node) (*CommandLineBinding, error) {
+	clb := CommandLineBinding{}
+	err := l.load(n, &clb)
+	if err != nil {
+		return nil, err
+	}
+	return &clb, nil
+}
+
+func (l *loader) SeqToCommandLineBindingPtrSlice(n node) ([]*CommandLineBinding, error) {
+	var clbs []*CommandLineBinding
+	for _, c := range n.Children {
+		clb := CommandLineBinding{}
+		err := l.load(c, &clb)
+		if err != nil {
+			return nil, err
+		}
+		clbs = append(clbs, &clb)
+	}
+	return clbs, nil
 }
 
 func (l *loader) SeqToCommandInputSlice(n node) ([]CommandInput, error) {

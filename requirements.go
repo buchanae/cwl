@@ -1,69 +1,85 @@
 package cwl
 
 type DockerRequirement struct {
-	Pull            string `cwl:"dockerPull"`
-	Load            string `cwl:"dockerLoad"`
-	File            string `cwl:"dockerFile"`
-	Import          string `cwl:"dockerImport"`
-	ImageID         string `cwl:"dockerImageID"`
-	OutputDirectory string `cwl:"dockerOutputDirectory"`
+	Class           string `json:"class"`
+	Pull            string `json:"dockerPull"`
+	Load            string `json:"dockerLoad"`
+	File            string `json:"dockerFile"`
+	Import          string `json:"dockerImport"`
+	ImageID         string `json:"dockerImageID"`
+	OutputDirectory string `json:"dockerOutputDirectory"`
 }
 
 type ResourceRequirement struct {
-	CoresMin Expression
-	// TODO this is incorrectly denoted in the spec as int | string | expression
-	CoresMax  Expression
-	RAMMin    Expression
-	RAMMax    Expression
-	TmpDirMin Expression
-	TmpDirMax Expression
-	OutDirMin Expression
-	OutDirMax Expression
+	Class     string     `json:"class"`
+	CoresMin  Expression `json:"coresMin"`
+	CoresMax  Expression `json:"coresMax"`
+	RAMMin    Expression `json:"ramMin"`
+	RAMMax    Expression `json:"ramMax"`
+	TmpDirMin Expression `json:"tmpdirMin"`
+	TmpDirMax Expression `json:"tmpdirMax"`
+	OutDirMin Expression `json:"outdirMin"`
+	OutDirMax Expression `json:"outdirMax"`
 }
 
 type EnvVarRequirement struct {
-	Class  string
-	EnvDef map[string]Expression
+	Class  string                `json:"class"`
+	EnvDef map[string]Expression `json:"envDef"`
 }
 
-type ShellCommandRequirement struct{}
+type ShellCommandRequirement struct {
+	Class string `json:"class"`
+}
 
 type InlineJavascriptRequirement struct {
-	ExpressionLib []string
+	Class         string   `json:"class"`
+	ExpressionLib []string `json:"expressionLib"`
 }
 
 type InputSchema struct{}
 type SchemaDefRequirement struct {
-	Types []InputSchema
+	Class string        `json:"class"`
+	Types []InputSchema `json:"types"`
 }
 
 type SoftwareRequirement struct {
-	Packages []SoftwarePackage
+	Class    string            `json:"class"`
+	Packages []SoftwarePackage `json:"packages"`
 }
 
 type SoftwarePackage struct {
-	Package string
-	Version []string
-	Specs   []string
+	Class   string   `json:"class"`
+	Package string   `json:"package"`
+	Version []string `json:"version"`
+	Specs   []string `json:"specs"`
 }
 
 type InitialWorkDirListing struct{}
 
 type InitialWorkDirRequirement struct {
+	Class string `json:"class"`
 	// TODO the most difficult union type
-	Listing InitialWorkDirListing
+	Listing InitialWorkDirListing `json:"listing"`
 }
 
 type Dirent struct {
-	Entry     Expression
-	Entryname Expression
-	Writable  bool
+	Entry     Expression `json:"entry"`
+	Entryname Expression `json:"entryname"`
+	Writable  bool       `json:"writeable"`
 }
 
-type SubworkflowFeatureRequirement struct{}
+type SubworkflowFeatureRequirement struct {
+	Class string `json:"class"`
+}
 
-type ScatterFeatureRequirement struct{}
+type ScatterFeatureRequirement struct {
+	Class string `json:"class"`
+}
 
-type MultipleInputFeatureRequirement struct{}
+type MultipleInputFeatureRequirement struct {
+	Class string `json:"class"`
+}
 
-type StepInputExpressionRequirement struct{}
+type StepInputExpressionRequirement struct {
+	Class string `json:"class"`
+}

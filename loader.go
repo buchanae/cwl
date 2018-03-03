@@ -35,6 +35,14 @@ type loader struct{}
 //
 // "t" must be a pointer
 func (l *loader) load(n node, t interface{}) error {
+
+	// only pointers can be set to new values by the loader.
+	if reflect.TypeOf(t).Kind() != reflect.Ptr {
+		return fmt.Errorf("load() must be called with a pointer")
+	}
+
+	// get the reflected type of the loader in order to look up
+	// handler methods, e.g. loader.MappingToWorkflowInput()
 	loaderTyp := reflect.TypeOf(l)
 	loaderVal := reflect.ValueOf(l)
 
@@ -79,9 +87,9 @@ func (l *loader) load(n node, t interface{}) error {
 		return nil
 	}
 
-	// try to handle obvious conversions that don't
-	// have a specific handler.
-	if n.Kind == yamlast.ScalarNode {
+	switch {
+	// Try to handle obvious scalar conversions automatically.
+	case n.Kind == yamlast.ScalarNode:
 		vt := reflect.TypeOf(n.Value)
 
 		if vt.AssignableTo(typ) {
@@ -96,11 +104,8 @@ func (l *loader) load(n node, t interface{}) error {
 				return nil
 			}
 		}
-	}
 
-	switch {
-	// Try to automatically load a YAML mapping into a struct type,
-	// without a defined handler.
+	// Try to automatically load a YAML mapping into a struct.
 	case typ.Kind() == reflect.Struct && n.Kind == yamlast.MappingNode:
 		return l.loadMappingToStruct(n, t)
 
@@ -108,20 +113,32 @@ func (l *loader) load(n node, t interface{}) error {
 		// without a defined handler.
 	case typ.Kind() == reflect.Slice && n.Kind == yamlast.SequenceNode:
 		for _, c := range n.Children {
-			item := reflect.New(typ.Elem())
+			el := typ.Elem()
+			if el.Kind() == reflect.Ptr {
+				el = el.Elem()
+			}
+
+			item := reflect.New(el)
 			err := l.load(c, item.Interface())
 			if err != nil {
 				return err
 			}
-			val.Set(reflect.Append(val, item.Elem()))
+
+			if typ.Elem().Kind() == reflect.Ptr {
+				val.Set(reflect.Append(val, item))
+			} else {
+				val.Set(reflect.Append(val, item.Elem()))
+			}
 		}
+		return nil
 	}
 
 	// No handler found.
-	fmt.Println()
-	pretty.Println("output rec", t)
-	fmt.Println("input node", fmtNode(n, ""))
-	return fmt.Errorf("unhandled type: %s", handlerName)
+	return fmt.Errorf("unhandled type:\n  %s\n  %s\n  %s\n  %s",
+		handlerName,
+		fmtNode(n, ""),
+		typ,
+		pretty.Sprint("output rec", t))
 }
 
 // loadMappingToStruct essentially unmarshals a YAML mapping
@@ -162,9 +179,9 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 			f := typ.Field(i)
 
 			n := f.Name
-			// TODO try to use json instead
-			if alt, ok := f.Tag.Lookup("cwl"); ok {
-				n = alt
+			if alt, ok := f.Tag.Lookup("json"); ok {
+				sp := strings.Split(alt, ",")
+				n = sp[0]
 			}
 
 			if strings.ToLower(n) == name {
@@ -176,6 +193,7 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 
 		if !found {
 			continue
+			//return fmt.Errorf("struct field not found: %s", name)
 		}
 
 		fv := val.FieldByIndex(field.Index)
@@ -184,7 +202,15 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 			continue
 		}
 
-		err := l.load(v, fv.Addr().Interface())
+		var val reflect.Value
+		if field.Type.Kind() == reflect.Ptr {
+			val = reflect.New(field.Type.Elem())
+			fv.Set(val)
+		} else {
+			val = fv.Addr()
+		}
+
+		err := l.load(v, val.Interface())
 		if err != nil {
 			return err
 		}

@@ -59,7 +59,7 @@ func findValue(n node, key string) (node, bool) {
 
 func findKey(n node, key string) string {
 	if v, ok := findValue(n, key); ok {
-		return strings.ToLower(v.Value)
+		return v.Value
 	}
 	return ""
 }

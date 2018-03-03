@@ -9,7 +9,7 @@ import (
 func (l *loader) MappingToDocument(n node) (Document, error) {
 
 	class := findKey(n, "class")
-	switch class {
+	switch strings.ToLower(class) {
 
 	case "commandlinetool":
 		t := &CommandLineTool{}
@@ -234,16 +234,6 @@ func (l *loader) ScalarToOutputType(n node) (OutputType, error) {
 	}
 	// TODO should convert an unknown node into an IRI type reference
 	return nil, fmt.Errorf("unhandled scalar type: %s", n.Value)
-}
-
-func (l *loader) SeqToExpressionSlice(n node) ([]Expression, error) {
-	exprs := []Expression{}
-	for _, c := range n.Children {
-		e := Expression("")
-		l.load(c, &e)
-		exprs = append(exprs, e)
-	}
-	return exprs, nil
 }
 
 func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {
