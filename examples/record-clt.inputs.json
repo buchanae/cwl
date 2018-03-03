@@ -1,0 +1,23 @@
+{
+  "arrparam": ["five", "six", 1],
+  "arrrec": [{
+    "recA": "bar",
+    "recB": "baz"
+  }],
+  "fp": {
+    "type": "File",
+    "path": "path/to/file.txt"
+  },
+  "nil": "foo",
+  "flag": false,
+  "onflag": true,
+  "zdependent_parameters": {
+    "itemA": "one",
+    "itemB": "two"
+  },
+  "exclusive_parameters": {
+    "itemC": "three",
+    "itemD": "four"
+  },
+  "extra": "foo"
+}

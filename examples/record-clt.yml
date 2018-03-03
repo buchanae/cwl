@@ -6,6 +6,12 @@ arguments:
   - valueFrom: "-Arg2"
 
 inputs:
+  str:
+    type: string
+    default: foo
+    inputBinding:
+      prefix: "-str"
+
   nil:
     type: "string?"
     inputBinding:
@@ -37,11 +43,11 @@ inputs:
             inputBinding:
               prefix: "-rz"
 
-  fp:
+  #fp:
     # TODO revisi this line, which is corrupt type: File:
-    type: File
-    inputBinding:
-      prefix: "-fp"
+    #type: File
+    #inputBinding:
+      #prefix: "-fp"
 
   fpnil:
     type: File?

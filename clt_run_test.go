@@ -15,30 +15,6 @@ func TestBuildCommand(t *testing.T) {
 	clt := doc.(*CommandLineTool)
 	debug(clt)
 
-	args, err := buildCommand(clt, map[string]interface{}{
-		"arrparam": []interface{}{"five", "six", 1},
-		"arrrec": []interface{}{
-			map[string]interface{}{
-				"recA": "bar",
-				"recB": "baz",
-			},
-		},
-		"fp": File{
-			Path: "path/to/file.txt",
-		},
-		"nil":    "foo",
-		"flag":   false,
-		"onflag": true,
-		"zdependent_parameters": map[string]interface{}{
-			"itemA": "one",
-			"itemB": "two",
-		},
-		"exclusive_parameters": map[string]interface{}{
-			"itemC": "three",
-			"itemD": "four",
-		},
-		"extra": "foo",
-	})
 	if err != nil {
 		t.Fatal(err)
 	}

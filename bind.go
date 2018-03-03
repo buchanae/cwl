@@ -5,18 +5,10 @@ import (
 	"strings"
 )
 
+// bindable describes a type which may have input values bound to it:
+// CommandInput, InputArray, InputField
 type bindable interface {
 	bindable() ([]InputType, *CommandLineBinding)
-}
-
-func (c CommandInput) bindable() ([]InputType, *CommandLineBinding) {
-	return c.Type, c.InputBinding
-}
-func (i InputArray) bindable() ([]InputType, *CommandLineBinding) {
-	return i.Items, i.InputBinding
-}
-func (i InputField) bindable() ([]InputType, *CommandLineBinding) {
-	return i.Type, i.InputBinding
 }
 
 // binding binds an input type description (string, array, record, etc)
@@ -35,38 +27,39 @@ type binding struct {
 	nested  bindings
 }
 
+// args converts a binding into a list of formatted command line arguments.
 func (b *binding) args() []string {
 	switch b.typ.(type) {
 
 	case InputArray:
 		strval := ""
-		if b.clb.ItemSeparator != "" {
+		if b.clb != nil && b.clb.ItemSeparator != "" {
 			var nested []string
 			for _, nb := range b.nested {
 				nested = append(nested, nb.args()...)
 			}
 			strval = strings.Join(nested, b.clb.ItemSeparator)
 		}
-		return prefixArg(b.clb.Prefix, strval, b.clb.Separate())
+		return formatArg(b.clb, strval)
 
 	case InputRecord:
-		return prefixArg(b.clb.Prefix, "", b.clb.Separate())
+		return formatArg(b.clb, "")
 
 	case argType:
 		strval := fmt.Sprintf("%s", b.value)
-		return prefixArg(b.clb.Prefix, strval, b.clb.Separate())
+		return formatArg(b.clb, strval)
 
 	case String, Int, Long, Float, Double:
 		strval := fmt.Sprintf("%s", b.value)
-		return prefixArg(b.clb.Prefix, strval, b.clb.Separate())
+		return formatArg(b.clb, strval)
 
 	case FileType:
 		f := b.value.(File)
-		return prefixArg(b.clb.Prefix, f.Path, b.clb.Separate())
+		return formatArg(b.clb, f.Path)
 
 	case DirectoryType:
 		d := b.value.(File)
-		return prefixArg(b.clb.Prefix, d.Path, b.clb.Separate())
+		return formatArg(b.clb, d.Path)
 
 	case Boolean:
 		bv := b.value.(bool)
@@ -79,12 +72,27 @@ func (b *binding) args() []string {
 		     return nil, fmt.Errorf("boolean value without prefix")
 		   }
 		*/
-		return []string{b.clb.Prefix}
+		prefix := ""
+		if b.clb != nil {
+			prefix = b.clb.Prefix
+		}
+		return []string{prefix}
 	}
 	return nil
 }
 
-func prefixArg(prefix, arg string, sep bool) []string {
+// formatArg applies some command line binding rules to a CLI argument,
+// such as flag prefixing, separator, etc.
+// http://www.commonwl.org/v1.0/CommandLineTool.html#CommandLineBinding
+func formatArg(clb *CommandLineBinding, arg string) []string {
+	sep := true
+	prefix := ""
+
+	if clb != nil {
+		prefix = clb.Prefix
+		sep = clb.Separate()
+	}
+
 	switch {
 	case prefix == "" && arg == "":
 		return nil
@@ -180,3 +188,13 @@ type argType struct{}
 
 func (argType) inputtype()     {}
 func (argType) String() string { return "argument" }
+
+func (c CommandInput) bindable() ([]InputType, *CommandLineBinding) {
+	return c.Type, c.InputBinding
+}
+func (i InputArray) bindable() ([]InputType, *CommandLineBinding) {
+	return i.Items, i.InputBinding
+}
+func (i InputField) bindable() ([]InputType, *CommandLineBinding) {
+	return i.Type, i.InputBinding
+}

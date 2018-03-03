@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "encoding/json"
+  "io/ioutil"
   "github.com/buchanae/cwl"
   "os"
   "github.com/spf13/cobra"
@@ -10,7 +11,6 @@ import (
 
 var root = cobra.Command{
   Use: "cwl",
-	//SilenceErrors: true,
 	SilenceUsage:  true,
 }
 
@@ -27,7 +27,6 @@ func init() {
 
 func main() {
   if err := root.Execute(); err != nil {
-    fmt.Println(err)
     os.Exit(1)
   }
 }
@@ -44,5 +43,52 @@ func dump(path string) error {
   }
 
   fmt.Println(string(b))
+  return nil
+}
+
+func init() {
+  cmd := &cobra.Command{
+    Use: "build <doc.cwl> <inputs.json>",
+    Args: cobra.ExactArgs(2),
+    RunE: func(cmd *cobra.Command, args []string) error {
+      return build(args[0], args[1])
+    },
+  }
+  root.AddCommand(cmd)
+}
+
+func build(path, inputsPath string) error {
+  fh, err := os.Open(inputsPath)
+  if err != nil {
+    return err
+  }
+
+  b, err := ioutil.ReadAll(fh)
+  if err != nil {
+    return err
+  }
+
+  vals := map[string]interface{}{}
+  err = json.Unmarshal(b, &vals)
+  if err != nil {
+    return err
+  }
+
+  doc, err := cwl.LoadFile(path)
+  if err != nil {
+    return err
+  }
+
+  clt, ok := doc.(*cwl.CommandLineTool)
+  if !ok {
+    return fmt.Errorf("can only build command line tools")
+  }
+
+  args, err := cwl.BuildCommand(clt, vals)
+  if err != nil {
+    return err
+  }
+
+  fmt.Println(args)
   return nil
 }

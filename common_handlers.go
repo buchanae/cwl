@@ -46,7 +46,31 @@ func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {
 }
 
 func (l *loader) SeqToAny(n node) (Any, error) {
-	return nil, nil
+	vals := []Any{}
+	for _, c := range n.Children {
+		var a Any
+		err := l.load(c, &a)
+		if err != nil {
+			return nil, err
+		}
+		vals = append(vals, a)
+	}
+	return vals, nil
+}
+
+func (l *loader) MappingToAny(n node) (Any, error) {
+	vals := map[string]Any{}
+	for _, kv := range itermap(n) {
+		k := kv.k
+		v := kv.v
+		var a Any
+		err := l.load(v, &a)
+		if err != nil {
+			return nil, err
+		}
+		vals[k] = a
+	}
+	return vals, nil
 }
 
 func (l *loader) SeqToStringSlice(n node) ([]string, error) {

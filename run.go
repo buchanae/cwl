@@ -6,61 +6,93 @@ import (
 	"sort"
 )
 
-func buildCommand(clt *CommandLineTool, vals map[string]interface{}) ([]string, error) {
-	arr := bindings{}
+// BuildCommand builds command line arguments for an invocation a tool
+// given a set of input values.
+func BuildCommand(clt *CommandLineTool, vals map[string]interface{}) ([]string, error) {
+	args := bindings{}
 
+	// Add "arguments"
 	for i, arg := range clt.Arguments {
 		// TODO evaluate expressions
 		b := &binding{arg, argType{}, string(arg.ValueFrom), sortKey{arg.Position, i}, nil}
-		arr = append(arr, b)
+		args = append(args, b)
 	}
 
+	// Bind inputs to values and add args.
 	for i, in := range clt.Inputs {
-		k := sortKey{in.InputBinding.Position, i}
-
-		b := walk(in, vals[in.ID], k)
-		if b == nil {
-			return nil, fmt.Errorf("no valid binding found for input: %s", in.ID)
+		k := sortKey{getPos(in.InputBinding), i}
+		val := vals[in.ID]
+		if val == nil {
+			val = in.Default
 		}
-		arr = append(arr, b...)
+
+		b := walk(in, val, k)
+		if b == nil {
+			return nil, fmt.Errorf("no binding found for input: %s", in.ID)
+		}
+		args = append(args, b...)
 	}
 
-	sort.Stable(arr)
-	debug(arr)
+	sort.Stable(args)
+	//debug(args)
 
 	// Now collect the input bindings into command line arguments
-	args := append([]string{}, clt.BaseCommand...)
-	for _, b := range arr {
-		args = append(args, b.args()...)
+	cmd := append([]string{}, clt.BaseCommand...)
+	for _, b := range args {
+		cmd = append(cmd, b.args()...)
 	}
-	debug(args)
 
-	return args, nil
+	return cmd, nil
 }
 
+// walk walks the tree of input descriptors and values,
+// binding values to descriptors.
+//
+// walk is called recursively for types which have subtypes,
+// such as array, record, etc.
 func walk(b bindable, val interface{}, key sortKey) bindings {
 	types, clb := b.bindable()
 
+	// If no type was found, check if the type is allowed to be null
+	if val == nil {
+		for _, t := range types {
+			if z, ok := t.(Null); ok {
+				return bindings{
+					{clb, z, nil, key, nil},
+				}
+			}
+		}
+	}
+
+	if val == nil {
+		return nil
+	}
+
 Loop:
+	// an input descriptor describes multiple allowed types.
+	// loop over the types, looking for the best match for the given input value.
 	for _, t := range types {
 		switch z := t.(type) {
 
 		case InputArray:
 			vals, ok := val.([]interface{})
 			if !ok {
+				// input value is not an array.
 				continue Loop
 			}
 
 			var out bindings
 
 			for i, val := range vals {
-				key := append(key, sortKey{z.InputBinding.Position, i}...)
+				key := append(key, sortKey{getPos(z.InputBinding), i}...)
 				b := walk(z, val, key)
 				if b == nil {
+					// array item values did not bind to the array descriptor.
 					continue Loop
 				}
 				out = append(out, b...)
 			}
+
 			if out != nil {
 				nested := make(bindings, len(out))
 				copy(nested, out)
@@ -72,6 +104,7 @@ Loop:
 		case InputRecord:
 			vals, ok := val.(map[string]interface{})
 			if !ok {
+				// input value is not a record.
 				continue Loop
 			}
 
@@ -84,13 +117,14 @@ Loop:
 					continue Loop
 				}
 
-				key := append(key, sortKey{field.InputBinding.Position, i}...)
+				key := append(key, sortKey{getPos(field.InputBinding), i}...)
 				b := walk(field, val, key)
 				if b == nil {
 					continue Loop
 				}
 				out = append(out, b...)
 			}
+
 			if out != nil {
 				nested := make(bindings, len(out))
 				copy(nested, out)
@@ -178,16 +212,12 @@ Loop:
 		}
 	}
 
-	// If no type was found, check if the type is allowed to be null
-	if val == nil {
-		for _, t := range types {
-			if z, ok := t.(Null); ok {
-				return bindings{
-					{clb, z, nil, key, nil},
-				}
-			}
-		}
-	}
-
 	return nil
+}
+
+func getPos(in *CommandLineBinding) int {
+	if in == nil {
+		return 0
+	}
+	return in.Position
 }
