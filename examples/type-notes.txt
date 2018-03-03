@@ -1,0 +1,72 @@
+
+
+type:
+  - type: string[]
+    inputBinding:
+
+  - type: string[]
+    items: int
+    inputBinding:
+
+  - type: int
+
+
+
+inputs:
+  type: string[]
+
+inputs:
+- id: foo
+  type:
+    type: array?
+    items: string
+    inputBinding:
+
+inputs:
+  - id: foo
+    type:
+      type: string?
+
+
+inputs:
+  type:
+    type: string?
+
+type: string
+
+
+
+
+type: string[]
+
+
+# Does null by itself make sense?
+type: null
+
+type: null[]
+type: null[]?
+
+type:
+  - int
+  - string[]
+  - string?
+
+
+
+type:
+  type: array
+  items: int
+
+
+type:
+  type: array
+  items: int[]
+
+
+type: int[]
+
+
+
+  list5:
+    type: array
+    items: string?

@@ -15,9 +15,8 @@ type Workflow struct {
 }
 
 type WorkflowInput struct {
-	ID    string `json:"id,omitempty"`
-	Label string `json:"label,omitempty"`
-	// TODO ensure that an array of strings can be loaded
+	ID         string `json:"id,omitempty"`
+	Label      string `json:"label,omitempty"`
 	Doc        string `json:"doc,omitempty"`
 	Streamable bool   `json:"streamable,omitempty"`
 

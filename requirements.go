@@ -1,85 +1,85 @@
 package cwl
 
 type DockerRequirement struct {
-	Class           string `json:"class"`
-	Pull            string `json:"dockerPull"`
-	Load            string `json:"dockerLoad"`
-	File            string `json:"dockerFile"`
-	Import          string `json:"dockerImport"`
-	ImageID         string `json:"dockerImageID"`
-	OutputDirectory string `json:"dockerOutputDirectory"`
+	Class           string `json:"class,omitempty"`
+	Pull            string `json:"dockerPull,omitempty"`
+	Load            string `json:"dockerLoad,omitempty"`
+	File            string `json:"dockerFile,omitempty"`
+	Import          string `json:"dockerImport,omitempty"`
+	ImageID         string `json:"dockerImageID,omitempty"`
+	OutputDirectory string `json:"dockerOutputDirectory,omitempty"`
 }
 
 type ResourceRequirement struct {
-	Class     string     `json:"class"`
-	CoresMin  Expression `json:"coresMin"`
-	CoresMax  Expression `json:"coresMax"`
-	RAMMin    Expression `json:"ramMin"`
-	RAMMax    Expression `json:"ramMax"`
-	TmpDirMin Expression `json:"tmpdirMin"`
-	TmpDirMax Expression `json:"tmpdirMax"`
-	OutDirMin Expression `json:"outdirMin"`
-	OutDirMax Expression `json:"outdirMax"`
+	Class     string     `json:"class,omitempty"`
+	CoresMin  Expression `json:"coresMin,omitempty"`
+	CoresMax  Expression `json:"coresMax,omitempty"`
+	RAMMin    Expression `json:"ramMin,omitempty"`
+	RAMMax    Expression `json:"ramMax,omitempty"`
+	TmpDirMin Expression `json:"tmpdirMin,omitempty"`
+	TmpDirMax Expression `json:"tmpdirMax,omitempty"`
+	OutDirMin Expression `json:"outdirMin,omitempty"`
+	OutDirMax Expression `json:"outdirMax,omitempty"`
 }
 
 type EnvVarRequirement struct {
-	Class  string                `json:"class"`
-	EnvDef map[string]Expression `json:"envDef"`
+	Class  string                `json:"class,omitempty"`
+	EnvDef map[string]Expression `json:"envDef,omitempty"`
 }
 
 type ShellCommandRequirement struct {
-	Class string `json:"class"`
+	Class string `json:"class,omitempty"`
 }
 
 type InlineJavascriptRequirement struct {
-	Class         string   `json:"class"`
-	ExpressionLib []string `json:"expressionLib"`
+	Class         string   `json:"class,omitempty"`
+	ExpressionLib []string `json:"expressionLib,omitempty"`
 }
 
 type InputSchema struct{}
 type SchemaDefRequirement struct {
-	Class string        `json:"class"`
-	Types []InputSchema `json:"types"`
+	Class string        `json:"class,omitempty"`
+	Types []InputSchema `json:"types,omitempty"`
 }
 
 type SoftwareRequirement struct {
-	Class    string            `json:"class"`
-	Packages []SoftwarePackage `json:"packages"`
+	Class    string            `json:"class,omitempty"`
+	Packages []SoftwarePackage `json:"packages,omitempty"`
 }
 
 type SoftwarePackage struct {
-	Class   string   `json:"class"`
-	Package string   `json:"package"`
-	Version []string `json:"version"`
-	Specs   []string `json:"specs"`
+	Class   string   `json:"class,omitempty"`
+	Package string   `json:"package,omitempty"`
+	Version []string `json:"version,omitempty"`
+	Specs   []string `json:"specs,omitempty"`
 }
 
 type InitialWorkDirListing struct{}
 
 type InitialWorkDirRequirement struct {
-	Class string `json:"class"`
+	Class string `json:"class,omitempty"`
 	// TODO the most difficult union type
-	Listing InitialWorkDirListing `json:"listing"`
+	Listing InitialWorkDirListing `json:"listing,omitempty"`
 }
 
 type Dirent struct {
-	Entry     Expression `json:"entry"`
-	Entryname Expression `json:"entryname"`
-	Writable  bool       `json:"writeable"`
+	Entry     Expression `json:"entry,omitempty"`
+	Entryname Expression `json:"entryname,omitempty"`
+	Writable  bool       `json:"writeable,omitempty"`
 }
 
 type SubworkflowFeatureRequirement struct {
-	Class string `json:"class"`
+	Class string `json:"class,omitempty"`
 }
 
 type ScatterFeatureRequirement struct {
-	Class string `json:"class"`
+	Class string `json:"class,omitempty"`
 }
 
 type MultipleInputFeatureRequirement struct {
-	Class string `json:"class"`
+	Class string `json:"class,omitempty"`
 }
 
 type StepInputExpressionRequirement struct {
-	Class string `json:"class"`
+	Class string `json:"class,omitempty"`
 }

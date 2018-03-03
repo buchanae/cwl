@@ -96,6 +96,7 @@ type Document interface {
 
 func (CommandLineTool) doctype() {}
 func (Workflow) doctype()        {}
+func (ExpressionTool) doctype()  {}
 func (DocumentRef) doctype()     {}
 
 type InputType interface {
@@ -136,7 +137,8 @@ func (OutputRecord) outputtype()  {}
 func (OutputEnum) outputtype()    {}
 func (OutputArray) outputtype()   {}
 
-type Type interface {
+type cwltype interface {
+	String() string
 	cwltype()
 }
 

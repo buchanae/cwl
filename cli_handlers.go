@@ -6,6 +6,12 @@ func (l *loader) ScalarToCommandOutput(n node) (CommandOutput, error) {
 	return o, err
 }
 
+func (l *loader) ScalarToCommandInput(n node) (CommandInput, error) {
+	o := CommandInput{}
+	err := l.load(n, &o.Type)
+	return o, err
+}
+
 func (l *loader) ScalarToCommandLineBindingPtr(n node) (*CommandLineBinding, error) {
 	return &CommandLineBinding{
 		ValueFrom: Expression(n.Value),

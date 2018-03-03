@@ -25,6 +25,35 @@ type CommandLineTool struct {
 	PermanentFailCodes []int `json:",omitempty"`
 }
 
+type CommandInput struct {
+	ID         string `json:"id,omitempty"`
+	Label      string `json:"label,omitempty"`
+	Doc        string `json:"doc,omitempty"`
+	Streamable bool   `json:"streamable,omitempty"`
+	Default    Any    `json:"default,omitempty"`
+
+	Type []InputType `json:"type,omitempty"`
+
+	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
+	Format         []Expression `json:"format,omitempty"`
+
+	InputBinding *CommandLineBinding `json:"inputBinding,omitempty"`
+}
+
+type CommandOutput struct {
+	ID         string `json:"id,omitempty"`
+	Label      string `json:"label,omitempty"`
+	Doc        string `json:"doc,omitempty"`
+	Streamable bool   `json:"streamable,omitempty"`
+
+	Type []OutputType `json:"type,omitempty"`
+
+	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
+	Format         []Expression `json:"format,omitempty"`
+
+	OutputBinding *CommandOutputBinding `json:"outputBinding,omitempty"`
+}
+
 type CommandLineBinding struct {
 	LoadContents  bool       `json:"loadContents,omitempty"`
 	Position      int        `json:"position,omitempty"`
@@ -60,35 +89,6 @@ func (c *CommandLineBinding) ShellQuote() bool {
 func (c *CommandLineBinding) SetShellQuote(b bool) {
 	c.shellQuote = b
 	c.shellQuoteSet = true
-}
-
-type CommandInput struct {
-	ID         string `json:"id,omitempty"`
-	Label      string `json:"label,omitempty"`
-	Doc        string `json:"doc,omitempty"`
-	Streamable bool   `json:"streamable,omitempty"`
-	Default    Any    `json:"default,omitempty"`
-
-	Type []InputType `json:"type,omitempty"`
-
-	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
-	Format         []Expression `json:"format,omitempty"`
-
-	InputBinding *CommandLineBinding `json:"inputBinding,omitempty"`
-}
-
-type CommandOutput struct {
-	ID         string `json:"id,omitempty"`
-	Label      string `json:"label,omitempty"`
-	Doc        string `json:"doc,omitempty"`
-	Streamable bool   `json:"streamable,omitempty"`
-
-	Type []OutputType `json:"type,omitempty"`
-
-	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
-	Format         []Expression `json:"format,omitempty"`
-
-	OutputBinding *CommandOutputBinding `json:"outputBinding,omitempty"`
 }
 
 type CommandOutputBinding struct {

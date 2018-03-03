@@ -1,7 +1,7 @@
 cwlVersion: v1.0
 class: CommandLineTool
 label: Example trivial wrapper for Java 7 compiler
-Doc: Example doc
+doc: Example doc
 hints:
   DockerRequirement:
     dockerPull: java:7-jdk
@@ -15,8 +15,22 @@ stdout: output.txt
 stderr: error.txt
 inputs:
   scalar: string
-  list3: string[]
-  opt2: string?
+  list31: string[]
+  list32:
+    type: string[]
+    inputBinding:
+      position: 1
+  list4:
+    type: string[]
+  st1:
+    type:
+      type: string
+      items: string
+      bar: baz
+  st2:
+    type: array?
+    items: string
+  opt21: string?
   tarfile:
     type: File
     inputBinding:
@@ -26,7 +40,7 @@ inputs:
     inputBinding:
       position: 2
   nullablefile:
-    type: [null, string]
+    type: ["null", "string"]
     inputBinding:
       position: 2
   list:
@@ -47,7 +61,7 @@ inputs:
   num:
     type: int
 outputs:
-  scalar: string
+  scalar1: string
   list3: string[]
   opt2: string?
   output1:

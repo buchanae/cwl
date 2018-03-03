@@ -10,6 +10,8 @@ import (
 
 var root = cobra.Command{
   Use: "cwl",
+	//SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func init() {

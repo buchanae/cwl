@@ -193,7 +193,6 @@ func (l *loader) loadMappingToStruct(n node, t interface{}) error {
 
 		if !found {
 			continue
-			//return fmt.Errorf("struct field not found: %s", name)
 		}
 
 		fv := val.FieldByIndex(field.Index)

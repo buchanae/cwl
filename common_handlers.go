@@ -25,6 +25,13 @@ func (l *loader) MappingToDocument(n node) (Document, error) {
 		}
 		return wf, nil
 
+	case "expressiontool":
+		t := &ExpressionTool{}
+		if err := l.load(n, t); err != nil {
+			return nil, err
+		}
+		return t, nil
+
 	default:
 		return nil, fmt.Errorf("unknown document class: '%s'", class)
 	}
@@ -32,6 +39,10 @@ func (l *loader) MappingToDocument(n node) (Document, error) {
 
 func (l *loader) ScalarToDocument(n node) (Document, error) {
 	return DocumentRef{URL: n.Value}, nil
+}
+
+func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {
+	return []Expression{Expression(n.Value)}, nil
 }
 
 func (l *loader) SeqToAny(n node) (Any, error) {
@@ -77,69 +88,6 @@ func (l *loader) SeqToString(n node) (string, error) {
 	return s, nil
 }
 
-func (l *loader) MappingToInputTypeSlice(n node) ([]InputType, error) {
-	t, err := l.MappingToInputType(n)
-	if err != nil {
-		return nil, err
-	}
-	return []InputType{t}, nil
-}
-
-func (l *loader) MappingToOutputTypeSlice(n node) ([]OutputType, error) {
-	t, err := l.MappingToOutputType(n)
-	if err != nil {
-		return nil, err
-	}
-	return []OutputType{t}, nil
-}
-
-func (l *loader) SeqToInputTypeSlice(n node) ([]InputType, error) {
-	var out []InputType
-	for _, c := range n.Children {
-		var t InputType
-		err := l.load(c, &t)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, t)
-	}
-	return out, nil
-}
-
-func (l *loader) MappingToInputType(n node) (InputType, error) {
-	typ := findKey(n, "type")
-	switch typ {
-	case "array":
-		a := InputArray{}
-		err := l.load(n, &a)
-		return a, err
-	case "record":
-		rec := InputRecord{}
-		err := l.load(n, &rec)
-		return rec, err
-	case "enum":
-		return InputEnum{}, nil
-	}
-	panic("unknown type")
-}
-
-func (l *loader) MappingToOutputType(n node) (OutputType, error) {
-	typ := findKey(n, "type")
-	switch typ {
-	case "array":
-		a := OutputArray{}
-		err := l.load(n, &a)
-		return a, err
-	case "record":
-		rec := OutputRecord{}
-		err := l.load(n, &rec)
-		return rec, err
-	case "enum":
-		return OutputEnum{}, nil
-	}
-	panic("unknown type")
-}
-
 func (l *loader) MappingToInputFieldSlice(n node) ([]InputField, error) {
 	var fields []InputField
 
@@ -156,124 +104,295 @@ func (l *loader) MappingToInputFieldSlice(n node) ([]InputField, error) {
 	return fields, nil
 }
 
-func (l *loader) ScalarToInputTypeSlice(n node) ([]InputType, error) {
+/* Type loading is pretty complex.... */
 
-	if strings.HasSuffix(n.Value, "?") {
-		name := strings.TrimSuffix(n.Value, "?")
-		t, ok := getInputTypeByName(name)
-		if ok {
-			return []InputType{t, Null{}}, nil
-		}
+func (l *loader) MappingToInputTypeSlice(n node) ([]InputType, error) {
+
+	typeVal, ok := findValue(n, "type")
+	if !ok {
+		return nil, fmt.Errorf("missing input type")
 	}
+	n = transformTypeNode(n)
 
-	t, err := l.ScalarToInputType(n)
+	var t []InputType
+	err := l.load(typeVal, &t)
 	if err != nil {
 		return nil, err
 	}
-	if t != nil {
-		return []InputType{t}, nil
+
+	if len(t) == 1 {
+		switch z := t[0].(type) {
+		case InputArray:
+			err := l.load(n, &z)
+			if err != nil {
+				return nil, err
+			}
+			t[0] = z
+		case InputEnum:
+			err := l.load(n, &z)
+			if err != nil {
+				return nil, err
+			}
+			t[0] = z
+		case InputRecord:
+			err := l.load(n, &z)
+			if err != nil {
+				return nil, err
+			}
+			t[0] = z
+		}
 	}
-	panic("unhandled cwl type")
+
+	return t, err
+}
+
+func (l *loader) MappingToOutputTypeSlice(n node) ([]OutputType, error) {
+
+	typeVal, ok := findValue(n, "type")
+	if !ok {
+		return nil, fmt.Errorf("missing output type")
+	}
+	n = transformTypeNode(n)
+
+	var t []OutputType
+	err := l.load(typeVal, &t)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(t) == 1 {
+		switch z := t[0].(type) {
+		case OutputArray:
+			err := l.load(n, &z)
+			if err != nil {
+				return nil, err
+			}
+			t[0] = z
+		case OutputEnum:
+			err := l.load(n, &z)
+			if err != nil {
+				return nil, err
+			}
+			t[0] = z
+		case OutputRecord:
+			err := l.load(n, &z)
+			if err != nil {
+				return nil, err
+			}
+			t[0] = z
+		}
+	}
+
+	return t, err
+}
+
+func (l *loader) ScalarToInputTypeSlice(n node) ([]InputType, error) {
+
+	n = transformTypeNode(n)
+
+	if n.Kind != yamlast.ScalarNode {
+		var out []InputType
+		err := l.load(n, &out)
+		if err != nil {
+			return nil, err
+		}
+		return out, nil
+	}
+
+	t := l.scalarToType(n.Value, true)
+	if t == nil {
+		return nil, fmt.Errorf("unknown input type: %s", n.Value)
+	}
+
+	ot, ok := t.(InputType)
+	if !ok {
+		return nil, fmt.Errorf("invalid input type: %s", n.Value)
+	}
+	return []InputType{ot}, nil
 }
 
 func (l *loader) ScalarToOutputTypeSlice(n node) ([]OutputType, error) {
 
-	if strings.HasSuffix(n.Value, "?") {
-		name := strings.TrimSuffix(n.Value, "?")
-		t, ok := getOutputTypeByName(name)
-		if ok {
-			return []OutputType{t, Null{}}, nil
+	n = transformTypeNode(n)
+
+	if n.Kind != yamlast.ScalarNode {
+		var out []OutputType
+		err := l.load(n, &out)
+		if err != nil {
+			return nil, err
 		}
+		return out, nil
 	}
 
-	t, err := l.ScalarToOutputType(n)
-	if err != nil {
-		return nil, err
+	t := l.scalarToType(n.Value, false)
+	if t == nil {
+		return nil, fmt.Errorf("unknown output type: %s", n.Value)
 	}
-	if t != nil {
-		return []OutputType{t}, nil
+
+	ot, ok := t.(OutputType)
+	if !ok {
+		return nil, fmt.Errorf("invalid output type: %s", n.Value)
 	}
-	panic("unhandled cwl type")
+	return []OutputType{ot}, nil
 }
 
-// TODO is "string[]?" acceptable?
-func (l *loader) ScalarToInputType(n node) (InputType, error) {
-	name := n.Value
+func (l *loader) scalarToType(name string, isInput bool) cwltype {
+
+	var t cwltype
+	switch name {
+	case "":
+		return nil
+	case "null":
+		t = Null{}
+	case "boolean":
+		t = Boolean{}
+	case "int":
+		t = Int{}
+	case "float":
+		t = Float{}
+	case "long":
+		t = Long{}
+	case "double":
+		t = Double{}
+	case "string":
+		t = String{}
+	case "file":
+		t = FileType{}
+	case "directory":
+		t = DirectoryType{}
+	case "stdout":
+		t = Stdout{}
+	case "stderr":
+		t = Stderr{}
+	case "record":
+		if isInput {
+			t = InputRecord{}
+		} else {
+			t = OutputRecord{}
+		}
+	case "enum":
+		if isInput {
+			t = InputEnum{}
+		} else {
+			t = OutputEnum{}
+		}
+	case "array":
+		if isInput {
+			t = InputArray{}
+		} else {
+			t = OutputArray{}
+		}
+	default:
+		return nil
+	}
+
+	return t
+}
+
+/* These are here to avoid the automatic loading of slice types in the loader */
+
+func (l *loader) SeqToInputTypeSlice(n node) ([]InputType, error) {
+	var out []InputType
+	for _, c := range n.Children {
+		var t []InputType
+		err := l.load(c, &t)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, t...)
+	}
+	return out, nil
+}
+
+func (l *loader) SeqToOutputTypeSlice(n node) ([]OutputType, error) {
+	var out []OutputType
+	for _, c := range n.Children {
+		var t []OutputType
+		err := l.load(c, &t)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, t...)
+	}
+	return out, nil
+}
+
+// transformTypeNode handles type name transformations such as "string[]", "string?", etc.
+// http://www.commonwl.org/v1.0/Workflow.html#Document_preprocessing
+func transformTypeNode(n node) node {
+	if n.Kind != yamlast.ScalarNode {
+		return n
+	}
+
+	name := strings.ToLower(n.Value)
+	name = strings.TrimSpace(name)
+
+	isNullable := false
+	isArray := false
+
+	if strings.HasSuffix(name, "?") {
+		name = strings.TrimSuffix(name, "?")
+		isNullable = true
+	}
 
 	if strings.HasSuffix(name, "[]") {
-		name := strings.TrimSuffix(name, "[]")
-		t, ok := getInputTypeByName(name)
-		if ok {
-			return InputArray{Items: []InputType{t}}, nil
+		name = strings.TrimSuffix(name, "[]")
+		isArray = true
+	}
+	n.Value = strings.TrimSpace(name)
+
+	// Copy input node
+	out := &yamlast.Node{
+		Kind:   n.Kind,
+		Line:   n.Line,
+		Column: n.Column,
+		Value:  n.Value,
+	}
+
+	if isArray {
+		out = &yamlast.Node{
+			Kind:   yamlast.MappingNode,
+			Line:   n.Line,
+			Column: n.Column,
+			Children: []*yamlast.Node{
+				{
+					Kind:   yamlast.ScalarNode,
+					Line:   n.Line,
+					Column: n.Column,
+					Value:  "type",
+				},
+				{
+					Kind:   yamlast.ScalarNode,
+					Line:   n.Line,
+					Column: n.Column,
+					Value:  "array",
+				},
+				{
+					Kind:   yamlast.ScalarNode,
+					Line:   n.Line,
+					Column: n.Column,
+					Value:  "items",
+				},
+				out,
+			},
 		}
 	}
 
-	t, ok := getInputTypeByName(name)
-	if ok {
-		return t, nil
-	}
-	// TODO should convert an unknown node into an IRI type reference
-	return nil, fmt.Errorf("unhandled scalar type: %s", n.Value)
-}
-
-// TODO is "string[]?" acceptable?
-func (l *loader) ScalarToOutputType(n node) (OutputType, error) {
-	name := n.Value
-
-	if strings.HasSuffix(name, "[]") {
-		name := strings.TrimSuffix(name, "[]")
-		t, ok := getOutputTypeByName(name)
-		if ok {
-			return OutputArray{Items: []OutputType{t}}, nil
+	if isNullable {
+		out = &yamlast.Node{
+			Kind:   yamlast.SequenceNode,
+			Line:   n.Line,
+			Column: n.Column,
+			Children: []*yamlast.Node{
+				out,
+				{
+					Kind:   yamlast.ScalarNode,
+					Line:   n.Line,
+					Column: n.Column,
+					Value:  "null",
+				},
+			},
 		}
 	}
-
-	t, ok := getOutputTypeByName(name)
-	if ok {
-		return t, nil
-	}
-	// TODO should convert an unknown node into an IRI type reference
-	return nil, fmt.Errorf("unhandled scalar type: %s", n.Value)
-}
-
-func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {
-	return []Expression{Expression(n.Value)}, nil
-}
-
-var inputTypesByName = map[string]InputType{}
-
-func init() {
-	ts := []InputType{
-		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
-		FileType{}, DirectoryType{}, InputRecord{}, InputArray{}, InputEnum{},
-	}
-	for _, t := range ts {
-		name := strings.ToLower(t.String())
-		inputTypesByName[name] = t
-	}
-}
-
-func getInputTypeByName(name string) (InputType, bool) {
-	name = strings.ToLower(name)
-	t, ok := inputTypesByName[name]
-	return t, ok
-}
-
-var outputTypesByName = map[string]OutputType{}
-
-func init() {
-	ts := []OutputType{
-		Null{}, Boolean{}, Int{}, Long{}, Float{}, Double{}, String{},
-		FileType{}, DirectoryType{}, OutputRecord{}, OutputArray{}, OutputEnum{},
-	}
-	for _, t := range ts {
-		name := strings.ToLower(t.String())
-		outputTypesByName[name] = t
-	}
-}
-
-func getOutputTypeByName(name string) (OutputType, bool) {
-	name = strings.ToLower(name)
-	t, ok := outputTypesByName[name]
-	return t, ok
+	return node(out)
 }
