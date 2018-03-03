@@ -1,1 +1,3 @@
-message: foo
+message:
+  class: File
+  path: examples/tar.cwl

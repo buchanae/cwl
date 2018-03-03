@@ -9,7 +9,6 @@ import (
 // BuildCommand builds command line arguments for an invocation a tool
 // given a set of input values.
 func BuildCommand(clt *CommandLineTool, vals InputValues) ([]string, error) {
-	debug(vals)
 	args := bindings{}
 
 	// Add "arguments"
@@ -193,7 +192,6 @@ Loop:
 			}
 
 		case FileType:
-			debug(val)
 			v, ok := val.(File)
 			if !ok {
 				continue Loop
