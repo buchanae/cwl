@@ -13,6 +13,8 @@ type Job struct {
 	// TODO input files
 	// TODO output binding description
 	// environment
+	// working directory
+	// file staging
 }
 
 // TODO need to fully resolve file inputs (including secondary files)
@@ -126,8 +128,10 @@ Loop:
 				nested := make(bindings, len(out))
 				copy(nested, out)
 				b := &binding{clb, z, val, key, nested}
-				out = append(out, b)
-				return out, nil
+				// TODO revisit whether creating a nested tree (instead of flat) is always better/ok
+				return bindings{b}, nil
+				//out = append(out, b)
+				//return out, nil
 			}
 
 		case InputRecord:

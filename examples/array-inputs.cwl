@@ -2,10 +2,15 @@ cwlVersion: v1.0
 class: CommandLineTool
 inputs:
   filesA:
-    type: string[]
+    #type: File[]
+    type:
+      type: array
+      items:
+        type: array
+        items: string
     inputBinding:
-      prefix: -A
-      position: 1
+      #prefix: -A
+      #position: 1
 
   filesB:
     type:
@@ -14,11 +19,18 @@ inputs:
       inputBinding:
         prefix: -B=
         separate: false
+        #position: -2
     inputBinding:
-      position: 2
+      prefix: -ZZ
+      #position: 20
 
   filesC:
-    type: string[]
+    type:
+      type: array
+      items: string
+      #inputBinding:
+        #prefix: -Z=
+        #separate: false
     inputBinding:
       prefix: -C=
       itemSeparator: ","

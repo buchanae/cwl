@@ -1,5 +1,9 @@
 package cwl
 
+import (
+	"fmt"
+)
+
 type Expression string
 
 type ScatterMethod string
@@ -175,4 +179,31 @@ func (StepInputExpressionRequirement) hint()  {}
 
 type WorkflowRequirement interface {
 	wfrequirement()
+}
+
+// OptOut provides a boolean flag that defaults to true.
+type OptOut struct {
+	v   bool
+	set bool
+}
+
+func (o *OptOut) Clear() {
+	o.v = false
+	o.set = false
+}
+
+func (o *OptOut) Value() bool {
+	if !o.set {
+		return true
+	}
+	return o.v
+}
+
+func (o *OptOut) Set(v bool) {
+	o.set = true
+	o.v = v
+}
+
+func (o *OptOut) MarshalText() ([]byte, error) {
+	return []byte(fmt.Sprintf("%t", o.Value())), nil
 }

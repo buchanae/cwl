@@ -6,15 +6,15 @@ import (
 )
 
 func TestResolveFile(t *testing.T) {
-	f := &File{
+	f := File{
 		Location: "./examples/record.cwl",
 	}
 
-	filesys, _ := fs.FindFilesystem(f.Location)
-	err := ResolveFile(f, filesys, true)
+	l := fs.NewLocal()
+	x, err := ResolveFile(f, l, true)
 	if err != nil {
 		t.Error(err)
 	}
 
-	debug(f)
+	debug(x)
 }

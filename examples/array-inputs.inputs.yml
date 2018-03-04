@@ -1,0 +1,15 @@
+#filesA: [true, true, false]
+#filesA:
+#  - class: File
+#    location: foo
+#  - class: File
+#    location: bar
+#  - class: File
+#    location: baz
+#filesA: [1, 2, 3]
+#filesA: [foo, bar, baz]
+filesA:
+  - [foo]
+  - [bar, baz]
+filesB: [four, five, six]
+filesC: [one, two, three]

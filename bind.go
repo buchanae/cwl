@@ -30,56 +30,117 @@ type binding struct {
 	nested  bindings
 }
 
-// args converts a binding into a list of formatted command line arguments.
-func (b *binding) args() []string {
+// String formats the value as a string.
+// This is not an argument/flag string, just the value.
+func (b *binding) String() string {
 	switch b.typ.(type) {
 
 	case InputArray:
-		strval := ""
 		if b.clb != nil && b.clb.ItemSeparator != "" {
 			var nested []string
 			for _, nb := range b.nested {
-				nested = append(nested, nb.args()...)
+				nested = append(nested, nb.String())
 			}
-			strval = strings.Join(nested, b.clb.ItemSeparator)
+			return strings.Join(nested, b.clb.ItemSeparator)
 		}
-		return formatArg(b.clb, strval)
+		return ""
+		return fmt.Sprintf("%q", b.value)
 
 	case InputRecord:
-		return formatArg(b.clb, "")
+		return ""
+		return fmt.Sprintf("%q", b.value)
 
 	case argType:
-		strval := fmt.Sprintf("%s", b.value)
-		return formatArg(b.clb, strval)
+		return fmt.Sprintf("%s", b.value)
 
 	case String, Int, Long, Float, Double:
-		strval := fmt.Sprintf("%s", b.value)
-		return formatArg(b.clb, strval)
+		return fmt.Sprintf("%s", b.value)
 
 	case FileType:
 		f := b.value.(File)
-		return formatArg(b.clb, f.Path)
+		return f.Path
 
 	case DirectoryType:
 		d := b.value.(File)
-		return formatArg(b.clb, d.Path)
+		return d.Path
+
+	case Boolean:
+		return ""
+		bv := b.value.(bool)
+		if !bv {
+			return "false"
+		}
+		return "true"
+	}
+	return ""
+}
+
+func (b *binding) strings() []string {
+	var s []string
+	if b.String() != "" {
+		s = append(s, b.String())
+	}
+	for _, nb := range b.nested {
+		s = append(s, nb.strings()...)
+	}
+	return s
+}
+
+// args converts a binding into a list of formatted command line arguments.
+func (b *binding) args() []string {
+	/*
+	  if b.clb == nil {
+	    return nil
+	  }
+	*/
+
+	switch b.typ.(type) {
+
+	case InputArray:
+		// cwl spec:
+		// "If itemSeparator is specified, add prefix and the join the array
+		// into a single string with itemSeparator separating the items.
+		// Otherwise first add prefix, then recursively process individual elements."
+		var args []string
+		if b.clb != nil && b.clb.ItemSeparator != "" {
+			args = formatArg(b.clb, b.String())
+		} else {
+			args = formatArg(b.clb, "")
+			//args = append(args, b.strings()...)
+
+			for _, nb := range b.nested {
+				args = append(args, nb.args()...)
+			}
+		}
+		return args
+
+	case InputRecord:
+		// TODO nested
+		return formatArg(b.clb, b.String())
+
+	case argType:
+		return formatArg(b.clb, b.String())
+
+	case String, Int, Long, Float, Double:
+		return formatArg(b.clb, b.String())
+
+	case FileType:
+		return formatArg(b.clb, b.String())
+
+	case DirectoryType:
+		return formatArg(b.clb, b.String())
 
 	case Boolean:
 		bv := b.value.(bool)
-		if !bv {
-			return nil
-		}
 		/*
 		   TODO find a place for this validation
 		   if b.clb.Prefix == "" {
 		     return nil, fmt.Errorf("boolean value without prefix")
 		   }
 		*/
-		prefix := ""
-		if b.clb != nil {
-			prefix = b.clb.Prefix
+		if bv && b.clb != nil && b.clb.Prefix != "" {
+			return []string{b.clb.Prefix}
 		}
-		return []string{prefix}
 	}
 	return nil
 }
@@ -93,7 +154,7 @@ func formatArg(clb *CommandLineBinding, arg string) []string {
 
 	if clb != nil {
 		prefix = clb.Prefix
-		sep = clb.Separate()
+		sep = clb.Separate.Value()
 	}
 
 	switch {

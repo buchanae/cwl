@@ -60,35 +60,8 @@ type CommandLineBinding struct {
 	Prefix        string     `json:"prefix,omitempty"`
 	ItemSeparator string     `json:"itemSeparator,omitempty"`
 	ValueFrom     Expression `json:"valueFrom,omitempty"`
-
-	separate      bool
-	separateSet   bool
-	shellQuote    bool
-	shellQuoteSet bool
-}
-
-func (c *CommandLineBinding) Separate() bool {
-	if !c.separateSet {
-		return true
-	}
-	return c.separate
-}
-
-func (c *CommandLineBinding) SetSeparate(b bool) {
-	c.separate = b
-	c.separateSet = true
-}
-
-func (c *CommandLineBinding) ShellQuote() bool {
-	if !c.shellQuoteSet {
-		return true
-	}
-	return c.shellQuote
-}
-
-func (c *CommandLineBinding) SetShellQuote(b bool) {
-	c.shellQuote = b
-	c.shellQuoteSet = true
+	Separate      OptOut     `json:"separate,omitempty"`
+	ShellQuote    OptOut     `json:"shellQuote,omitempty"`
 }
 
 type CommandOutputBinding struct {

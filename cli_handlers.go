@@ -1,5 +1,9 @@
 package cwl
 
+import (
+	"fmt"
+)
+
 func (l *loader) ScalarToCommandOutput(n node) (CommandOutput, error) {
 	o := CommandOutput{}
 	err := l.load(n, &o.Type)
@@ -12,10 +16,21 @@ func (l *loader) ScalarToCommandInput(n node) (CommandInput, error) {
 	return o, err
 }
 
-func (l *loader) ScalarToCommandLineBindingPtr(n node) (*CommandLineBinding, error) {
-	return &CommandLineBinding{
+func (l *loader) ScalarToCommandLineBinding(n node) (CommandLineBinding, error) {
+	return CommandLineBinding{
 		ValueFrom: Expression(n.Value),
 	}, nil
+}
+
+func (l *loader) ScalarToOptOut(n node) (OptOut, error) {
+	switch n.Value {
+	case "true":
+		return OptOut{v: true, set: true}, nil
+	case "false":
+		return OptOut{v: false, set: true}, nil
+	default:
+		return OptOut{}, fmt.Errorf("invalid boolean value: %s", n.Value)
+	}
 }
 
 func (l *loader) MappingToCommandLineBindingPtr(n node) (*CommandLineBinding, error) {
