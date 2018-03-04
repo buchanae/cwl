@@ -4,8 +4,8 @@ import (
   "fmt"
   "encoding/json"
   "github.com/buchanae/cwl"
+  "github.com/buchanae/cwl/exec/simple"
   "os"
-  "os/exec"
   "github.com/spf13/cobra"
 )
 
@@ -73,12 +73,13 @@ func build(path, inputsPath string) error {
     return fmt.Errorf("can only build command line tools")
   }
 
-  args, err := cwl.BuildCommand(clt, vals)
+  e := cwl.NewExecutor()
+  job, err := e.BuildJob(clt, vals)
   if err != nil {
     return err
   }
 
-  fmt.Println(args)
+  fmt.Println(job)
   return nil
 }
 
@@ -109,13 +110,11 @@ func run(path, inputsPath string) error {
     return fmt.Errorf("can only build command line tools")
   }
 
-  args, err := cwl.BuildCommand(clt, vals)
+  e := cwl.NewExecutor()
+  job, err := e.BuildJob(clt, vals)
   if err != nil {
     return err
   }
 
-  cmd := exec.Command(args[0], args[1:]...)
-  cmd.Stdout = os.Stdout
-  cmd.Stderr = os.Stderr
-  return cmd.Run()
+  return simple.Exec(job)
 }

@@ -5,8 +5,11 @@ import (
 	"strings"
 )
 
-// bindable describes a type which may have input values bound to it:
-// CommandInput, InputArray, InputField
+// bindable describes a type which may have input values bound to it.
+// The following types are bindable:
+// - CommandInput
+// - InputArray
+// - InputField
 type bindable interface {
 	bindable() ([]InputType, *CommandLineBinding)
 }

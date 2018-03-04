@@ -2,13 +2,33 @@ package cwl
 
 import (
 	"fmt"
+	"github.com/buchanae/cwl/fs"
 	"github.com/spf13/cast"
 	"sort"
 )
 
-// BuildCommand builds command line arguments for an invocation a tool
+type Job struct {
+	Command []string
+	// TODO resource requests
+	// TODO input files
+	// TODO output binding description
+	// environment
+}
+
+// TODO need to fully resolve file inputs (including secondary files)
+//      before building job.
+
+type Executor struct {
+	FS fs.Filesystem
+}
+
+func NewExecutor() *Executor {
+	return &Executor{FS: fs.NewLocal()}
+}
+
+// BuildJob builds command line arguments for an invocation a tool
 // given a set of input values.
-func BuildCommand(clt *CommandLineTool, vals InputValues) ([]string, error) {
+func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error) {
 	args := bindings{}
 
 	// Add "arguments"
@@ -26,7 +46,10 @@ func BuildCommand(clt *CommandLineTool, vals InputValues) ([]string, error) {
 			val = in.Default
 		}
 
-		b := walk(in, val, k)
+		b, err := e.walk(in, val, k)
+		if err != nil {
+			return nil, fmt.Errorf("error while binding inputs: %s", err)
+		}
 		if b == nil {
 			return nil, fmt.Errorf("no binding found for input: %s", in.ID)
 		}
@@ -36,13 +59,16 @@ func BuildCommand(clt *CommandLineTool, vals InputValues) ([]string, error) {
 	sort.Stable(args)
 	//debug(args)
 
-	// Now collect the input bindings into command line arguments
-	cmd := append([]string{}, clt.BaseCommand...)
-	for _, b := range args {
-		cmd = append(cmd, b.args()...)
+	job := &Job{
+		Command: append([]string{}, clt.BaseCommand...),
 	}
 
-	return cmd, nil
+	// Now collect the input bindings into command line arguments
+	for _, b := range args {
+		job.Command = append(job.Command, b.args()...)
+	}
+
+	return job, nil
 }
 
 // walk walks the tree of input descriptors and values,
@@ -50,7 +76,7 @@ func BuildCommand(clt *CommandLineTool, vals InputValues) ([]string, error) {
 //
 // walk is called recursively for types which have subtypes,
 // such as array, record, etc.
-func walk(b bindable, val interface{}, key sortKey) bindings {
+func (e *Executor) walk(b bindable, val interface{}, key sortKey) (bindings, error) {
 	types, clb := b.bindable()
 
 	// If no type was found, check if the type is allowed to be null
@@ -59,13 +85,13 @@ func walk(b bindable, val interface{}, key sortKey) bindings {
 			if z, ok := t.(Null); ok {
 				return bindings{
 					{clb, z, nil, key, nil},
-				}
+				}, nil
 			}
 		}
 	}
 
 	if val == nil {
-		return nil
+		return nil, nil
 	}
 
 Loop:
@@ -85,7 +111,10 @@ Loop:
 
 			for i, val := range vals {
 				key := append(key, sortKey{getPos(z.InputBinding), i}...)
-				b := walk(z, val, key)
+				b, err := e.walk(z, val, key)
+				if err != nil {
+					return nil, err
+				}
 				if b == nil {
 					// array item values did not bind to the array descriptor.
 					continue Loop
@@ -98,7 +127,7 @@ Loop:
 				copy(nested, out)
 				b := &binding{clb, z, val, key, nested}
 				out = append(out, b)
-				return out
+				return out, nil
 			}
 
 		case InputRecord:
@@ -118,7 +147,10 @@ Loop:
 				}
 
 				key := append(key, sortKey{getPos(field.InputBinding), i}...)
-				b := walk(field, val, key)
+				b, err := e.walk(field, val, key)
+				if err != nil {
+					return nil, err
+				}
 				if b == nil {
 					continue Loop
 				}
@@ -130,7 +162,7 @@ Loop:
 				copy(nested, out)
 				b := &binding{clb, z, val, key, nested}
 				out = append(out, b)
-				return out
+				return out, nil
 			}
 
 		case Boolean:
@@ -143,7 +175,7 @@ Loop:
 			}
 			return bindings{
 				{clb, z, v, key, nil},
-			}
+			}, nil
 
 		case Int:
 			v, err := cast.ToInt32E(val)
@@ -152,7 +184,7 @@ Loop:
 			}
 			return bindings{
 				{clb, z, v, key, nil},
-			}
+			}, nil
 
 		case Long:
 			v, err := cast.ToInt64E(val)
@@ -161,7 +193,7 @@ Loop:
 			}
 			return bindings{
 				{clb, z, v, key, nil},
-			}
+			}, nil
 
 		case Float:
 			v, err := cast.ToFloat32E(val)
@@ -170,7 +202,7 @@ Loop:
 			}
 			return bindings{
 				{clb, z, v, key, nil},
-			}
+			}, nil
 
 		case Double:
 			v, err := cast.ToFloat64E(val)
@@ -179,7 +211,7 @@ Loop:
 			}
 			return bindings{
 				{clb, z, v, key, nil},
-			}
+			}, nil
 
 		case String:
 			v, err := cast.ToStringE(val)
@@ -189,16 +221,20 @@ Loop:
 
 			return bindings{
 				{clb, z, v, key, nil},
-			}
+			}, nil
 
 		case FileType:
 			v, ok := val.(File)
 			if !ok {
 				continue Loop
 			}
-			return bindings{
-				{clb, z, v, key, nil},
+			f, err := ResolveFile(v, e.FS, clb.LoadContents)
+			if err != nil {
+				return nil, err
 			}
+			return bindings{
+				{clb, z, *f, key, nil},
+			}, nil
 
 		case DirectoryType:
 			v, ok := val.(Directory)
@@ -207,12 +243,12 @@ Loop:
 			}
 			return bindings{
 				{clb, z, v, key, nil},
-			}
+			}, nil
 
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func getPos(in *CommandLineBinding) int {
