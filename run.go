@@ -18,6 +18,9 @@ type Job struct {
 	// file staging
 }
 
+// TODO expression results need to go through the loader,
+//      so that file types are properly recognized.
+
 // TODO need to fully resolve file inputs (including secondary files)
 //      before building job.
 
@@ -36,6 +39,7 @@ func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error
 
 	// Add "arguments"
 	for i, arg := range clt.Arguments {
+		// TODO validate that valueFrom is set
 		val, err := expr.EvalString(string(arg.ValueFrom))
 		if err != nil {
 			return nil, fmt.Errorf("failed to eval argument value: %s", err)

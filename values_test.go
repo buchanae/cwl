@@ -18,3 +18,32 @@ func TestResolveFile(t *testing.T) {
 
 	debug(x)
 }
+
+func TestEvalSecondaryFilesPattern(t *testing.T) {
+
+	tests := []struct {
+		path    string
+		pattern string
+		expect  string
+	}{
+		{
+			path:    "foo.bam",
+			pattern: "^.bai",
+			expect:  "foo.bai",
+		},
+		{
+			path:    "foo.bam",
+			pattern: ".bai",
+			expect:  "foo.bam.bai",
+		},
+	}
+
+	for _, test := range tests {
+		res := EvalSecondaryFilesPattern(test.path, test.pattern)
+		t.Log(test.path, test.pattern, test.expect, res)
+		if res != test.expect {
+			t.Error("failed match", res, test.expect)
+		}
+	}
+
+}

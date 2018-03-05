@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// TODO need parser that tracks open/close of parens
 var rx = regexp.MustCompile(`\$\((.*)\)`)
 
 type Part struct {
@@ -78,13 +79,22 @@ func Parse(e string) []*Part {
 
 var vm = otto.New()
 
+func IsExpr(s string) bool {
+	parts := Parse(s)
+	if len(parts) == 0 {
+		return false
+	}
+	if len(parts) == 1 && parts[0].Expr == "" {
+		return false
+	}
+	return true
+}
+
 func EvalString(s string) (interface{}, error) {
 	parts := Parse(s)
 	return Eval(parts)
 }
 
-// TODO expression results need to go through the loader,
-//      so that file types are properly recognized.
 func Eval(parts []*Part) (interface{}, error) {
 	if len(parts) == 0 {
 		return nil, nil

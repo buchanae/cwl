@@ -118,3 +118,23 @@ func splitname(n string) (root, ext string) {
 	root = strings.TrimSuffix(n, ext)
 	return root, ext
 }
+
+func EvalSecondaryFilesPattern(path string, pattern string) string {
+
+	// cwlspec:
+	// "If a value in secondaryFiles is a string that is not an expression,
+	// it specifies that the following pattern should be applied to the path
+	// of the primary file to yield a filename relative to the primary File:"
+
+	// "If string begins with one or more caret ^ characters, for each caret,
+	// remove the last file extension from the path (the last period . and all
+	// following characters).
+
+	for strings.HasPrefix(pattern, "^") {
+		pattern = strings.TrimPrefix(pattern, "^")
+		path = strings.TrimSuffix(path, filepath.Ext(path))
+	}
+
+	// "Append the remainder of the string to the end of the file path."
+	return path + pattern
+}
