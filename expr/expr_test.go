@@ -126,6 +126,28 @@ func TestParseString(t *testing.T) {
 				},
 			},
 		},
+		{
+			input: `$("/foo/bar/baz".split('/').slice(-1)[0])`,
+			expect: []*Part{
+				{
+					Raw:   `$("/foo/bar/baz".split('/').slice(-1)[0])`,
+					Expr:  `"/foo/bar/baz".split('/').slice(-1)[0]`,
+					Start: 0,
+					End:   41,
+				},
+			},
+		},
+		{
+			input: "${\n  var r = [];\n  for (var i = 10; i >= 1; i--) {\n    r.push(i);\n  }\n  return r;\n}\n",
+			expect: []*Part{
+				{
+					Raw:   "${\n  var r = [];\n  for (var i = 10; i >= 1; i--) {\n    r.push(i);\n  }\n  return r;\n}\n",
+					Expr:  "var r = [];\n  for (var i = 10; i >= 1; i--) {\n    r.push(i);\n  }\n  return r;",
+					Start: 0,
+					End:   84,
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {

@@ -2,6 +2,7 @@ package cwl
 
 import (
 	"fmt"
+	"github.com/buchanae/cwl/expr"
 	"github.com/buchanae/cwl/fs"
 	"github.com/spf13/cast"
 	"sort"
@@ -35,8 +36,11 @@ func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error
 
 	// Add "arguments"
 	for i, arg := range clt.Arguments {
-		// TODO evaluate expressions
-		b := &binding{arg, argType{}, string(arg.ValueFrom), sortKey{arg.Position, i}, nil}
+		val, err := expr.EvalString(string(arg.ValueFrom))
+		if err != nil {
+			return nil, fmt.Errorf("failed to eval argument value: %s", err)
+		}
+		b := &binding{arg, argType{}, val, sortKey{arg.Position, i}, nil}
 		args = append(args, b)
 	}
 
@@ -55,6 +59,7 @@ func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error
 		if b == nil {
 			return nil, fmt.Errorf("no binding found for input: %s", in.ID)
 		}
+
 		args = append(args, b...)
 	}
 
@@ -130,8 +135,6 @@ Loop:
 				b := &binding{clb, z, val, key, nested}
 				// TODO revisit whether creating a nested tree (instead of flat) is always better/ok
 				return bindings{b}, nil
-				//out = append(out, b)
-				//return out, nil
 			}
 
 		case InputRecord:

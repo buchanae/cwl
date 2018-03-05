@@ -28,9 +28,9 @@ inputs:
     type:
       type: array
       items: string
-      #inputBinding:
-        #prefix: -Z=
-        #separate: false
+      inputBinding:
+        prefix: -Z=
+        separate: false
     inputBinding:
       prefix: -C=
       itemSeparator: ","
