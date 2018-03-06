@@ -8,6 +8,12 @@ type Expression string
 
 type ScatterMethod string
 
+// TODO merge these
+type InputValue interface{}
+type InputValues map[string]InputValue
+type Value interface{}
+type Values map[string]Value
+
 const (
 	DotProduct         ScatterMethod = "dotproduct"
 	NestedCrossProduct               = "nested_crossproduct"
@@ -40,6 +46,27 @@ type FileType struct{}
 type DirectoryType struct{}
 type Stderr struct{}
 type Stdout struct{}
+
+type File struct {
+	Location       string       `json:"location,omitempty"`
+	Path           string       `json:"path,omitempty"`
+	Basename       string       `json:"basename,omitempty"`
+	Dirname        string       `json:"dirname,omitempty"`
+	Nameroot       string       `json:"nameroot,omitempty"`
+	Nameext        string       `json:"nameext,omitempty"`
+	Checksum       string       `json:"checksum,omitempty"`
+	Size           int64        `json:"size,omitempty"`
+	Format         string       `json:"format,omitempty"`
+	Contents       string       `json:"contents,omitempty"`
+	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
+}
+
+type Directory struct {
+	Location string   `json:"location,omitempty"`
+	Path     string   `json:"path,omitempty"`
+	Basename string   `json:"basename,omitempty"`
+	Listing  []string `json:"listing,omitempty"`
+}
 
 func (Null) String() string          { return "null" }
 func (Boolean) String() string       { return "boolean" }

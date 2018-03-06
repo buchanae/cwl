@@ -1,29 +1,21 @@
-package cwl
+package cwllib
 
 import (
 	"fmt"
+	"github.com/buchanae/cwl"
 	"strings"
 )
-
-// bindable describes a type which may have input values bound to it.
-// The following types are bindable:
-// - CommandInput
-// - InputArray
-// - InputField
-type bindable interface {
-	bindable() ([]InputType, *CommandLineBinding)
-}
 
 // binding binds an input type description (string, array, record, etc)
 // to a concrete input value. this information is used while building
 // command line args.
 type binding struct {
-	clb *CommandLineBinding
+	clb *cwl.CommandLineBinding
 	// the bound type (resolved by matching the input value to one of many allowed types)
 	// can be nil, which means no matching type could be determined.
-	typ InputType
+	typ interface{}
 	// the value from the input object
-	value InputValue
+	value cwl.InputValue
 	// used to determine the ordering of command line flags.
 	// http://www.commonwl.org/v1.0/CommandLineTool.html#Input_binding
 	sortKey sortKey
@@ -34,13 +26,13 @@ type binding struct {
 func (b *binding) args() []string {
 	switch b.typ.(type) {
 
-	case InputArray:
+	case cwl.InputArray:
 		// cwl spec:
 		// "If itemSeparator is specified, add prefix and the join the array
 		// into a single string with itemSeparator separating the items..."
 		if b.clb != nil && b.clb.ItemSeparator != "" {
 
-			var nested []InputValue
+			var nested []cwl.InputValue
 			for _, nb := range b.nested {
 				nested = append(nested, nb.value)
 			}
@@ -57,13 +49,14 @@ func (b *binding) args() []string {
 			return args
 		}
 
-	case InputRecord:
+	case cwl.InputRecord:
 		// TODO
 
-	case String, Int, Long, Float, Double, FileType, DirectoryType, argType:
+	case cwl.String, cwl.Int, cwl.Long, cwl.Float, cwl.Double, cwl.FileType,
+		cwl.DirectoryType, argType:
 		return formatArgs(b.clb, b.value)
 
-	case Boolean:
+	case cwl.Boolean:
 		/*
 		   TODO find a place for this validation
 		   if b.clb.Prefix == "" {
@@ -84,7 +77,7 @@ func (b *binding) args() []string {
 // formatArgs applies some command line binding rules to a CLI argument,
 // such as prefix, separate, etc.
 // http://www.commonwl.org/v1.0/CommandLineTool.html#CommandLineBinding
-func formatArgs(clb *CommandLineBinding, args ...InputValue) []string {
+func formatArgs(clb *cwl.CommandLineBinding, args ...cwl.InputValue) []string {
 	sep := true
 	prefix := ""
 	join := ""
@@ -116,7 +109,7 @@ func formatArgs(clb *CommandLineBinding, args ...InputValue) []string {
 	return strargs
 }
 
-func valueToStrings(v InputValue) []string {
+func valueToStrings(v cwl.InputValue) []string {
 	switch z := v.(type) {
 	case []interface{}:
 		var out []string
@@ -126,9 +119,9 @@ func valueToStrings(v InputValue) []string {
 		return out
 	case int, int32, int64, float32, float64, bool, string:
 		return []string{fmt.Sprintf("%v", z)}
-	case File:
+	case cwl.File:
 		return []string{z.Path}
-	case Directory:
+	case cwl.Directory:
 		return []string{z.Path}
 	}
 	return nil
@@ -209,16 +202,3 @@ func compare(iv, jv interface{}) int {
 
 // argType is used internally to mark a binding as coming from "CommandLineTool.Arguments"
 type argType struct{}
-
-func (argType) inputtype()     {}
-func (argType) String() string { return "argument" }
-
-func (c CommandInput) bindable() ([]InputType, *CommandLineBinding) {
-	return c.Type, c.InputBinding
-}
-func (i InputArray) bindable() ([]InputType, *CommandLineBinding) {
-	return i.Items, i.InputBinding
-}
-func (i InputField) bindable() ([]InputType, *CommandLineBinding) {
-	return i.Type, i.InputBinding
-}

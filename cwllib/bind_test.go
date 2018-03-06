@@ -1,4 +1,4 @@
-package cwl
+package cwllib
 
 /* TODO
 import (

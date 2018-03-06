@@ -1,7 +1,7 @@
 package simple
 
 import (
-  "github.com/buchanae/cwl"
+  "github.com/buchanae/cwl/cwllib"
   "os"
   "os/exec"
 )
@@ -20,7 +20,7 @@ type Result struct {
   ExitCode int
 }
 
-func Exec(job *cwl.Job) error {
+func Exec(job *cwllib.Job) error {
   cmd := exec.Command(job.Command[0], job.Command[1:]...)
   cmd.Stdout = os.Stdout
   cmd.Stderr = os.Stderr

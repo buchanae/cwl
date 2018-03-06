@@ -1,44 +1,43 @@
-package cwl
+package cwllib
 
 import (
 	"fmt"
-	"github.com/buchanae/cwl/expr"
-	"github.com/buchanae/cwl/fs"
+	"github.com/buchanae/cwl"
 	"github.com/spf13/cast"
 	"sort"
 )
 
 /*
 TODO
-- resource requests
-- environment variables
-- initial work dir
-- docker
 - better exec vs document code organization
+- more complete JS expression context (self, inputs, runtime, etc)
 - output document binding
 - cwl.output.json
-- file staging and working directory
-- more complete JS expression context (self, inputs, runtime, etc)
 - secondary files
 - load expression result values into File/Directory types where appropriate
+- file staging and working directory
+- solid expression parser (regexp misses edge cases and escaping)
+- relative path context (current working directory) for filesystems
+- absolute paths for files, especially in outputs
+- resolve document references
+- filesystem multiplexing based on location
+- success/failure codes and relationship to CLI cmd
+- Any type
 - document validation before processing
 - better line/col info from document loading errors
 - carefully check document json/yaml marshaling
 - input/output record type handling
 - executor backends
-- solid expression parser (regexp misses edge cases and escaping)
 - directory type
 - good framework for e2e tests with lots of coverage
-- resolve document references
 - $include and $import
 - test unrecognized fields are ignored (possibly with warning)
 - optional checksum calculation for filesystems
-- relative path context (current working directory) for filesystems
-- filesystem multiplexing based on location
-- Any type
-- success/failure codes and relationship to CLI cmd
-- absolute paths for files, especially in outputs
-- "class" and "type" for JSON output: File, Directory, ???
+- resource requests
+- environment variables
+- initial work dir
+- docker
+- missing requirement/hint types. see requirements.go
 
 workflow execution:
 - basics
@@ -52,11 +51,11 @@ type Job struct {
 }
 
 type Executor struct {
-	FS fs.Filesystem
+	FS Filesystem
 }
 
 func NewExecutor() *Executor {
-	return &Executor{FS: fs.NewLocal()}
+	return &Executor{FS: NewLocal()}
 }
 
 // evalGlobPatterns evaluates a list of potential expressions as defined by the CWL
@@ -66,11 +65,11 @@ func NewExecutor() *Executor {
 // cwl spec:
 // "If an expression is provided, the expression must return a string or an array
 //  of strings, which will then be evaluated as one or more glob patterns."
-func evalGlobPatterns(patterns []Expression) ([]string, error) {
+func evalGlobPatterns(patterns []cwl.Expression) ([]string, error) {
 	var out []string
 
 	for _, pattern := range patterns {
-		val, err := expr.Eval(string(pattern))
+		val, err := Eval(pattern)
 		if err != nil {
 			return nil, err
 		}
@@ -91,10 +90,10 @@ func evalGlobPatterns(patterns []Expression) ([]string, error) {
 
 // matchFiles executes the list of glob patterns, returning a list of matched files.
 // matchFiles must return a non-nil list on success, even if no files are matched.
-func (e *Executor) matchFiles(globs []string, loadContents bool) ([]*File, error) {
+func (e *Executor) matchFiles(globs []string, loadContents bool) ([]*cwl.File, error) {
 	// it's important this slice isn't nil, because the outputEval field
 	// expects it to be non-null during expression evaluation.
-	files := []*File{}
+	files := []*cwl.File{}
 
 	// resolve all the globs into file objects.
 	for _, pattern := range globs {
@@ -105,7 +104,7 @@ func (e *Executor) matchFiles(globs []string, loadContents bool) ([]*File, error
 
 		for _, m := range matches {
 			// TODO clean this up. the split between this and the "fs" package is weird.
-			v := File{
+			v := cwl.File{
 				Location: m.Location,
 				Path:     m.Path,
 				Checksum: m.Checksum,
@@ -124,20 +123,20 @@ func (e *Executor) matchFiles(globs []string, loadContents bool) ([]*File, error
 
 // TODO the expressions here need access to "inputs"
 // CollectOutputs collects outputs from the given CommandLineTool.
-func (e *Executor) CollectOutputs(clt *CommandLineTool) (Values, error) {
-  values := Values{}
+func (e *Executor) CollectOutputs(clt *cwl.CommandLineTool) (cwl.Values, error) {
+	values := cwl.Values{}
 	for _, out := range clt.Outputs {
 		v, err := e.CollectOutput(out)
 		if err != nil {
 			return nil, err
 		}
-    values[out.ID] = v
+		values[out.ID] = v
 	}
-  return values, nil
+	return values, nil
 }
 
 // CollectOutput collects the output value for a single CommandOutput.
-func (e *Executor) CollectOutput(out CommandOutput) (val interface{}, err error) {
+func (e *Executor) CollectOutput(out cwl.CommandOutput) (val interface{}, err error) {
 	// glob patterns may be expressions. evaluate them.
 	globs, err := evalGlobPatterns(out.OutputBinding.Glob)
 	if err != nil {
@@ -151,7 +150,7 @@ func (e *Executor) CollectOutput(out CommandOutput) (val interface{}, err error)
 
 	if out.OutputBinding.OutputEval != "" {
 		// TODO set value of "self"
-		val, err := expr.Eval(string(out.OutputBinding.OutputEval))
+		val, err := Eval(out.OutputBinding.OutputEval)
 		if err != nil {
 			return nil, fmt.Errorf("failed to evaluate outputEval for %s: %s", out.ID, err)
 		}
@@ -162,13 +161,13 @@ func (e *Executor) CollectOutput(out CommandOutput) (val interface{}, err error)
 
 // BuildJob builds command line arguments for an invocation a tool
 // given a set of input values.
-func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error) {
+func (e *Executor) BuildJob(clt *cwl.CommandLineTool, vals cwl.InputValues) (*Job, error) {
 	args := bindings{}
 
 	// Add "arguments"
 	for i, arg := range clt.Arguments {
 		// TODO validate that valueFrom is set
-		val, err := expr.Eval(string(arg.ValueFrom))
+		val, err := Eval(arg.ValueFrom)
 		if err != nil {
 			return nil, fmt.Errorf("failed to eval argument value: %s", err)
 		}
@@ -215,13 +214,25 @@ func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error
 //
 // walk is called recursively for types which have subtypes,
 // such as array, record, etc.
-func (e *Executor) walk(b bindable, val interface{}, key sortKey) (bindings, error) {
-	types, clb := b.bindable()
+func (e *Executor) walk(b interface{}, val interface{}, key sortKey) (bindings, error) {
+	var types []cwl.InputType
+	var clb *cwl.CommandLineBinding
+
+	switch z := b.(type) {
+	case cwl.CommandInput:
+		types, clb = z.Type, z.InputBinding
+	case cwl.InputArray:
+		types, clb = z.Items, z.InputBinding
+	case cwl.InputField:
+		types, clb = z.Type, z.InputBinding
+	default:
+		panic(fmt.Errorf("unknown binding type: %#v", b))
+	}
 
 	// If no type was found, check if the type is allowed to be null
 	if val == nil {
 		for _, t := range types {
-			if z, ok := t.(Null); ok {
+			if z, ok := t.(cwl.Null); ok {
 				return bindings{
 					{clb, z, nil, key, nil},
 				}, nil
@@ -239,8 +250,8 @@ Loop:
 	for _, t := range types {
 		switch z := t.(type) {
 
-		case InputArray:
-			vals, ok := val.([]InputValue)
+		case cwl.InputArray:
+			vals, ok := val.([]cwl.InputValue)
 			if !ok {
 				// input value is not an array.
 				continue Loop
@@ -269,8 +280,8 @@ Loop:
 				return bindings{b}, nil
 			}
 
-		case InputRecord:
-			vals, ok := val.(map[string]InputValue)
+		case cwl.InputRecord:
+			vals, ok := val.(map[string]cwl.InputValue)
 			if !ok {
 				// input value is not a record.
 				continue Loop
@@ -304,7 +315,7 @@ Loop:
 				return out, nil
 			}
 
-		case Boolean:
+		case cwl.Boolean:
 			if val == nil {
 				continue Loop
 			}
@@ -316,7 +327,7 @@ Loop:
 				{clb, z, v, key, nil},
 			}, nil
 
-		case Int:
+		case cwl.Int:
 			v, err := cast.ToInt32E(val)
 			if err != nil {
 				continue Loop
@@ -325,7 +336,7 @@ Loop:
 				{clb, z, v, key, nil},
 			}, nil
 
-		case Long:
+		case cwl.Long:
 			v, err := cast.ToInt64E(val)
 			if err != nil {
 				continue Loop
@@ -334,7 +345,7 @@ Loop:
 				{clb, z, v, key, nil},
 			}, nil
 
-		case Float:
+		case cwl.Float:
 			v, err := cast.ToFloat32E(val)
 			if err != nil {
 				continue Loop
@@ -343,7 +354,7 @@ Loop:
 				{clb, z, v, key, nil},
 			}, nil
 
-		case Double:
+		case cwl.Double:
 			v, err := cast.ToFloat64E(val)
 			if err != nil {
 				continue Loop
@@ -352,7 +363,7 @@ Loop:
 				{clb, z, v, key, nil},
 			}, nil
 
-		case String:
+		case cwl.String:
 			v, err := cast.ToStringE(val)
 			if err != nil {
 				continue Loop
@@ -362,8 +373,8 @@ Loop:
 				{clb, z, v, key, nil},
 			}, nil
 
-		case FileType:
-			v, ok := val.(File)
+		case cwl.FileType:
+			v, ok := val.(cwl.File)
 			if !ok {
 				continue Loop
 			}
@@ -375,8 +386,8 @@ Loop:
 				{clb, z, *f, key, nil},
 			}, nil
 
-		case DirectoryType:
-			v, ok := val.(Directory)
+		case cwl.DirectoryType:
+			v, ok := val.(cwl.Directory)
 			if !ok {
 				continue Loop
 			}
@@ -390,7 +401,7 @@ Loop:
 	return nil, nil
 }
 
-func getPos(in *CommandLineBinding) int {
+func getPos(in *cwl.CommandLineBinding) int {
 	if in == nil {
 		return 0
 	}

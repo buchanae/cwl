@@ -4,7 +4,8 @@ import (
   "fmt"
   "encoding/json"
   "github.com/buchanae/cwl"
-  "github.com/buchanae/cwl/exec/simple"
+  "github.com/buchanae/cwl/cwllib"
+  "github.com/buchanae/cwl/cwllib/simple"
   "os"
   "github.com/spf13/cobra"
 )
@@ -73,7 +74,7 @@ func build(path, inputsPath string) error {
     return fmt.Errorf("can only build command line tools")
   }
 
-  e := cwl.NewExecutor()
+  e := cwllib.NewExecutor()
   job, err := e.BuildJob(clt, vals)
   if err != nil {
     return err
@@ -110,7 +111,7 @@ func run(path, inputsPath string) error {
     return fmt.Errorf("can only build command line tools")
   }
 
-  e := cwl.NewExecutor()
+  e := cwllib.NewExecutor()
   job, err := e.BuildJob(clt, vals)
   if err != nil {
     return err

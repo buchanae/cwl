@@ -1,7 +1,8 @@
-package expr
+package cwllib
 
 import (
 	"fmt"
+	"github.com/buchanae/cwl"
 	"github.com/kr/pretty"
 	"github.com/robertkrimen/otto"
 	"regexp"
@@ -27,7 +28,8 @@ type Part struct {
 // Parse parses a string into a list of parts. If the string does not
 // contain a CWL expression, a single part is returned with `Raw` set
 // to the original string and `Expr` set to an empty string.
-func Parse(e string) []*Part {
+func Parse(expr cwl.Expression) []*Part {
+	e := string(expr)
 	ev := strings.TrimSpace(e)
 	if len(ev) == 0 {
 		return nil
@@ -86,8 +88,8 @@ func Parse(e string) []*Part {
 }
 
 // IsExpr returns true if the given string contains a CWL expression.
-func IsExpr(s string) bool {
-	parts := Parse(s)
+func IsExpr(expr cwl.Expression) bool {
+	parts := Parse(expr)
 	if len(parts) == 0 {
 		return false
 	}
@@ -99,8 +101,8 @@ func IsExpr(s string) bool {
 
 // Eval evaluates a string which is possibly a CWL expression.
 // If the string is not an expression, the string is returned unchanged.
-func Eval(s string) (interface{}, error) {
-	return EvalParts(Parse(s))
+func Eval(e cwl.Expression) (interface{}, error) {
+	return EvalParts(Parse(e))
 }
 
 // EvalParts evaluates a string which has been parsed by Parse().
