@@ -61,33 +61,37 @@ func (l *loader) MappingToRequirement(n node) (Requirement, error) {
 func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
 	switch strings.ToLower(name) {
 	case "dockerrequirement":
-		d := DockerRequirement{Class: name}
+		d := DockerRequirement{}
 		err := l.load(n, &d)
 		return d, err
 	case "resourcerequirement":
-		r := ResourceRequirement{Class: name}
+		r := ResourceRequirement{}
 		err := l.load(n, &r)
 		return r, err
 	case "envvarrequirement":
+    // TODO
 	case "shellcommandrequirement":
-		s := ShellCommandRequirement{Class: name}
+		s := ShellCommandRequirement{}
 		err := l.load(n, &s)
 		return s, err
 	case "inlinejavascriptrequirement":
-		j := InlineJavascriptRequirement{Class: name}
+		j := InlineJavascriptRequirement{}
 		err := l.load(n, &j)
 		return j, err
 	case "schemadefrequirement":
+    // TODO
 	case "softwarerequirement":
+    // TODO
 	case "initialworkdirrequirement":
+    // TODO
 	case "subworkflowfeaturerequirement":
-		return SubworkflowFeatureRequirement{Class: name}, nil
+		return SubworkflowFeatureRequirement{}, nil
 	case "scatterfeaturerequirement":
-		return ScatterFeatureRequirement{Class: name}, nil
+		return ScatterFeatureRequirement{}, nil
 	case "multipleinputfeaturerequirement":
-		return MultipleInputFeatureRequirement{Class: name}, nil
+		return MultipleInputFeatureRequirement{}, nil
 	case "stepinputexpressionrequirement":
-		return StepInputExpressionRequirement{Class: name}, nil
+		return StepInputExpressionRequirement{}, nil
 	}
 	return nil, fmt.Errorf("unknown hint name: %s", name)
 }

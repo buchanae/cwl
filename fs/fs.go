@@ -11,15 +11,6 @@ import (
 	"github.com/alecthomas/units"
 )
 
-/*
-TODO
-
-resolution can be relative, so directory context is required
-
-map location to filesystem provider
-
-*/
-
 type File struct {
 	Location string
 	Path     string
@@ -30,10 +21,6 @@ type File struct {
 const maxContentsBytes = 64 * units.Kilobyte
 
 type Filesystem interface {
-
-	// TODO secondary files
-	// check that it exists
-
 	Glob(pattern string) ([]*File, error)
 
 	Create(path, contents string) (*File, error)

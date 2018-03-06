@@ -120,5 +120,17 @@ func run(path, inputsPath string) error {
   if err != nil {
     return err
   }
-  return e.CollectOutputs(clt)
+
+  outvals, err := e.CollectOutputs(clt)
+  if err != nil {
+    return err
+  }
+
+  b, err := json.MarshalIndent(outvals, "", "  ")
+  if err != nil {
+    return err
+  }
+  fmt.Println(string(b))
+
+  return nil
 }

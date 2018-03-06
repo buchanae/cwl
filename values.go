@@ -12,25 +12,28 @@ type InputValue interface{}
 
 type InputValues map[string]InputValue
 
+type Value interface{}
+type Values map[string]Value
+
 type File struct {
-	Location       string
-	Path           string
-	Basename       string
-	Dirname        string
-	Nameroot       string
-	Nameext        string
-	Checksum       string
-	Size           int64
-	Format         string
-	Contents       string
-	SecondaryFiles []Expression
+	Location       string `json:"location,omitempty"`
+	Path           string `json:"path,omitempty"`
+	Basename       string `json:"basename,omitempty"`
+	Dirname        string `json:"dirname,omitempty"`
+	Nameroot       string `json:"nameroot,omitempty"`
+	Nameext        string `json:"nameext,omitempty"`
+	Checksum       string `json:"checksum,omitempty"`
+	Size           int64 `json:"size,omitempty"`
+	Format         string `json:"format,omitempty"`
+	Contents       string `json:"contents,omitempty"`
+	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
 }
 
 type Directory struct {
-	Location string
-	Path     string
-	Basename string
-	Listing  []string
+	Location string `json:"location,omitempty"`
+	Path     string `json:"path,omitempty"`
+	Basename string `json:"basename,omitempty"`
+	Listing  []string `json:"listing,omitempty"`
 }
 
 // ResolveFile uses the filesystem to fill in all fields in the File,

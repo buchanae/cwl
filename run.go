@@ -8,21 +8,48 @@ import (
 	"sort"
 )
 
+/*
+TODO
+- resource requests
+- environment variables
+- initial work dir
+- docker
+- better exec vs document code organization
+- output document binding
+- cwl.output.json
+- file staging and working directory
+- more complete JS expression context (self, inputs, runtime, etc)
+- secondary files
+- load expression result values into File/Directory types where appropriate
+- document validation before processing
+- better line/col info from document loading errors
+- carefully check document json/yaml marshaling
+- input/output record type handling
+- executor backends
+- solid expression parser (regexp misses edge cases and escaping)
+- directory type
+- good framework for e2e tests with lots of coverage
+- resolve document references
+- $include and $import
+- test unrecognized fields are ignored (possibly with warning)
+- optional checksum calculation for filesystems
+- relative path context (current working directory) for filesystems
+- filesystem multiplexing based on location
+- Any type
+- success/failure codes and relationship to CLI cmd
+- absolute paths for files, especially in outputs
+- "class" and "type" for JSON output: File, Directory, ???
+
+workflow execution:
+- basics
+- caching
+
+server + API:
+*/
+
 type Job struct {
 	Command []string
-	// TODO resource requests
-	// TODO input files
-	// TODO output binding description
-	// environment
-	// working directory
-	// file staging
 }
-
-// TODO expression results need to go through the loader,
-//      so that file types are properly recognized.
-
-// TODO need to fully resolve file inputs (including secondary files)
-//      before building job.
 
 type Executor struct {
 	FS fs.Filesystem
@@ -45,7 +72,7 @@ func evalGlobPatterns(patterns []Expression) ([]string, error) {
 	for _, pattern := range patterns {
 		val, err := expr.Eval(string(pattern))
 		if err != nil {
-			return nil, fmt.Errorf("failed to evaluate glob expression: %s", err)
+			return nil, err
 		}
 
 		switch z := val.(type) {
@@ -95,16 +122,18 @@ func (e *Executor) matchFiles(globs []string, loadContents bool) ([]*File, error
 	return files, nil
 }
 
+// TODO the expressions here need access to "inputs"
 // CollectOutputs collects outputs from the given CommandLineTool.
-func (e *Executor) CollectOutputs(clt *CommandLineTool) error {
+func (e *Executor) CollectOutputs(clt *CommandLineTool) (Values, error) {
+  values := Values{}
 	for _, out := range clt.Outputs {
 		v, err := e.CollectOutput(out)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		debug(v)
+    values[out.ID] = v
 	}
-	return nil
+  return values, nil
 }
 
 // CollectOutput collects the output value for a single CommandOutput.

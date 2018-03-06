@@ -11,3 +11,4 @@ outputs:
     type: File
     outputBinding:
       glob: hello.txt
+      loadContents: true
