@@ -116,5 +116,9 @@ func run(path, inputsPath string) error {
     return err
   }
 
-  return simple.Exec(job)
+  err = simple.Exec(job)
+  if err != nil {
+    return err
+  }
+  return e.CollectOutputs(clt)
 }

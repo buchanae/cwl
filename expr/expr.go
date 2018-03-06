@@ -8,9 +8,14 @@ import (
 	"strings"
 )
 
+// javascript VM
+var vm = otto.New()
+
 // TODO need parser that tracks open/close of parens
 var rx = regexp.MustCompile(`\$\((.*)\)`)
 
+// Part describes a part of a CWL expression string which has been
+// parsed by Parse().
 type Part struct {
 	Raw        string
 	Expr       string
@@ -19,6 +24,9 @@ type Part struct {
 	IsFuncBody bool
 }
 
+// Parse parses a string into a list of parts. If the string does not
+// contain a CWL expression, a single part is returned with `Raw` set
+// to the original string and `Expr` set to an empty string.
 func Parse(e string) []*Part {
 	ev := strings.TrimSpace(e)
 	if len(ev) == 0 {
@@ -77,8 +85,7 @@ func Parse(e string) []*Part {
 	return parts
 }
 
-var vm = otto.New()
-
+// IsExpr returns true if the given string contains a CWL expression.
 func IsExpr(s string) bool {
 	parts := Parse(s)
 	if len(parts) == 0 {
@@ -90,12 +97,16 @@ func IsExpr(s string) bool {
 	return true
 }
 
-func EvalString(s string) (interface{}, error) {
-	parts := Parse(s)
-	return Eval(parts)
+// Eval evaluates a string which is possibly a CWL expression.
+// If the string is not an expression, the string is returned unchanged.
+func Eval(s string) (interface{}, error) {
+	return EvalParts(Parse(s))
 }
 
-func Eval(parts []*Part) (interface{}, error) {
+// EvalParts evaluates a string which has been parsed by Parse().
+// If the parts do not represent an expression, the original raw string
+// is returned. This is a low-level function, it's better to use EvalString().
+func EvalParts(parts []*Part) (interface{}, error) {
 	if len(parts) == 0 {
 		return nil, nil
 	}

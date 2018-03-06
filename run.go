@@ -32,6 +32,105 @@ func NewExecutor() *Executor {
 	return &Executor{FS: fs.NewLocal()}
 }
 
+// evalGlobPatterns evaluates a list of potential expressions as defined by the CWL
+// OutputBinding.glob field. It returns a list of strings, which are glob expression,
+// or an error.
+//
+// cwl spec:
+// "If an expression is provided, the expression must return a string or an array
+//  of strings, which will then be evaluated as one or more glob patterns."
+func evalGlobPatterns(patterns []Expression) ([]string, error) {
+	var out []string
+
+	for _, pattern := range patterns {
+		val, err := expr.Eval(string(pattern))
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate glob expression: %s", err)
+		}
+
+		switch z := val.(type) {
+		case string:
+			out = append(out, z)
+		case []string:
+			out = append(out, z...)
+		default:
+			return nil, fmt.Errorf(
+				"glob expression returned an invalid type. Only string or []string "+
+					"are allowed. Got: %s", val)
+		}
+	}
+	return out, nil
+}
+
+// matchFiles executes the list of glob patterns, returning a list of matched files.
+// matchFiles must return a non-nil list on success, even if no files are matched.
+func (e *Executor) matchFiles(globs []string, loadContents bool) ([]*File, error) {
+	// it's important this slice isn't nil, because the outputEval field
+	// expects it to be non-null during expression evaluation.
+	files := []*File{}
+
+	// resolve all the globs into file objects.
+	for _, pattern := range globs {
+		matches, err := e.FS.Glob(pattern)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute glob: %s", err)
+		}
+
+		for _, m := range matches {
+			// TODO clean this up. the split between this and the "fs" package is weird.
+			v := File{
+				Location: m.Location,
+				Path:     m.Path,
+				Checksum: m.Checksum,
+				Size:     m.Size,
+			}
+
+			f, err := ResolveFile(v, e.FS, loadContents)
+			if err != nil {
+				return nil, err
+			}
+			files = append(files, f)
+		}
+	}
+	return files, nil
+}
+
+// CollectOutputs collects outputs from the given CommandLineTool.
+func (e *Executor) CollectOutputs(clt *CommandLineTool) error {
+	for _, out := range clt.Outputs {
+		v, err := e.CollectOutput(out)
+		if err != nil {
+			return err
+		}
+		debug(v)
+	}
+	return nil
+}
+
+// CollectOutput collects the output value for a single CommandOutput.
+func (e *Executor) CollectOutput(out CommandOutput) (val interface{}, err error) {
+	// glob patterns may be expressions. evaluate them.
+	globs, err := evalGlobPatterns(out.OutputBinding.Glob)
+	if err != nil {
+		return nil, fmt.Errorf("failed to evaluate glob expressions for %s: %s", out.ID, err)
+	}
+
+	files, err := e.matchFiles(globs, out.OutputBinding.LoadContents)
+	if err != nil {
+		return nil, fmt.Errorf("failed to match files for %s: %s", out.ID, err)
+	}
+
+	if out.OutputBinding.OutputEval != "" {
+		// TODO set value of "self"
+		val, err := expr.Eval(string(out.OutputBinding.OutputEval))
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate outputEval for %s: %s", out.ID, err)
+		}
+		return val, nil
+	}
+	return files, nil
+}
+
 // BuildJob builds command line arguments for an invocation a tool
 // given a set of input values.
 func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error) {
@@ -40,7 +139,7 @@ func (e *Executor) BuildJob(clt *CommandLineTool, vals InputValues) (*Job, error
 	// Add "arguments"
 	for i, arg := range clt.Arguments {
 		// TODO validate that valueFrom is set
-		val, err := expr.EvalString(string(arg.ValueFrom))
+		val, err := expr.Eval(string(arg.ValueFrom))
 		if err != nil {
 			return nil, fmt.Errorf("failed to eval argument value: %s", err)
 		}
