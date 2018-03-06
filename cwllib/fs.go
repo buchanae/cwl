@@ -14,20 +14,13 @@ import (
 	"github.com/buchanae/cwl"
 )
 
-type File struct {
-	Location string
-	Path     string
-	Checksum string
-	Size     int64
-}
-
 const maxContentsBytes = 64 * units.Kilobyte
 
 type Filesystem interface {
-	Glob(pattern string) ([]*File, error)
+	Glob(pattern string) ([]*cwl.File, error)
 
-	Create(path, contents string) (*File, error)
-	Info(loc string) (*File, error)
+	Create(path, contents string) (*cwl.File, error)
+	Info(loc string) (*cwl.File, error)
 	Contents(loc string) (string, error)
 }
 
@@ -45,8 +38,8 @@ func NewLocal() *Local {
 	return &Local{}
 }
 
-func (l *Local) Glob(pattern string) ([]*File, error) {
-	var out []*File
+func (l *Local) Glob(pattern string) ([]*cwl.File, error) {
+	var out []*cwl.File
 
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
@@ -63,7 +56,7 @@ func (l *Local) Glob(pattern string) ([]*File, error) {
 	return out, nil
 }
 
-func (l *Local) Create(path, contents string) (*File, error) {
+func (l *Local) Create(path, contents string) (*cwl.File, error) {
 	if path == "" {
 		return nil, fmt.Errorf("can't create file with empty path")
 	}
@@ -74,7 +67,7 @@ func (l *Local) Create(path, contents string) (*File, error) {
 		return nil, fmt.Errorf("contents is max allowed size (%s)", maxContentsBytes)
 	}
 
-	return &File{
+	return &cwl.File{
 		Location: filepath.Join(l.workdir, path),
 		Path:     path,
 		Checksum: "sha1$" + fmt.Sprintf("%x", sha1.Sum(b)),
@@ -82,7 +75,7 @@ func (l *Local) Create(path, contents string) (*File, error) {
 	}, nil
 }
 
-func (l *Local) Info(loc string) (*File, error) {
+func (l *Local) Info(loc string) (*cwl.File, error) {
 	st, err := os.Stat(loc)
 	if err != nil {
 		return nil, err
@@ -93,7 +86,7 @@ func (l *Local) Info(loc string) (*File, error) {
 		return nil, fmt.Errorf("can't call Info() on a directory: %s", loc)
 	}
 
-	return &File{
+	return &cwl.File{
 		Location: loc,
 		Path:     loc,
 		// TODO allow config to optionally enable calculating checksum for local files
@@ -141,7 +134,7 @@ func ResolveFile(f cwl.File, filesys Filesystem, loadContents bool) (*cwl.File, 
 		return nil, fmt.Errorf("location and contents are both non-empty")
 	}
 
-	var x *File
+	var x *cwl.File
 	var err error
 
 	if f.Contents != "" {
@@ -178,6 +171,8 @@ func ResolveFile(f cwl.File, filesys Filesystem, loadContents bool) (*cwl.File, 
 		}
 	}
 
+	// TODO clean this up. "x" was needed before a package reorg.
+	//      possibly can be removed now.
 	f.Location = x.Location
 	f.Path = x.Path
 	f.Checksum = x.Checksum
