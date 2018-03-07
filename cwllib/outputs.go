@@ -2,6 +2,8 @@ package cwllib
 
 import (
 	"github.com/buchanae/cwl"
+	"github.com/spf13/cast"
+	"reflect"
 )
 
 /*** CWL output binding code ***/
@@ -11,9 +13,9 @@ func (job *Job) Outputs() (cwl.Values, error) {
 	// TODO bind the outputs recursively, like bindInput
 	values := cwl.Values{}
 	for _, out := range job.tool.Outputs {
-		v, err := job.bindOutput(out)
+		v, err := job.bindOutput(out.Type, out.OutputBinding, out.SecondaryFiles, nil)
 		if err != nil {
-			return nil, err
+			return nil, errf(`failed to bind value for "%s": %s`, out.ID, err)
 		}
 		values[out.ID] = v
 	}
@@ -21,26 +23,141 @@ func (job *Job) Outputs() (cwl.Values, error) {
 }
 
 // bindOutput binds the output value for a single CommandOutput.
-func (job *Job) bindOutput(out cwl.CommandOutput) (val interface{}, err error) {
-	// glob patterns may be expressions. evaluate them.
-	globs, err := job.evalGlobPatterns(out.OutputBinding.Glob)
-	if err != nil {
-		return nil, errf("failed to evaluate glob expressions for %s: %s", out.ID, err)
-	}
+func (job *Job) bindOutput(
+	types []cwl.OutputType,
+	binding *cwl.CommandOutputBinding,
+	secondaryFiles []cwl.Expression,
+	val interface{},
+) (interface{}, error) {
+	var err error
 
-	files, err := job.matchFiles(globs, out.OutputBinding.LoadContents)
-	if err != nil {
-		return nil, errf("failed to match files for %s: %s", out.ID, err)
-	}
-
-	if out.OutputBinding.OutputEval != "" {
-		val, err := job.eval(out.OutputBinding.OutputEval, files)
+	if binding != nil && len(binding.Glob) > 0 {
+		// glob patterns may be expressions. evaluate them.
+		globs, err := job.evalGlobPatterns(binding.Glob)
 		if err != nil {
-			return nil, errf("failed to evaluate outputEval for %s: %s", out.ID, err)
+			return nil, errf("failed to evaluate glob expressions: %s", err)
 		}
-		return val, nil
+
+		files, err := job.matchFiles(globs, binding.LoadContents)
+		if err != nil {
+			return nil, errf("failed to match files: %s", err)
+		}
+		val = files
 	}
-	return files, nil
+
+	if binding != nil && binding.OutputEval != "" {
+		val, err = job.eval(binding.OutputEval, val)
+		if err != nil {
+			return nil, errf("failed to evaluate outputEval: %s", err)
+		}
+	}
+
+	if val == nil {
+		for _, t := range types {
+			if _, ok := t.(cwl.Null); ok {
+				return nil, nil
+			}
+		}
+	}
+
+	if val == nil {
+		return nil, errf("missing value")
+	}
+
+	debug("value", val)
+
+	// Bind the output value to one of the allowed types.
+Loop:
+	for _, t := range types {
+		switch z := t.(type) {
+		case cwl.Boolean:
+			v, err := cast.ToBoolE(val)
+			if err == nil {
+				return v, nil
+			}
+		case cwl.Int:
+			v, err := cast.ToInt32E(val)
+			if err == nil {
+				return v, nil
+			}
+		case cwl.Long:
+			v, err := cast.ToInt64E(val)
+			if err == nil {
+				return v, nil
+			}
+		case cwl.Float:
+			v, err := cast.ToFloat32E(val)
+			if err == nil {
+				return v, nil
+			}
+		case cwl.Double:
+			v, err := cast.ToFloat64E(val)
+			if err == nil {
+				return v, nil
+			}
+		case cwl.String:
+			v, err := cast.ToStringE(val)
+			if err == nil {
+				return v, nil
+			}
+		case cwl.FileType:
+			debug("trying to match File")
+
+			switch y := val.(type) {
+			case []*cwl.File:
+				if len(y) != 1 {
+					debug("array is not a single file")
+					continue Loop
+				}
+				f := y[0]
+				for _, expr := range secondaryFiles {
+					err := job.resolveSecondaryFiles(f, expr)
+					if err != nil {
+						return nil, errf("failed to resolve secondary files: %s", err)
+					}
+				}
+				return f, nil
+
+			case *cwl.File:
+				return y, nil
+			case cwl.File:
+				return y, nil
+			default:
+				continue Loop
+			}
+		case cwl.DirectoryType:
+			// TODO
+		case cwl.OutputArray:
+			debug("trying to match OutputArray")
+
+			typ := reflect.TypeOf(val)
+			if typ.Kind() != reflect.Slice {
+				debug("value is not an array")
+				continue Loop
+			}
+
+			var res []interface{}
+
+			arr := reflect.ValueOf(val)
+			for i := 0; i < arr.Len(); i++ {
+				item := arr.Index(i)
+				if !item.CanInterface() {
+					return nil, errf("can't get interface of array item")
+				}
+				r, err := job.bindOutput(z.Items, z.OutputBinding, nil, item.Interface())
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, r)
+			}
+			return res, nil
+
+		case cwl.OutputRecord:
+			// TODO
+		}
+	}
+
+	return nil, errf("no type could be matched")
 }
 
 // matchFiles executes the list of glob patterns, returning a list of matched files.

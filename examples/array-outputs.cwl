@@ -1,5 +1,7 @@
 cwlVersion: v1.0
 class: CommandLineTool
+requirements:
+ - class: InlineJavascriptRequirement
 baseCommand: touch
 inputs:
   touchfiles:
@@ -10,8 +12,7 @@ inputs:
       position: 1
 outputs:
   output:
-    type:
-      type: array
-      items: File
+    type: File[]
     outputBinding:
       glob: "*.txt"
+      #outputEval: ${return self}

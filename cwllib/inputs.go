@@ -53,9 +53,8 @@ func (job *Job) bindInput(
 		}
 	}
 
-	// TODO maybe return an error here to be more explicit.
 	if val == nil {
-		return nil, nil
+		return nil, errf("failed to bind input, missing value")
 	}
 
 Loop:
@@ -220,5 +219,5 @@ Loop:
 		}
 	}
 
-	return nil, nil
+	return nil, errf("failed to bind input, missing value")
 }

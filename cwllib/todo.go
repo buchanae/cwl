@@ -8,13 +8,14 @@ TODO
 - secondary files
 - load expression result values into File/Directory types where appropriate
 - file staging and working directory
-- solid expression parser (regexp misses edge cases and escaping)
 - relative path context (current working directory) for filesystems
 - absolute paths for files, especially in outputs
 - resolve document references
 - filesystem multiplexing based on location
 - success/failure codes and relationship to CLI cmd
 - Any type
+- solid expression parser (regexp misses edge cases and escaping)
+
 - document validation before processing
 - better line/col info from document loading errors
 - carefully check document json/yaml marshaling
