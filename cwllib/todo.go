@@ -7,14 +7,15 @@ TODO
 - relative path context (current working directory) for filesystems
 - absolute paths for files, especially in outputs
 - resolve document references
+- good framework for e2e tests with lots of coverage
 - really good debug logging, with the goal of clearly explaining to a **user**
   what is going on when a job fails at any step, especially input/output binding.
-- filesystem multiplexing based on location
 - success/failure codes and relationship to CLI cmd
 - shell command requirement and relationship to executor/env interface
 - Any type
 - solid expression parser (regexp misses edge cases and escaping)
 - type check cwl.output.json
+- filesystem multiplexing based on location
 
 - document validation before processing
 - better line/col/context info from document loading errors
@@ -22,7 +23,6 @@ TODO
 - input/output record type handling
 - executor backends
 - directory type
-- good framework for e2e tests with lots of coverage
 - $include and $import
 - test unrecognized fields are ignored (possibly with warning)
 - optional checksum calculation for filesystems
@@ -30,7 +30,6 @@ TODO
 - environment variables
 - initial work dir
 - docker
-- missing requirement/hint types. see requirements.go
 - time limit on JS evaluation
 
 workflow execution:

@@ -17,7 +17,7 @@ inputs:
 
 outputs:
   output:
-    type: string
+    type: File[]
     outputBinding:
       glob: "*.txt"
       #outputEval: ${return self}

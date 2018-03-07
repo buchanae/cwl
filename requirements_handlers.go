@@ -69,6 +69,9 @@ func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
 		err := l.load(n, &r)
 		return r, err
 	case "envvarrequirement":
+		r := EnvVarRequirement{}
+		err := l.load(n, &r)
+		return r, err
 		// TODO
 	case "shellcommandrequirement":
 		s := ShellCommandRequirement{}
@@ -79,11 +82,17 @@ func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
 		err := l.load(n, &j)
 		return j, err
 	case "schemadefrequirement":
-		// TODO
+		r := SchemaDefRequirement{}
+		err := l.load(n, &r)
+		return r, err
 	case "softwarerequirement":
-		// TODO
+		r := SoftwareRequirement{}
+		err := l.load(n, &r)
+		return r, err
 	case "initialworkdirrequirement":
-		// TODO
+		r := InitialWorkDirRequirement{}
+		err := l.load(n, &r)
+		return r, err
 	case "subworkflowfeaturerequirement":
 		return SubworkflowFeatureRequirement{}, nil
 	case "scatterfeaturerequirement":
