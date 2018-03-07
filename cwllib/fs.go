@@ -1,11 +1,11 @@
 package cwllib
 
 import (
+	"github.com/alecthomas/units"
+	"github.com/buchanae/cwl"
 	"github.com/google/uuid"
 	"path/filepath"
 	"strings"
-	"github.com/alecthomas/units"
-	"github.com/buchanae/cwl"
 )
 
 type Filesystem interface {
@@ -45,7 +45,7 @@ func (job *Job) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
 	var x *cwl.File
 	var err error
 
-  fs := job.env.Filesystem()
+	fs := job.env.Filesystem()
 	if f.Contents != "" {
 		// Determine the file path of the literal.
 		// Use the path, or the basename, or generate a random name.
@@ -99,20 +99,20 @@ func (job *Job) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
 
 func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error {
 
-  // cwl spec:
-  // "If the value is an expression, the value of self in the expression
-  // must be the primary input or output File object to which this binding applies.
-  // The basename, nameroot and nameext fields must be present in self.
-  // For CommandLineTool outputs the path field must also be present.
-  // The expression must return a filename string relative to the path
-  // to the primary File, a File or Directory object with either path 
-  // or location and basename fields set, or an array consisting of strings 
-  // or File or Directory objects. It is legal to reference an unchanged File 
-  // or Directory object taken from input as a secondaryFile.
-  // TODO
-  if IsExpression(expr) {
-    job.eval(expr, file)
-  }
+	// cwl spec:
+	// "If the value is an expression, the value of self in the expression
+	// must be the primary input or output File object to which this binding applies.
+	// The basename, nameroot and nameext fields must be present in self.
+	// For CommandLineTool outputs the path field must also be present.
+	// The expression must return a filename string relative to the path
+	// to the primary File, a File or Directory object with either path
+	// or location and basename fields set, or an array consisting of strings
+	// or File or Directory objects. It is legal to reference an unchanged File
+	// or Directory object taken from input as a secondaryFile.
+	// TODO
+	if IsExpression(expr) {
+		job.eval(expr, file)
+	}
 
 	// cwl spec:
 	// "If a value in secondaryFiles is a string that is not an expression,
@@ -122,9 +122,9 @@ func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error
 	// "If string begins with one or more caret ^ characters, for each caret,
 	// remove the last file extension from the location (the last period . and all
 	// following characters).
-  pattern := string(expr)
-  // TODO location or path? cwl spec says "path" but I'm suspicious.
-  location := file.Location
+	pattern := string(expr)
+	// TODO location or path? cwl spec says "path" but I'm suspicious.
+	location := file.Location
 
 	for strings.HasPrefix(pattern, "^") {
 		pattern = strings.TrimPrefix(pattern, "^")
@@ -132,18 +132,18 @@ func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error
 	}
 
 	// "Append the remainder of the string to the end of the file location."
-  sec := cwl.File{
-    Location: location + pattern,
-  }
+	sec := cwl.File{
+		Location: location + pattern,
+	}
 
-  // TODO does LoadContents apply to secondary files? not in the spec
-  f, err := job.resolveFile(sec, false)
-  if err != nil {
-    return err
-  }
+	// TODO does LoadContents apply to secondary files? not in the spec
+	f, err := job.resolveFile(sec, false)
+	if err != nil {
+		return err
+	}
 
-  file.SecondaryFiles = append(file.SecondaryFiles, f)
-  return nil
+	file.SecondaryFiles = append(file.SecondaryFiles, f)
+	return nil
 }
 
 // splitname splits a file name into root and extension,

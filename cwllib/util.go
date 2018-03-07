@@ -1,14 +1,14 @@
 package cwllib
 
 import (
-  "fmt"
-  "github.com/buchanae/cwl"
+	"fmt"
+	"github.com/buchanae/cwl"
 	"github.com/kr/pretty"
 )
 
 // errf makes fmt.Errorf shorter
 func errf(msg string, args ...interface{}) error {
-  return fmt.Errorf(msg, args...)
+	return fmt.Errorf(msg, args...)
 }
 
 // getPos is a helper for accessing the Position field

@@ -45,31 +45,31 @@ type Stderr struct{}
 type Stdout struct{}
 
 type FileDir interface {
-  filedir()
+	filedir()
 }
 
 type File struct {
-	Location       string       `json:"location,omitempty"`
-	Path           string       `json:"path,omitempty"`
-	Basename       string       `json:"basename,omitempty"`
-	Dirname        string       `json:"dirname,omitempty"`
-	Nameroot       string       `json:"nameroot,omitempty"`
-	Nameext        string       `json:"nameext,omitempty"`
-	Checksum       string       `json:"checksum,omitempty"`
-	Size           int64        `json:"size,omitempty"`
-	Format         string       `json:"format,omitempty"`
-	Contents       string       `json:"contents,omitempty"`
-	SecondaryFiles []FileDir    `json:"secondaryFiles,omitempty"`
+	Location       string    `json:"location,omitempty"`
+	Path           string    `json:"path,omitempty"`
+	Basename       string    `json:"basename,omitempty"`
+	Dirname        string    `json:"dirname,omitempty"`
+	Nameroot       string    `json:"nameroot,omitempty"`
+	Nameext        string    `json:"nameext,omitempty"`
+	Checksum       string    `json:"checksum,omitempty"`
+	Size           int64     `json:"size,omitempty"`
+	Format         string    `json:"format,omitempty"`
+	Contents       string    `json:"contents,omitempty"`
+	SecondaryFiles []FileDir `json:"secondaryFiles,omitempty"`
 }
 
 type Directory struct {
-	Location string   `json:"location,omitempty"`
-	Path     string   `json:"path,omitempty"`
-	Basename string   `json:"basename,omitempty"`
+	Location string    `json:"location,omitempty"`
+	Path     string    `json:"path,omitempty"`
+	Basename string    `json:"basename,omitempty"`
 	Listing  []FileDir `json:"listing,omitempty"`
 }
 
-func (File) filedir() {}
+func (File) filedir()      {}
 func (Directory) filedir() {}
 
 func (Null) String() string          { return "null" }
@@ -106,10 +106,10 @@ type Document interface {
 	doctype()
 }
 
-func (Tool) doctype() {}
-func (Workflow) doctype()        {}
-func (ExpressionTool) doctype()  {}
-func (DocumentRef) doctype()     {}
+func (Tool) doctype()           {}
+func (Workflow) doctype()       {}
+func (ExpressionTool) doctype() {}
+func (DocumentRef) doctype()    {}
 
 type InputType interface {
 	String() string

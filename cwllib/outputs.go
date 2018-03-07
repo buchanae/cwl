@@ -6,10 +6,9 @@ import (
 
 /*** CWL output binding code ***/
 
-
 // Outputs binds cwl.Tool output descriptors to concrete values.
 func (job *Job) Outputs() (cwl.Values, error) {
-  // TODO bind the outputs recursively, like bindInput
+	// TODO bind the outputs recursively, like bindInput
 	values := cwl.Values{}
 	for _, out := range job.tool.Outputs {
 		v, err := job.bindOutput(out)
@@ -50,7 +49,7 @@ func (job *Job) matchFiles(globs []string, loadContents bool) ([]*cwl.File, erro
 	// it's important this slice isn't nil, because the outputEval field
 	// expects it to be non-null during expression evaluation.
 	files := []*cwl.File{}
-  fs := job.env.Filesystem()
+	fs := job.env.Filesystem()
 
 	// resolve all the globs into file objects.
 	for _, pattern := range globs {
@@ -60,7 +59,7 @@ func (job *Job) matchFiles(globs []string, loadContents bool) ([]*cwl.File, erro
 		}
 
 		for _, m := range matches {
-      // TODO handle directories
+			// TODO handle directories
 			v := cwl.File{
 				Location: m.Location,
 				Path:     m.Path,
@@ -89,7 +88,7 @@ func (job *Job) evalGlobPatterns(patterns []cwl.Expression) ([]string, error) {
 	var out []string
 
 	for _, pattern := range patterns {
-    // TODO what is "self" here?
+		// TODO what is "self" here?
 		val, err := job.eval(pattern, nil)
 		if err != nil {
 			return nil, err

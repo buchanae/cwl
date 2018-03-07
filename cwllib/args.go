@@ -3,47 +3,47 @@ package cwllib
 import (
 	"fmt"
 	"github.com/buchanae/cwl"
+	"sort"
 	"strings"
-  "sort"
 )
 
 /*** CWL tool command line argument building code ***/
 
 func (job *Job) Command() ([]string, error) {
 
-  args := make([]*binding, len(job.bindings))
-  copy(args, job.bindings)
+	args := make([]*binding, len(job.bindings))
+	copy(args, job.bindings)
 
 	// Add "CommandLineTool.arguments"
 	for i, arg := range job.tool.Arguments {
-    if arg.ValueFrom == "" {
-      return nil, errf("valueFrom is required but missing for argument %d", i)
-    }
+		if arg.ValueFrom == "" {
+			return nil, errf("valueFrom is required but missing for argument %d", i)
+		}
 		args = append(args, &binding{
-      arg, argType{}, nil, sortKey{arg.Position, i}, nil,
-    })
+			arg, argType{}, nil, sortKey{arg.Position, i}, nil,
+		})
 	}
 
-  // Evaluate "valueFrom" expression.
-  for _, b := range args {
-    if b.clb.ValueFrom != "" {
-      val, err := job.eval(b.clb.ValueFrom, b.value)
-      if err != nil {
-        return nil, errf("failed to eval argument value: %s", err)
-      }
-      b.value = val
-    }
-  }
+	// Evaluate "valueFrom" expression.
+	for _, b := range args {
+		if b.clb.ValueFrom != "" {
+			val, err := job.eval(b.clb.ValueFrom, b.value)
+			if err != nil {
+				return nil, errf("failed to eval argument value: %s", err)
+			}
+			b.value = val
+		}
+	}
 
 	sort.Stable(bySortKey(args))
 
 	// Now collect the input bindings into command line arguments
-  cmd := append([]string{}, job.tool.BaseCommand...)
+	cmd := append([]string{}, job.tool.BaseCommand...)
 	for _, b := range args {
-    cmd = append(cmd, bindArgs(b)...)
+		cmd = append(cmd, bindArgs(b)...)
 	}
 
-  return cmd, nil
+	return cmd, nil
 }
 
 // args converts a binding into a list of formatted command line arguments.

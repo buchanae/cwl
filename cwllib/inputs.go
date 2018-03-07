@@ -34,15 +34,15 @@ type binding struct {
 // `val` is the input value for this input key.
 // `key` is the sort key of the parent of this binding.
 func (job *Job) bindInput(
-  types []cwl.InputType,
-  clb *cwl.CommandLineBinding,
-  secondaryFiles []cwl.Expression,
-  val interface{},
-  key sortKey,
+	types []cwl.InputType,
+	clb *cwl.CommandLineBinding,
+	secondaryFiles []cwl.Expression,
+	val interface{},
+	key sortKey,
 ) ([]*binding, error) {
 
 	// If no value was found, check if the type is allowed to be null.
-  // If so, return a binding.
+	// If so, return a binding.
 	if val == nil {
 		for _, t := range types {
 			if z, ok := t.(cwl.Null); ok {
@@ -53,7 +53,7 @@ func (job *Job) bindInput(
 		}
 	}
 
-  // TODO maybe return an error here to be more explicit.
+	// TODO maybe return an error here to be more explicit.
 	if val == nil {
 		return nil, nil
 	}
@@ -131,7 +131,7 @@ Loop:
 			}
 
 		case cwl.Boolean:
-      // TODO if-statement above means val should never be nil at this point?
+			// TODO if-statement above means val should never be nil at this point?
 			if val == nil {
 				continue Loop
 			}
@@ -199,9 +199,9 @@ Loop:
 			if err != nil {
 				return nil, err
 			}
-      for _, expr := range secondaryFiles {
-        job.resolveSecondaryFiles(f, expr)
-      }
+			for _, expr := range secondaryFiles {
+				job.resolveSecondaryFiles(f, expr)
+			}
 
 			return []*binding{
 				{clb, z, *f, key, nil},
@@ -212,7 +212,7 @@ Loop:
 			if !ok {
 				continue Loop
 			}
-      // TODO resolve directory
+			// TODO resolve directory
 			return []*binding{
 				{clb, z, v, key, nil},
 			}, nil

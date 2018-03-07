@@ -25,11 +25,11 @@ type Tool struct {
 }
 
 type CommandInput struct {
-	ID         string     `json:"id,omitempty"`
-	Label      string     `json:"label,omitempty"`
-	Doc        string     `json:"doc,omitempty"`
-	Streamable bool       `json:"streamable,omitempty"`
-	Default    Value `json:"default,omitempty"`
+	ID         string `json:"id,omitempty"`
+	Label      string `json:"label,omitempty"`
+	Doc        string `json:"doc,omitempty"`
+	Streamable bool   `json:"streamable,omitempty"`
+	Default    Value  `json:"default,omitempty"`
 
 	Type []InputType `json:"type,omitempty"`
 

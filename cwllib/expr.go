@@ -95,10 +95,10 @@ func IsExpression(expr cwl.Expression) bool {
 }
 
 type ExprData struct {
-  Inputs cwl.Values
-  Self interface{}
-  Runtime Runtime
-  Libs []string
+	Inputs  cwl.Values
+	Self    interface{}
+	Runtime Runtime
+	Libs    []string
 }
 
 // Eval evaluates a string which is possibly a CWL expression.
@@ -112,9 +112,9 @@ func Eval(e cwl.Expression, data ExprData) (interface{}, error) {
 // is returned. This is a low-level function, it's better to use EvalString().
 func EvalParts(parts []*Part, data ExprData) (interface{}, error) {
 
-  // TODO is there any chance that allocating a VM for every expression is too much?
-  //      possibly if used in an API server, this could increase load significantly?
-  var vm = otto.New()
+	// TODO is there any chance that allocating a VM for every expression is too much?
+	//      possibly if used in an API server, this could increase load significantly?
+	var vm = otto.New()
 
 	if len(parts) == 0 {
 		return nil, nil
@@ -130,23 +130,23 @@ func EvalParts(parts []*Part, data ExprData) (interface{}, error) {
 
 		// Expression or JS function body.
 		// Can return any type.
-    code := strings.Join(data.Libs, "\n")
+		code := strings.Join(data.Libs, "\n")
 		if part.IsFuncBody {
 			code = "(function(){" + part.Expr + "})()"
 		} else {
-      code = "(function(){ return " + part.Expr + "; })()"
-    }
+			code = "(function(){ return " + part.Expr + "; })()"
+		}
 
-    vm.Set("inputs", data.Inputs)
-    vm.Set("self", data.Self)
-    vm.Set("runtime", map[string]interface{}{
-      "outdir": data.Runtime.Outdir,
-      "tmpdir": data.Runtime.Tmpdir,
-      "cores": data.Runtime.Cores,
-      "ram": data.Runtime.RAM,
-      "outdirSize": data.Runtime.OutdirSize,
-      "tmpdirSize": data.Runtime.TmpdirSize,
-    })
+		vm.Set("inputs", data.Inputs)
+		vm.Set("self", data.Self)
+		vm.Set("runtime", map[string]interface{}{
+			"outdir":     data.Runtime.Outdir,
+			"tmpdir":     data.Runtime.Tmpdir,
+			"cores":      data.Runtime.Cores,
+			"ram":        data.Runtime.RAM,
+			"outdirSize": data.Runtime.OutdirSize,
+			"tmpdirSize": data.Runtime.TmpdirSize,
+		})
 
 		val, err := vm.Run(code)
 		if err != nil {
