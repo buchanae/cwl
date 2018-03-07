@@ -38,7 +38,14 @@ func (l *loader) MappingToDocument(n node) (Document, error) {
 }
 
 func (l *loader) ScalarToDocument(n node) (Document, error) {
-	return DocumentRef{Location: n.Value}, nil
+	if _, ok := l.resolver.(noResolver); ok {
+		return DocumentRef{Location: n.Value}, nil
+	}
+	b, base, err := l.resolver.Resolve(l.base, n.Value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve document: %s", err)
+	}
+	return LoadDocumentBytes(b, base, l.resolver)
 }
 
 func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {

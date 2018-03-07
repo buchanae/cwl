@@ -9,31 +9,23 @@ import (
 	"strings"
 )
 
-// the loader has some reflect-based logic which
-// cuts out a lot of the manual conversion of type
-// coercion which should be automated. the rest of the
-// more complex, cwl-specific coercions are handled
-// by individual helper functions. those helper functions
-// are registered with the loader here.
-//
-// the loader constructs a string describing the type
-// conversion being requested. the helper function
-// is the value.
-var l = loader{}
-
 // loader helps deal with type coercion while loading a
 // CWL document, for example, dealing with the fact that
 // "inputs" might be a scalar, a map, or a list.
 //
 // loader tries to detect obvious type coercions via reflect.
-// the non-obvious type coercions must have a registered
+// non-obvious type coercions must have a registered
 // handler to do the work.
-type loader struct{}
+type loader struct {
+	base     string
+	resolver Resolver
+}
 
 // load is given a YAML node and a destination type,
 // e.g. yamlast.Mapping -> cwl.WorkflowInput.
 //
-// "t" must be a pointer
+// load() panics if `t` is not a pointer.
+// load() panics if given an unknown YAML node type (such as Alias)
 func (l *loader) load(n node, t interface{}) error {
 
 	// only pointers can be set to new values by the loader.

@@ -16,7 +16,7 @@ func (job *Job) Outputs() (cwl.Values, error) {
 	}
 	if err == nil {
 		// TODO type check the output values
-		return cwl.LoadValues([]byte(outdoc))
+		return cwl.LoadValuesBytes([]byte(outdoc))
 	}
 
 	values := cwl.Values{}

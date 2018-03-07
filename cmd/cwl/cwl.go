@@ -34,7 +34,7 @@ func main() {
 }
 
 func dump(path string) error {
-  doc, err := cwl.LoadFile(path)
+  doc, err := cwl.Load(path)
   if err != nil {
     return err
   }
@@ -65,7 +65,7 @@ func run(path, inputsPath string) error {
     return err
   }
 
-  doc, err := cwl.LoadFile(path)
+  doc, err := cwl.Load(path)
   if err != nil {
     return err
   }
