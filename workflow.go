@@ -23,7 +23,7 @@ type WorkflowInput struct {
 	SecondaryFiles []Expression        `json:"secondaryFiles,omitempty"`
 	Format         []Expression        `json:"format,omitempty"`
 	InputBinding   *CommandLineBinding `json:"inputBinding,omitempty"`
-	Default        InputValue          `json:"default,omitempty"`
+	Default        Value          `json:"default,omitempty"`
 	Type           []InputType         `json:"type,omitempty"`
 }
 
@@ -64,7 +64,7 @@ type StepInput struct {
 	ID        string          `json:"id,omitempty"`
 	Source    []string        `json:"source,omitempty"`
 	LinkMerge LinkMergeMethod `json:"linkMerge,omitempty"`
-	Default   InputValue      `json:"default,omitempty"`
+	Default   Value      `json:"default,omitempty"`
 	ValueFrom Expression      `json:"valueFrom,omitempty"`
 }
 

@@ -60,8 +60,8 @@ func (x Workflow) MarshalJSON() ([]byte, error) {
 	}{"Workflow", Wrap(x)})
 }
 
-func (x CommandLineTool) MarshalJSON() ([]byte, error) {
-	type Wrap CommandLineTool
+func (x Tool) MarshalJSON() ([]byte, error) {
+	type Wrap Tool
 	return json.Marshal(struct {
 		Class string `json:"class"`
 		Wrap

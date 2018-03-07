@@ -5,7 +5,8 @@ import (
   "encoding/json"
   "github.com/buchanae/cwl"
   "github.com/buchanae/cwl/cwllib"
-  "github.com/buchanae/cwl/cwllib/simple"
+  "github.com/buchanae/cwl/cwllib/env/simple"
+  exec "github.com/buchanae/cwl/cwllib/exec/simple"
   "os"
   "github.com/spf13/cobra"
 )
@@ -49,43 +50,6 @@ func dump(path string) error {
 
 func init() {
   cmd := &cobra.Command{
-    Use: "build <doc.cwl> <inputs.json>",
-    Args: cobra.ExactArgs(2),
-    RunE: func(cmd *cobra.Command, args []string) error {
-      return build(args[0], args[1])
-    },
-  }
-  root.AddCommand(cmd)
-}
-
-func build(path, inputsPath string) error {
-  vals, err := cwl.LoadInputValuesFile(inputsPath)
-  if err != nil {
-    return err
-  }
-
-  doc, err := cwl.LoadFile(path)
-  if err != nil {
-    return err
-  }
-
-  clt, ok := doc.(*cwl.CommandLineTool)
-  if !ok {
-    return fmt.Errorf("can only build command line tools")
-  }
-
-  e := cwllib.NewExecutor()
-  job, err := e.BuildJob(clt, vals)
-  if err != nil {
-    return err
-  }
-
-  fmt.Println(job)
-  return nil
-}
-
-func init() {
-  cmd := &cobra.Command{
     Use: "run <doc.cwl> <inputs.json>",
     Args: cobra.ExactArgs(2),
     RunE: func(cmd *cobra.Command, args []string) error {
@@ -96,7 +60,7 @@ func init() {
 }
 
 func run(path, inputsPath string) error {
-  vals, err := cwl.LoadInputValuesFile(inputsPath)
+  vals, err := cwl.LoadValuesFile(inputsPath)
   if err != nil {
     return err
   }
@@ -106,23 +70,28 @@ func run(path, inputsPath string) error {
     return err
   }
 
-  clt, ok := doc.(*cwl.CommandLineTool)
+  tool, ok := doc.(*cwl.Tool)
   if !ok {
     return fmt.Errorf("can only build command line tools")
   }
 
-  e := cwllib.NewExecutor()
-  job, err := e.BuildJob(clt, vals)
+  env := simple.NewSimpleEnv()
+  job, err := cwllib.NewJob(tool, vals, env)
   if err != nil {
     return err
   }
 
-  err = simple.Exec(job)
+  cmd, err := job.Command()
   if err != nil {
     return err
   }
 
-  outvals, err := e.CollectOutputs(clt)
+  err = exec.Exec(cmd)
+  if err != nil {
+    return err
+  }
+
+  outvals, err := job.Outputs()
   if err != nil {
     return err
   }

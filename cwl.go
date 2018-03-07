@@ -44,15 +44,15 @@ func Load(b []byte) (Document, error) {
 	return nil, nil
 }
 
-func LoadInputValuesFile(p string) (InputValues, error) {
+func LoadValuesFile(p string) (Values, error) {
 	b, err := ioutil.ReadFile(p)
 	if err != nil {
 		return nil, err
 	}
-	return LoadInputValues(b)
+	return LoadValues(b)
 }
 
-func LoadInputValues(b []byte) (InputValues, error) {
+func LoadValues(b []byte) (Values, error) {
 	// Parse the YAML into an AST
 	yamlnode, err := yamlast.Parse(b)
 	if err != nil {
@@ -67,7 +67,7 @@ func LoadInputValues(b []byte) (InputValues, error) {
 		return nil, fmt.Errorf("unexpected child count")
 	}
 
-	v := InputValues{}
+	v := Values{}
 	err = l.load(yamlnode.Children[0], &v)
 
 	if err != nil {

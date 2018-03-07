@@ -4,26 +4,50 @@ import (
 	"fmt"
 	"github.com/buchanae/cwl"
 	"strings"
+  "sort"
 )
 
-// binding binds an input type description (string, array, record, etc)
-// to a concrete input value. this information is used while building
-// command line args.
-type binding struct {
-	clb *cwl.CommandLineBinding
-	// the bound type (resolved by matching the input value to one of many allowed types)
-	// can be nil, which means no matching type could be determined.
-	typ interface{}
-	// the value from the input object
-	value cwl.InputValue
-	// used to determine the ordering of command line flags.
-	// http://www.commonwl.org/v1.0/CommandLineTool.html#Input_binding
-	sortKey sortKey
-	nested  bindings
+/*** CWL tool command line argument building code ***/
+
+func (job *Job) Command() ([]string, error) {
+
+  args := make([]*binding, len(job.bindings))
+  copy(args, job.bindings)
+
+	// Add "CommandLineTool.arguments"
+	for i, arg := range job.tool.Arguments {
+    if arg.ValueFrom == "" {
+      return nil, errf("valueFrom is required but missing for argument %d", i)
+    }
+		args = append(args, &binding{
+      arg, argType{}, nil, sortKey{arg.Position, i}, nil,
+    })
+	}
+
+  // Evaluate "valueFrom" expression.
+  for _, b := range args {
+    if b.clb.ValueFrom != "" {
+      val, err := job.eval(b.clb.ValueFrom, b.value)
+      if err != nil {
+        return nil, errf("failed to eval argument value: %s", err)
+      }
+      b.value = val
+    }
+  }
+
+	sort.Stable(bySortKey(args))
+
+	// Now collect the input bindings into command line arguments
+  cmd := append([]string{}, job.tool.BaseCommand...)
+	for _, b := range args {
+    cmd = append(cmd, bindArgs(b)...)
+	}
+
+  return cmd, nil
 }
 
 // args converts a binding into a list of formatted command line arguments.
-func (b *binding) args() []string {
+func bindArgs(b *binding) []string {
 	switch b.typ.(type) {
 
 	case cwl.InputArray:
@@ -32,7 +56,7 @@ func (b *binding) args() []string {
 		// into a single string with itemSeparator separating the items..."
 		if b.clb != nil && b.clb.ItemSeparator != "" {
 
-			var nested []cwl.InputValue
+			var nested []cwl.Value
 			for _, nb := range b.nested {
 				nested = append(nested, nb.value)
 			}
@@ -44,7 +68,7 @@ func (b *binding) args() []string {
 			args := formatArgs(b.clb)
 
 			for _, nb := range b.nested {
-				args = append(args, nb.args()...)
+				args = append(args, bindArgs(nb)...)
 			}
 			return args
 		}
@@ -57,13 +81,6 @@ func (b *binding) args() []string {
 		return formatArgs(b.clb, b.value)
 
 	case cwl.Boolean:
-		/*
-		   TODO find a place for this validation
-		   if b.clb.Prefix == "" {
-		     return nil, fmt.Errorf("boolean value without prefix")
-		   }
-		*/
-
 		// cwl spec:
 		// "boolean: If true, add prefix to the command line. If false, add nothing."
 		bv := b.value.(bool)
@@ -77,7 +94,7 @@ func (b *binding) args() []string {
 // formatArgs applies some command line binding rules to a CLI argument,
 // such as prefix, separate, etc.
 // http://www.commonwl.org/v1.0/CommandLineTool.html#CommandLineBinding
-func formatArgs(clb *cwl.CommandLineBinding, args ...cwl.InputValue) []string {
+func formatArgs(clb *cwl.CommandLineBinding, args ...cwl.Value) []string {
 	sep := true
 	prefix := ""
 	join := ""
@@ -109,7 +126,7 @@ func formatArgs(clb *cwl.CommandLineBinding, args ...cwl.InputValue) []string {
 	return strargs
 }
 
-func valueToStrings(v cwl.InputValue) []string {
+func valueToStrings(v cwl.Value) []string {
 	switch z := v.(type) {
 	case []interface{}:
 		var out []string
@@ -129,13 +146,13 @@ func valueToStrings(v cwl.InputValue) []string {
 
 type sortKey []interface{}
 
-// bindings defines the rules for sorting bindings;
+// bySortKey defines the rules for sorting bindings;
 // http://www.commonwl.org/v1.0/CommandLineTool.html#Input_binding
-type bindings []*binding
+type bySortKey []*binding
 
-func (s bindings) Len() int      { return len(s) }
-func (s bindings) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
-func (s bindings) Less(i, j int) bool {
+func (s bySortKey) Len() int      { return len(s) }
+func (s bySortKey) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s bySortKey) Less(i, j int) bool {
 	z := compareKey(s[i].sortKey, s[j].sortKey)
 	return z == -1
 }

@@ -1,6 +1,6 @@
 package cwl
 
-type CommandLineTool struct {
+type Tool struct {
 	CWLVersion string `json:"cwlVersion,omitempty"`
 	ID         string `json:"id,omitempty"`
 	Label      string `json:"label,omitempty"`
@@ -29,7 +29,7 @@ type CommandInput struct {
 	Label      string     `json:"label,omitempty"`
 	Doc        string     `json:"doc,omitempty"`
 	Streamable bool       `json:"streamable,omitempty"`
-	Default    InputValue `json:"default,omitempty"`
+	Default    Value `json:"default,omitempty"`
 
 	Type []InputType `json:"type,omitempty"`
 

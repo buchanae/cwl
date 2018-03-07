@@ -1,16 +1,11 @@
 package cwllib
 
 import (
-	"fmt"
 	"github.com/buchanae/cwl"
-	"github.com/kr/pretty"
 	"github.com/robertkrimen/otto"
 	"regexp"
 	"strings"
 )
-
-// javascript VM
-var vm = otto.New()
 
 // TODO need parser that tracks open/close of parens
 var rx = regexp.MustCompile(`\$\((.*)\)`)
@@ -87,8 +82,8 @@ func Parse(expr cwl.Expression) []*Part {
 	return parts
 }
 
-// IsExpr returns true if the given string contains a CWL expression.
-func IsExpr(expr cwl.Expression) bool {
+// IsExpression returns true if the given string contains a CWL expression.
+func IsExpression(expr cwl.Expression) bool {
 	parts := Parse(expr)
 	if len(parts) == 0 {
 		return false
@@ -99,16 +94,28 @@ func IsExpr(expr cwl.Expression) bool {
 	return true
 }
 
+type ExprData struct {
+  Inputs cwl.Values
+  Self interface{}
+  Runtime Runtime
+  Libs []string
+}
+
 // Eval evaluates a string which is possibly a CWL expression.
 // If the string is not an expression, the string is returned unchanged.
-func Eval(e cwl.Expression) (interface{}, error) {
-	return EvalParts(Parse(e))
+func Eval(e cwl.Expression, data ExprData) (interface{}, error) {
+	return EvalParts(Parse(e), data)
 }
 
 // EvalParts evaluates a string which has been parsed by Parse().
 // If the parts do not represent an expression, the original raw string
 // is returned. This is a low-level function, it's better to use EvalString().
-func EvalParts(parts []*Part) (interface{}, error) {
+func EvalParts(parts []*Part, data ExprData) (interface{}, error) {
+
+  // TODO is there any chance that allocating a VM for every expression is too much?
+  //      possibly if used in an API server, this could increase load significantly?
+  var vm = otto.New()
+
 	if len(parts) == 0 {
 		return nil, nil
 	}
@@ -123,14 +130,27 @@ func EvalParts(parts []*Part) (interface{}, error) {
 
 		// Expression or JS function body.
 		// Can return any type.
-		code := part.Expr
+    code := strings.Join(data.Libs, "\n")
 		if part.IsFuncBody {
 			code = "(function(){" + part.Expr + "})()"
-		}
+		} else {
+      code = "(function(){ return " + part.Expr + "; })()"
+    }
+
+    vm.Set("inputs", data.Inputs)
+    vm.Set("self", data.Self)
+    vm.Set("runtime", map[string]interface{}{
+      "outdir": data.Runtime.Outdir,
+      "tmpdir": data.Runtime.Tmpdir,
+      "cores": data.Runtime.Cores,
+      "ram": data.Runtime.RAM,
+      "outdirSize": data.Runtime.OutdirSize,
+      "tmpdirSize": data.Runtime.TmpdirSize,
+    })
 
 		val, err := vm.Run(code)
 		if err != nil {
-			return nil, fmt.Errorf("failed to run JS expression: %s", err)
+			return nil, errf("failed to run JS expression: %s", err)
 		}
 
 		// otto docs:
@@ -149,12 +169,12 @@ func EvalParts(parts []*Part) (interface{}, error) {
 
 			val, err := vm.Run(part.Expr)
 			if err != nil {
-				return nil, fmt.Errorf("failed to run JS expression: %s", err)
+				return nil, errf("failed to run JS expression: %s", err)
 			}
 
 			sval, err := val.ToString()
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert JS result to a string: %s", err)
+				return nil, errf("failed to convert JS result to a string: %s", err)
 			}
 
 			res += sval
@@ -163,8 +183,4 @@ func EvalParts(parts []*Part) (interface{}, error) {
 		}
 	}
 	return res, nil
-}
-
-func debug(i ...interface{}) {
-	pretty.Println(i...)
 }

@@ -12,7 +12,7 @@ func (l *loader) MappingToDocument(n node) (Document, error) {
 	switch strings.ToLower(class) {
 
 	case "commandlinetool":
-		t := &CommandLineTool{}
+		t := &Tool{}
 		if err := l.load(n, t); err != nil {
 			return nil, err
 		}
@@ -38,7 +38,7 @@ func (l *loader) MappingToDocument(n node) (Document, error) {
 }
 
 func (l *loader) ScalarToDocument(n node) (Document, error) {
-	return DocumentRef{URL: n.Value}, nil
+	return DocumentRef{Location: n.Value}, nil
 }
 
 func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {

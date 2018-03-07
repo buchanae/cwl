@@ -8,9 +8,6 @@ type Expression string
 
 type ScatterMethod string
 
-// TODO merge these
-type InputValue interface{}
-type InputValues map[string]InputValue
 type Value interface{}
 type Values map[string]Value
 
@@ -28,11 +25,11 @@ const (
 )
 
 type DocumentRef struct {
-	URL string
+	Location string
 }
 
 func (d DocumentRef) MarshalText() ([]byte, error) {
-	return []byte(d.URL), nil
+	return []byte(d.Location), nil
 }
 
 type Null struct{}
@@ -47,6 +44,10 @@ type DirectoryType struct{}
 type Stderr struct{}
 type Stdout struct{}
 
+type FileDir interface {
+  filedir()
+}
+
 type File struct {
 	Location       string       `json:"location,omitempty"`
 	Path           string       `json:"path,omitempty"`
@@ -58,15 +59,18 @@ type File struct {
 	Size           int64        `json:"size,omitempty"`
 	Format         string       `json:"format,omitempty"`
 	Contents       string       `json:"contents,omitempty"`
-	SecondaryFiles []Expression `json:"secondaryFiles,omitempty"`
+	SecondaryFiles []FileDir    `json:"secondaryFiles,omitempty"`
 }
 
 type Directory struct {
 	Location string   `json:"location,omitempty"`
 	Path     string   `json:"path,omitempty"`
 	Basename string   `json:"basename,omitempty"`
-	Listing  []string `json:"listing,omitempty"`
+	Listing  []FileDir `json:"listing,omitempty"`
 }
+
+func (File) filedir() {}
+func (Directory) filedir() {}
 
 func (Null) String() string          { return "null" }
 func (Boolean) String() string       { return "boolean" }
@@ -102,7 +106,7 @@ type Document interface {
 	doctype()
 }
 
-func (CommandLineTool) doctype() {}
+func (Tool) doctype() {}
 func (Workflow) doctype()        {}
 func (ExpressionTool) doctype()  {}
 func (DocumentRef) doctype()     {}

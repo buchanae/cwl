@@ -1,119 +1,27 @@
 package cwllib
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/google/uuid"
-	"io"
-	"os"
 	"path/filepath"
 	"strings"
-	//"github.com/google/uuid"
-	"crypto/sha1"
 	"github.com/alecthomas/units"
 	"github.com/buchanae/cwl"
 )
 
-const maxContentsBytes = 64 * units.Kilobyte
-
 type Filesystem interface {
-	Glob(pattern string) ([]*cwl.File, error)
-
 	Create(path, contents string) (*cwl.File, error)
 	Info(loc string) (*cwl.File, error)
 	Contents(loc string) (string, error)
+	Glob(pattern string) ([]*cwl.File, error)
 }
 
-type Local struct {
-	workdir string
-}
+const MaxContentsBytes = 64 * units.Kilobyte
 
-func NewLocal() *Local {
-	/*
-	  id, err := uuid.NewRandom()
-	  if err != nil {
-	    return fmt.Errorf("error generating unique file location: %s", err)
-	  }
-	*/
-	return &Local{}
-}
-
-func (l *Local) Glob(pattern string) ([]*cwl.File, error) {
-	var out []*cwl.File
-
-	matches, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, match := range matches {
-		f, err := l.Info(match)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, f)
-	}
-	return out, nil
-}
-
-func (l *Local) Create(path, contents string) (*cwl.File, error) {
-	if path == "" {
-		return nil, fmt.Errorf("can't create file with empty path")
-	}
-
-	b := []byte(contents)
-	size := int64(len(b))
-	if units.MetricBytes(size) > maxContentsBytes {
-		return nil, fmt.Errorf("contents is max allowed size (%s)", maxContentsBytes)
-	}
-
-	return &cwl.File{
-		Location: filepath.Join(l.workdir, path),
-		Path:     path,
-		Checksum: "sha1$" + fmt.Sprintf("%x", sha1.Sum(b)),
-		Size:     size,
-	}, nil
-}
-
-func (l *Local) Info(loc string) (*cwl.File, error) {
-	st, err := os.Stat(loc)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO make this work with directories
-	if st.IsDir() {
-		return nil, fmt.Errorf("can't call Info() on a directory: %s", loc)
-	}
-
-	return &cwl.File{
-		Location: loc,
-		Path:     loc,
-		// TODO allow config to optionally enable calculating checksum for local files
-		Checksum: "",
-		Size:     st.Size(),
-	}, nil
-}
-
-func (l *Local) Contents(loc string) (string, error) {
-	fh, err := os.Open(loc)
-	if err != nil {
-		return "", err
-	}
-	defer fh.Close()
-
-	buf := &bytes.Buffer{}
-	r := &io.LimitedReader{R: fh, N: int64(maxContentsBytes)}
-	_, err = io.Copy(buf, r)
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-// ResolveFile uses the filesystem to fill in all fields in the File,
-// such as dirname, checksum, size, etc.
-func ResolveFile(f cwl.File, filesys Filesystem, loadContents bool) (*cwl.File, error) {
+// resolveFile uses the filesystem to fill in all fields in the File,
+// such as dirname, checksum, size, etc. If f.Contents is given, the
+// file will be created via fs.Create(). if `loadContents` is true,
+// the file contents will be loaded via fs.Contents().
+func (job *Job) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
 
 	// http://www.commonwl.org/v1.0/CommandLineTool.html#File
 	// "As a special case, if the path field is provided but the location field is not,
@@ -125,18 +33,19 @@ func ResolveFile(f cwl.File, filesys Filesystem, loadContents bool) (*cwl.File, 
 	}
 
 	if f.Location == "" && f.Contents == "" {
-		return nil, fmt.Errorf("location and contents are empty")
+		return nil, errf("location and contents are empty")
 	}
 
 	// If both location and contents are set, one will get overwritten.
 	// Can't know which one the caller intended, so fail instead.
 	if f.Location != "" && f.Contents != "" {
-		return nil, fmt.Errorf("location and contents are both non-empty")
+		return nil, errf("location and contents are both non-empty")
 	}
 
 	var x *cwl.File
 	var err error
 
+  fs := job.env.Filesystem()
 	if f.Contents != "" {
 		// Determine the file path of the literal.
 		// Use the path, or the basename, or generate a random name.
@@ -147,26 +56,26 @@ func ResolveFile(f cwl.File, filesys Filesystem, loadContents bool) (*cwl.File, 
 		if path == "" {
 			id, err := uuid.NewRandom()
 			if err != nil {
-				return nil, fmt.Errorf("failed to generate a random name for a file literal: %s", err)
+				return nil, errf("failed to generate a random name for a file literal: %s", err)
 			}
 			path = id.String()
 		}
 
-		x, err = filesys.Create(path, f.Contents)
+		x, err = fs.Create(path, f.Contents)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create file from inline content: %s", err)
+			return nil, errf("failed to create file from inline content: %s", err)
 		}
 
 	} else {
-		x, err = filesys.Info(f.Location)
+		x, err = fs.Info(f.Location)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get file info: %s", err)
+			return nil, errf("failed to get file info: %s", err)
 		}
 
 		if loadContents {
-			f.Contents, err = filesys.Contents(f.Location)
+			f.Contents, err = fs.Contents(f.Location)
 			if err != nil {
-				return nil, fmt.Errorf("failed to load file contents: %s", err)
+				return nil, errf("failed to load file contents: %s", err)
 			}
 		}
 	}
@@ -188,6 +97,55 @@ func ResolveFile(f cwl.File, filesys Filesystem, loadContents bool) (*cwl.File, 
 	return &f, nil
 }
 
+func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error {
+
+  // cwl spec:
+  // "If the value is an expression, the value of self in the expression
+  // must be the primary input or output File object to which this binding applies.
+  // The basename, nameroot and nameext fields must be present in self.
+  // For CommandLineTool outputs the path field must also be present.
+  // The expression must return a filename string relative to the path
+  // to the primary File, a File or Directory object with either path 
+  // or location and basename fields set, or an array consisting of strings 
+  // or File or Directory objects. It is legal to reference an unchanged File 
+  // or Directory object taken from input as a secondaryFile.
+  // TODO
+  if IsExpression(expr) {
+    job.eval(expr, file)
+  }
+
+	// cwl spec:
+	// "If a value in secondaryFiles is a string that is not an expression,
+	// it specifies that the following pattern should be applied to the location
+	// of the primary file to yield a filename relative to the primary File:"
+
+	// "If string begins with one or more caret ^ characters, for each caret,
+	// remove the last file extension from the location (the last period . and all
+	// following characters).
+  pattern := string(expr)
+  // TODO location or path? cwl spec says "path" but I'm suspicious.
+  location := file.Location
+
+	for strings.HasPrefix(pattern, "^") {
+		pattern = strings.TrimPrefix(pattern, "^")
+		location = strings.TrimSuffix(location, filepath.Ext(location))
+	}
+
+	// "Append the remainder of the string to the end of the file location."
+  sec := cwl.File{
+    Location: location + pattern,
+  }
+
+  // TODO does LoadContents apply to secondary files? not in the spec
+  f, err := job.resolveFile(sec, false)
+  if err != nil {
+    return err
+  }
+
+  file.SecondaryFiles = append(file.SecondaryFiles, f)
+  return nil
+}
+
 // splitname splits a file name into root and extension,
 // with some special CWL rules.
 func splitname(n string) (root, ext string) {
@@ -197,24 +155,4 @@ func splitname(n string) (root, ext string) {
 	ext = filepath.Ext(x)
 	root = strings.TrimSuffix(n, ext)
 	return root, ext
-}
-
-func EvalSecondaryFilesPattern(path string, pattern string) string {
-
-	// cwlspec:
-	// "If a value in secondaryFiles is a string that is not an expression,
-	// it specifies that the following pattern should be applied to the path
-	// of the primary file to yield a filename relative to the primary File:"
-
-	// "If string begins with one or more caret ^ characters, for each caret,
-	// remove the last file extension from the path (the last period . and all
-	// following characters).
-
-	for strings.HasPrefix(pattern, "^") {
-		pattern = strings.TrimPrefix(pattern, "^")
-		path = strings.TrimSuffix(path, filepath.Ext(path))
-	}
-
-	// "Append the remainder of the string to the end of the file path."
-	return path + pattern
 }

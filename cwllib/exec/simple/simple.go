@@ -1,7 +1,6 @@
 package simple
 
 import (
-  "github.com/buchanae/cwl/cwllib"
   "os"
   "os/exec"
 )
@@ -13,15 +12,9 @@ import (
 // async handle
 // resource matching
 // exit code checking
-//
-// check for cwl.output.json
 
-type Result struct {
-  ExitCode int
-}
-
-func Exec(job *cwllib.Job) error {
-  cmd := exec.Command(job.Command[0], job.Command[1:]...)
+func Exec(args []string) error {
+  cmd := exec.Command(args[0], args[1:]...)
   cmd.Stdout = os.Stdout
   cmd.Stderr = os.Stderr
   return cmd.Run()

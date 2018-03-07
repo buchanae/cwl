@@ -4,10 +4,10 @@ import (
 	"strings"
 )
 
-func (l *loader) SeqToInputValue(n node) (InputValue, error) {
-	vals := []InputValue{}
+func (l *loader) SeqToValue(n node) (Value, error) {
+	vals := []Value{}
 	for _, c := range n.Children {
-		var a InputValue
+		var a Value
 		err := l.load(c, &a)
 		if err != nil {
 			return nil, err
@@ -17,7 +17,7 @@ func (l *loader) SeqToInputValue(n node) (InputValue, error) {
 	return vals, nil
 }
 
-func (l *loader) MappingToInputValue(n node) (InputValue, error) {
+func (l *loader) MappingToValue(n node) (Value, error) {
 
 	class := findKey(n, "class")
 	switch strings.ToLower(class) {
@@ -37,12 +37,12 @@ func (l *loader) MappingToInputValue(n node) (InputValue, error) {
 		return f, nil
 	}
 
-	vals := map[string]InputValue{}
+	vals := map[string]Value{}
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
 
-		var a InputValue
+		var a Value
 		err := l.load(v, &a)
 		if err != nil {
 			return nil, err
@@ -52,12 +52,12 @@ func (l *loader) MappingToInputValue(n node) (InputValue, error) {
 	return vals, nil
 }
 
-func (l *loader) MappingToInputValues(n node) (InputValues, error) {
-	vals := InputValues{}
+func (l *loader) MappingToValues(n node) (Values, error) {
+	vals := Values{}
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		var a InputValue
+		var a Value
 		err := l.load(v, &a)
 		if err != nil {
 			return nil, err
