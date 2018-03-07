@@ -38,21 +38,6 @@ func (l *loader) MappingToRequirementSlice(n node) ([]Requirement, error) {
 	return reqs, nil
 }
 
-func (l *loader) MappingToHintSlice(n node) ([]Hint, error) {
-	var hints []Hint
-	for _, kv := range itermap(n) {
-		k := kv.k
-		v := kv.v
-		h, err := l.loadReqByName(k, v)
-		if err != nil {
-			return nil, err
-		}
-		hint := h.(Hint)
-		hints = append(hints, hint)
-	}
-	return hints, nil
-}
-
 func (l *loader) MappingToRequirement(n node) (Requirement, error) {
 	class := findKey(n, "class")
 	return l.loadReqByName(class, n)
@@ -102,5 +87,5 @@ func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
 	case "stepinputexpressionrequirement":
 		return StepInputExpressionRequirement{}, nil
 	}
-	return nil, fmt.Errorf("unknown hint name: %s", name)
+	return nil, fmt.Errorf("unknown requirement name: %s", name)
 }

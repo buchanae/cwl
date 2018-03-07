@@ -6,7 +6,7 @@ type Tool struct {
 	Label      string `json:"label,omitempty"`
 	Doc        string `json:"doc,omitempty"`
 
-	Hints        []Hint        `json:"hints,omitempty"`
+	Hints        []Requirement `json:"hints,omitempty"`
 	Requirements []Requirement `json:"requirements,omitempty"`
 
 	Inputs  []CommandInput  `json:"inputs,omitempty"`

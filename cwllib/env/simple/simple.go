@@ -1,6 +1,7 @@
 package simple
 
 import (
+  "github.com/buchanae/cwl"
   "github.com/buchanae/cwl/cwllib"
   "github.com/buchanae/cwl/cwllib/fs/local"
 )
@@ -25,4 +26,16 @@ func (s *SimpleEnv) Runtime() cwllib.Runtime {
 
 func (s *SimpleEnv) Filesystem() cwllib.Filesystem {
   return s.fs
+}
+
+func (s *SimpleEnv) SupportsDocker() bool {
+  return false
+}
+
+func (s *SimpleEnv) SupportsShell() bool {
+  return false
+}
+
+func (s *SimpleEnv) CheckResources(req cwl.ResourceRequirement) error {
+  return nil
 }

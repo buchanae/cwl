@@ -7,10 +7,15 @@ import (
 type Env interface {
 	Runtime() Runtime
 	Filesystem() Filesystem
+	SupportsDocker() bool
+	SupportsShell() bool
+	CheckResources(cwl.ResourceRequirement) error
 }
 
 type Mebibyte int
 
+// TODO this is provided to expressions early on in job processing,
+//      but it won't have real values from a scheduler until much later.
 type Runtime struct {
 	Outdir     string
 	Tmpdir     string
@@ -26,6 +31,10 @@ type Job struct {
 	env            Env
 	bindings       []*binding
 	expressionLibs []string
+	envvars        map[string]string
+	docker         cwl.DockerRequirement
+	resources      cwl.ResourceRequirement
+	shell          bool
 }
 
 func NewJob(tool *cwl.Tool, inputs cwl.Values, env Env) (*Job, error) {
@@ -38,9 +47,10 @@ func NewJob(tool *cwl.Tool, inputs cwl.Values, env Env) (*Job, error) {
 	// TODO expose input bindings as an exported type of data
 	//      could be useful to know separately from all the other processing.
 	job := &Job{
-		tool:   tool,
-		inputs: inputs,
-		env:    env,
+		tool:    tool,
+		inputs:  inputs,
+		env:     env,
+		envvars: map[string]string{},
 	}
 
 	// Bind inputs to values.
@@ -66,7 +76,74 @@ func NewJob(tool *cwl.Tool, inputs cwl.Values, env Env) (*Job, error) {
 		job.bindings = append(job.bindings, b...)
 	}
 
+	err = job.loadReqs(tool.Requirements)
+	if err != nil {
+		return nil, err
+	}
+	err = job.loadReqs(tool.Hints)
+	if err != nil {
+		return nil, err
+	}
+
 	return job, nil
+}
+
+func (job *Job) loadReqs(reqs []cwl.Requirement) error {
+	for _, req := range reqs {
+		switch z := req.(type) {
+
+		case cwl.EnvVarRequirement:
+			err := job.evalEnvVars(z.EnvDef)
+			if err != nil {
+				return errf("failed to evaluate EnvVarRequirement: %s", err)
+			}
+
+		case cwl.InlineJavascriptRequirement:
+			job.expressionLibs = append(job.expressionLibs, z.ExpressionLib...)
+
+		case cwl.DockerRequirement:
+			if !job.env.SupportsDocker() {
+				return errf("The selected compute environment does not support Docker")
+			}
+			job.docker = z
+
+		case cwl.ResourceRequirement:
+			err := job.env.CheckResources(z)
+			if err != nil {
+				return errf("ResourceRequirement failed: %s", err)
+			}
+			job.resources = z
+
+		case cwl.ShellCommandRequirement:
+			if !job.env.SupportsShell() {
+				return errf("The selected compute environment does not support shell commands")
+			}
+			job.shell = true
+
+		case cwl.SchemaDefRequirement:
+			return errf("SchemaDefRequirement is not supported (yet)")
+		case cwl.InitialWorkDirRequirement:
+			return errf("InitialWorkDirRequirement is not supported (yet)")
+		default:
+			return errf("unknown requirement type")
+		}
+	}
+	return nil
+}
+
+func (job *Job) evalEnvVars(def map[string]cwl.Expression) error {
+	for k, expr := range def {
+		val, err := job.eval(expr, nil)
+		if err != nil {
+			return errf(`failed to evaluate expression: "%s": %s`, expr, err)
+		}
+		str, ok := val.(string)
+		if !ok {
+			return errf(`EnvVar must evaluate to a string, got "%s"`, val)
+		}
+		job.envvars[k] = str
+	}
+	return nil
 }
 
 func (job *Job) eval(expr cwl.Expression, self interface{}) (interface{}, error) {

@@ -191,23 +191,6 @@ func (ScatterFeatureRequirement) requirement()       {}
 func (MultipleInputFeatureRequirement) requirement() {}
 func (StepInputExpressionRequirement) requirement()  {}
 
-type Hint interface {
-	hint()
-}
-
-func (DockerRequirement) hint()               {}
-func (ResourceRequirement) hint()             {}
-func (EnvVarRequirement) hint()               {}
-func (ShellCommandRequirement) hint()         {}
-func (InlineJavascriptRequirement) hint()     {}
-func (SchemaDefRequirement) hint()            {}
-func (SoftwareRequirement) hint()             {}
-func (InitialWorkDirRequirement) hint()       {}
-func (SubworkflowFeatureRequirement) hint()   {}
-func (ScatterFeatureRequirement) hint()       {}
-func (MultipleInputFeatureRequirement) hint() {}
-func (StepInputExpressionRequirement) hint()  {}
-
 type WorkflowRequirement interface {
 	wfrequirement()
 }
