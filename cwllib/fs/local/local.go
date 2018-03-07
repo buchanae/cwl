@@ -59,6 +59,9 @@ func (l *Local) Create(path, contents string) (*cwl.File, error) {
 
 func (l *Local) Info(loc string) (*cwl.File, error) {
 	st, err := os.Stat(loc)
+  if os.IsNotExist(err) {
+    return nil, cwllib.ErrFileNotFound
+  }
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +82,9 @@ func (l *Local) Info(loc string) (*cwl.File, error) {
 
 func (l *Local) Contents(loc string) (string, error) {
 	fh, err := os.Open(loc)
+  if os.IsNotExist(err) {
+    return "", cwllib.ErrFileNotFound
+  }
 	if err != nil {
 		return "", err
 	}

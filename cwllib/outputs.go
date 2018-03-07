@@ -10,7 +10,15 @@ import (
 
 // Outputs binds cwl.Tool output descriptors to concrete values.
 func (job *Job) Outputs() (cwl.Values, error) {
-	// TODO bind the outputs recursively, like bindInput
+	outdoc, err := job.env.Filesystem().Contents("cwl.output.json")
+	if err != nil && err != ErrFileNotFound {
+		return nil, err
+	}
+	if err == nil {
+		// TODO type check the output values
+		return cwl.LoadValues([]byte(outdoc))
+	}
+
 	values := cwl.Values{}
 	for _, out := range job.tool.Outputs {
 		v, err := job.bindOutput(out.Type, out.OutputBinding, out.SecondaryFiles, nil)

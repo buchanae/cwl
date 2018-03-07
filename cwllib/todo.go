@@ -2,22 +2,22 @@ package cwllib
 
 /*
 TODO
-- more complete JS expression context (self, inputs, runtime, etc)
-- output document binding
-- cwl.output.json
-- secondary files
 - load expression result values into File/Directory types where appropriate
 - file staging and working directory
 - relative path context (current working directory) for filesystems
 - absolute paths for files, especially in outputs
 - resolve document references
+- really good debug logging, with the goal of clearly explaining to a **user**
+  what is going on when a job fails at any step, especially input/output binding.
 - filesystem multiplexing based on location
 - success/failure codes and relationship to CLI cmd
+- shell command requirement and relationship to executor/env interface
 - Any type
 - solid expression parser (regexp misses edge cases and escaping)
+- type check cwl.output.json
 
 - document validation before processing
-- better line/col info from document loading errors
+- better line/col/context info from document loading errors
 - carefully check document json/yaml marshaling
 - input/output record type handling
 - executor backends

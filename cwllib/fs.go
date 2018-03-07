@@ -1,12 +1,15 @@
 package cwllib
 
 import (
+	"errors"
 	"github.com/alecthomas/units"
 	"github.com/buchanae/cwl"
 	"github.com/google/uuid"
 	"path/filepath"
 	"strings"
 )
+
+var ErrFileNotFound = errors.New("file not found")
 
 type Filesystem interface {
 	Create(path, contents string) (*cwl.File, error)

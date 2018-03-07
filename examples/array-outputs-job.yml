@@ -1,4 +1,5 @@
 touchfiles:
-  - foo.txt
+  class: File
+  location: cwl.output.tpl
 #  - bar.dat
 #  - baz.txt
