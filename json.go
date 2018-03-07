@@ -96,6 +96,13 @@ func (x SchemaDefRequirement) MarshalJSON() ([]byte, error) {
 		Wrap
 	}{"SchemaDefRequirement", Wrap(x)})
 }
+func (x ShellCommandRequirement) MarshalJSON() ([]byte, error) {
+	type Wrap ShellCommandRequirement
+	return json.Marshal(struct {
+		Class string `json:"class"`
+		Wrap
+	}{"ShellCommandRequirement", Wrap(x)})
+}
 func (x InlineJavascriptRequirement) MarshalJSON() ([]byte, error) {
 	type Wrap InlineJavascriptRequirement
 	return json.Marshal(struct {
