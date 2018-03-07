@@ -18,6 +18,6 @@ inputs:
 outputs:
   output:
     type: string
-    #outputBinding:
-      #glob: "*.txt"
+    outputBinding:
+      glob: "*.txt"
       #outputEval: ${return self}

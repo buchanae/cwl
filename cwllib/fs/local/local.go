@@ -49,8 +49,14 @@ func (l *Local) Create(path, contents string) (*cwl.File, error) {
 		return nil, errf("contents is max allowed size (%s)", cwllib.MaxContentsBytes)
 	}
 
+  loc := filepath.Join(l.workdir, path)
+  abs, err := filepath.Abs(loc)
+  if err != nil {
+    return nil, errf("failed to get absolute path for %s: %s", loc, err)
+  }
+
 	return &cwl.File{
-		Location: filepath.Join(l.workdir, path),
+		Location: abs,
 		Path:     path,
 		Checksum: "sha1$" + fmt.Sprintf("%x", sha1.Sum(b)),
 		Size:     size,
@@ -71,9 +77,14 @@ func (l *Local) Info(loc string) (*cwl.File, error) {
 		return nil, errf("can't call Info() on a directory: %s", loc)
 	}
 
+  abs, err := filepath.Abs(loc)
+  if err != nil {
+    return nil, errf("failed to get absolute path for %s: %s", loc, err)
+  }
+
 	return &cwl.File{
-		Location: loc,
-		Path:     loc,
+		Location: abs,
+		Path:     abs,
 		// TODO allow config to optionally enable calculating checksum for local files
 		Checksum: "",
 		Size:     st.Size(),
