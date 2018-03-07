@@ -6,7 +6,6 @@ TODO
 - file staging and working directory
 - relative path context (current working directory) for filesystems
 - absolute paths for files, especially in outputs
-- resolve document references
 - good framework for e2e tests with lots of coverage
 - really good debug logging, with the goal of clearly explaining to a **user**
   what is going on when a job fails at any step, especially input/output binding.
@@ -16,6 +15,7 @@ TODO
 - solid expression parser (regexp misses edge cases and escaping)
 - type check cwl.output.json
 - filesystem multiplexing based on location
+- resolve http document references
 
 - document validation before processing
 - better line/col/context info from document loading errors

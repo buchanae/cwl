@@ -2,6 +2,8 @@ package cwl
 
 import (
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"path/filepath"
 )
 
@@ -23,6 +25,14 @@ type Resolver interface {
 type DefaultResolver struct{}
 
 func (DefaultResolver) Resolve(base, loc string) ([]byte, string, error) {
+	if u, ok := isHTTP(base, loc); ok {
+		b, err := httpGet(u)
+		if err != nil {
+			return nil, "", err
+		}
+		return b, u.String(), nil
+	}
+
 	if !filepath.IsAbs(loc) {
 		loc = filepath.Clean(filepath.Join(base, loc))
 	}
@@ -44,4 +54,35 @@ func NoResolve() Resolver {
 
 type noResolver struct {
 	Resolver
+}
+
+func isHTTP(base, loc string) (*url.URL, bool) {
+	if base == "" {
+		base, loc = loc, base
+	}
+	b, err := url.Parse(base)
+	if err != nil {
+		return nil, false
+	}
+	l, err := url.Parse(loc)
+	if err != nil {
+		return nil, false
+	}
+	if !b.IsAbs() {
+		return nil, false
+	}
+	return b.ResolveReference(l), true
+}
+
+func httpGet(u *url.URL) ([]byte, error) {
+	resp, err := http.Get(u.String())
+	if err != nil {
+		return nil, errf(`failed to resolve HTTP URL %s: %s`, u.String(), err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errf(`failed to read HTTP response body for %s: %s`, u.String(), err)
+	}
+	return body, nil
 }

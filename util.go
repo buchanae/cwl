@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+// errf makes fmt.Errorf shorter
+func errf(msg string, args ...interface{}) error {
+	return fmt.Errorf(msg, args...)
+}
+
 func debug(i ...interface{}) {
 	pretty.Println(i...)
 }
