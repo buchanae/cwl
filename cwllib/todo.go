@@ -15,7 +15,6 @@ TODO
 - solid expression parser (regexp misses edge cases and escaping)
 - type check cwl.output.json
 - filesystem multiplexing based on location
-- resolve http document references
 
 - document validation before processing
 - better line/col/context info from document loading errors

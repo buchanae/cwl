@@ -178,6 +178,7 @@ type Requirement interface {
 
 // TODO how many of these could legitimately be used
 //      as a hint?
+func (UnknownRequirement) requirement()              {}
 func (DockerRequirement) requirement()               {}
 func (ResourceRequirement) requirement()             {}
 func (EnvVarRequirement) requirement()               {}

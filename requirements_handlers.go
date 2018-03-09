@@ -1,7 +1,6 @@
 package cwl
 
 import (
-	"fmt"
 	"github.com/commondream/yamlast"
 	"strings"
 )
@@ -41,6 +40,10 @@ func (l *loader) MappingToRequirementSlice(n node) ([]Requirement, error) {
 func (l *loader) MappingToRequirement(n node) (Requirement, error) {
 	class := findKey(n, "class")
 	return l.loadReqByName(class, n)
+}
+
+func (l *loader) SeqToInitialWorkDirListing(n node) (InitialWorkDirListing, error) {
+	return InitialWorkDirListing{}, nil
 }
 
 func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
@@ -87,5 +90,7 @@ func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
 	case "stepinputexpressionrequirement":
 		return StepInputExpressionRequirement{}, nil
 	}
-	return nil, fmt.Errorf("unknown requirement name: %s", name)
+	return UnknownRequirement{Name: name}, nil
+	// TODO logging
+	//return nil, fmt.Errorf("unknown requirement name: %s", name)
 }

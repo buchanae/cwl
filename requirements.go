@@ -1,5 +1,9 @@
 package cwl
 
+type UnknownRequirement struct {
+	Name string
+}
+
 type DockerRequirement struct {
 	Pull            string `json:"dockerPull,omitempty"`
 	Load            string `json:"dockerLoad,omitempty"`
