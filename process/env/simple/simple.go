@@ -28,14 +28,6 @@ func (s *SimpleEnv) Filesystem() process.Filesystem {
   return s.fs
 }
 
-func (s *SimpleEnv) SupportsDocker() bool {
-  return false
-}
-
-func (s *SimpleEnv) SupportsShell() bool {
-  return false
-}
-
 func (s *SimpleEnv) CheckResources(req cwl.ResourceRequirement) error {
   return nil
 }

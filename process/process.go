@@ -8,7 +8,6 @@ import (
 type Env interface {
 	Runtime() Runtime
 	Filesystem() Filesystem
-	CheckResources(cwl.ResourceRequirement) error
 }
 
 type Mebibyte int
@@ -24,6 +23,17 @@ type Runtime struct {
 	TmpdirSize Mebibyte
 }
 
+type Resources struct {
+	CoresMin,
+	CoresMax int
+	RAMMin,
+	RAMMax,
+	OutdirMin,
+	OutdirMax,
+	TmpdirMin,
+	TmpdirMax Mebibyte
+}
+
 type Process struct {
 	tool           *cwl.Tool
 	inputs         cwl.Values
@@ -31,8 +41,8 @@ type Process struct {
 	bindings       []*binding
 	expressionLibs []string
 	envvars        map[string]string
-	resources      cwl.ResourceRequirement
 	shell          bool
+	resources      Resources
 }
 
 func NewProcess(tool *cwl.Tool, inputs cwl.Values, env Env) (*Process, error) {
@@ -74,17 +84,7 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, env Env) (*Process, error) {
 		process.bindings = append(process.bindings, b...)
 	}
 
-	if libs, ok := tool.RequiresInlineJavascript(); ok {
-		process.expressionLibs = libs
-	}
-
-	process.shell = tool.RequiresShellCommand()
-
-	err = process.loadReqs(tool.Requirements)
-	if err != nil {
-		return nil, err
-	}
-	err = process.loadReqs(tool.Hints)
+	err = process.loadReqs()
 	if err != nil {
 		return nil, err
 	}
@@ -92,9 +92,23 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, env Env) (*Process, error) {
 	return process, nil
 }
 
-func (process *Process) loadReqs(reqs []cwl.Requirement) error {
+func (process *Process) Tool() *cwl.Tool {
+	return process.tool
+}
+
+func (process *Process) Resources() Resources {
+	return process.resources
+}
+
+func (process *Process) loadReqs() error {
+	reqs := append([]cwl.Requirement{}, process.tool.Requirements...)
+	reqs = append(reqs, process.tool.Hints...)
+
 	for _, req := range reqs {
 		switch z := req.(type) {
+
+		case cwl.InlineJavascriptRequirement:
+			process.expressionLibs = z.ExpressionLib
 
 		case cwl.EnvVarRequirement:
 			err := process.evalEnvVars(z.EnvDef)
@@ -103,11 +117,7 @@ func (process *Process) loadReqs(reqs []cwl.Requirement) error {
 			}
 
 		case cwl.ResourceRequirement:
-			err := process.env.CheckResources(z)
-			if err != nil {
-				return errf("ResourceRequirement failed: %s", err)
-			}
-			process.resources = z
+			// TODO eval expressions
 
 		case cwl.SchemaDefRequirement:
 			return errf("SchemaDefRequirement is not supported (yet)")
