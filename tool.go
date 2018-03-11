@@ -24,6 +24,39 @@ type Tool struct {
 	PermanentFailCodes []int `json:",omitempty"`
 }
 
+func (t *Tool) RequiresDocker() (*DockerRequirement, bool) {
+	reqs := append([]Requirement{}, t.Requirements...)
+	reqs = append(reqs, t.Hints...)
+	for _, req := range reqs {
+		if r, ok := req.(DockerRequirement); ok {
+			return &r, true
+		}
+	}
+	return nil, false
+}
+
+func (t *Tool) RequiresShellCommand() bool {
+	reqs := append([]Requirement{}, t.Requirements...)
+	reqs = append(reqs, t.Hints...)
+	for _, req := range reqs {
+		if _, ok := req.(ShellCommandRequirement); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *Tool) RequiresInlineJavascript() ([]string, bool) {
+	reqs := append([]Requirement{}, t.Requirements...)
+	reqs = append(reqs, t.Hints...)
+	for _, req := range reqs {
+		if r, ok := req.(InlineJavascriptRequirement); ok {
+			return r.ExpressionLib, true
+		}
+	}
+	return nil, false
+}
+
 type CommandInput struct {
 	ID         string `json:"id,omitempty"`
 	Label      string `json:"label,omitempty"`

@@ -9,7 +9,7 @@ import (
 	"crypto/sha1"
 	"github.com/alecthomas/units"
 	"github.com/buchanae/cwl"
-	"github.com/buchanae/cwl/cwllib"
+	"github.com/buchanae/cwl/process"
 )
 
 type Local struct {
@@ -45,8 +45,8 @@ func (l *Local) Create(path, contents string) (*cwl.File, error) {
 
 	b := []byte(contents)
 	size := int64(len(b))
-	if units.MetricBytes(size) > cwllib.MaxContentsBytes {
-		return nil, errf("contents is max allowed size (%s)", cwllib.MaxContentsBytes)
+	if units.MetricBytes(size) > process.MaxContentsBytes {
+		return nil, errf("contents is max allowed size (%s)", process.MaxContentsBytes)
 	}
 
   loc := filepath.Join(l.workdir, path)
@@ -66,7 +66,7 @@ func (l *Local) Create(path, contents string) (*cwl.File, error) {
 func (l *Local) Info(loc string) (*cwl.File, error) {
 	st, err := os.Stat(loc)
   if os.IsNotExist(err) {
-    return nil, cwllib.ErrFileNotFound
+    return nil, process.ErrFileNotFound
   }
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (l *Local) Info(loc string) (*cwl.File, error) {
 func (l *Local) Contents(loc string) (string, error) {
 	fh, err := os.Open(loc)
   if os.IsNotExist(err) {
-    return "", cwllib.ErrFileNotFound
+    return "", process.ErrFileNotFound
   }
 	if err != nil {
 		return "", err
@@ -102,7 +102,7 @@ func (l *Local) Contents(loc string) (string, error) {
 	defer fh.Close()
 
 	buf := &bytes.Buffer{}
-	r := &io.LimitedReader{R: fh, N: int64(cwllib.MaxContentsBytes)}
+	r := &io.LimitedReader{R: fh, N: int64(process.MaxContentsBytes)}
 	_, err = io.Copy(buf, r)
 	if err != nil {
 		return "", err

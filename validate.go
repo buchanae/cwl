@@ -1,10 +1,6 @@
-package cwllib
+package cwl
 
-import (
-	"github.com/buchanae/cwl"
-)
-
-func ValidateTool(tool *cwl.Tool) error {
+func ValidateTool(tool *Tool) error {
 	// TODO
 	/*
 	   TODO find a place for this validation

@@ -2,8 +2,8 @@ package simple
 
 import (
   "github.com/buchanae/cwl"
-  "github.com/buchanae/cwl/cwllib"
-  "github.com/buchanae/cwl/cwllib/fs/local"
+  "github.com/buchanae/cwl/process"
+  "github.com/buchanae/cwl/process/fs/local"
 )
 
 type SimpleEnv struct {
@@ -20,11 +20,11 @@ func NewSimpleEnv() *SimpleEnv {
   return &SimpleEnv{fs: local.NewLocal(".")}
 }
 
-func (s *SimpleEnv) Runtime() cwllib.Runtime {
-  return cwllib.Runtime{}
+func (s *SimpleEnv) Runtime() process.Runtime {
+  return process.Runtime{}
 }
 
-func (s *SimpleEnv) Filesystem() cwllib.Filesystem {
+func (s *SimpleEnv) Filesystem() process.Filesystem {
   return s.fs
 }
 

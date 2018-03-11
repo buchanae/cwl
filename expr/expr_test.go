@@ -1,4 +1,4 @@
-package cwllib
+package expr
 
 import (
 	"github.com/kr/pretty"

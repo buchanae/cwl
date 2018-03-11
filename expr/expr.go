@@ -1,4 +1,4 @@
-package cwllib
+package expr
 
 import (
 	"github.com/buchanae/cwl"
@@ -94,23 +94,16 @@ func IsExpression(expr cwl.Expression) bool {
 	return true
 }
 
-type ExprData struct {
-	Inputs  cwl.Values
-	Self    interface{}
-	Runtime Runtime
-	Libs    []string
-}
-
 // Eval evaluates a string which is possibly a CWL expression.
 // If the string is not an expression, the string is returned unchanged.
-func Eval(e cwl.Expression, data ExprData) (interface{}, error) {
-	return EvalParts(Parse(e), data)
+func Eval(e cwl.Expression, libs []string, data map[string]interface{}) (interface{}, error) {
+	return EvalParts(Parse(e), libs, data)
 }
 
 // EvalParts evaluates a string which has been parsed by Parse().
 // If the parts do not represent an expression, the original raw string
 // is returned. This is a low-level function, it's better to use EvalString().
-func EvalParts(parts []*Part, data ExprData) (interface{}, error) {
+func EvalParts(parts []*Part, libs []string, data map[string]interface{}) (interface{}, error) {
 
 	// TODO is there any chance that allocating a VM for every expression is too much?
 	//      possibly if used in an API server, this could increase load significantly?
@@ -130,23 +123,16 @@ func EvalParts(parts []*Part, data ExprData) (interface{}, error) {
 
 		// Expression or JS function body.
 		// Can return any type.
-		code := strings.Join(data.Libs, "\n")
+		code := strings.Join(libs, "\n")
 		if part.IsFuncBody {
 			code = "(function(){" + part.Expr + "})()"
 		} else {
 			code = "(function(){ return " + part.Expr + "; })()"
 		}
 
-		vm.Set("inputs", data.Inputs)
-		vm.Set("self", data.Self)
-		vm.Set("runtime", map[string]interface{}{
-			"outdir":     data.Runtime.Outdir,
-			"tmpdir":     data.Runtime.Tmpdir,
-			"cores":      data.Runtime.Cores,
-			"ram":        data.Runtime.RAM,
-			"outdirSize": data.Runtime.OutdirSize,
-			"tmpdirSize": data.Runtime.TmpdirSize,
-		})
+		for key, val := range data {
+			vm.Set(key, val)
+		}
 
 		val, err := vm.Run(code)
 		if err != nil {

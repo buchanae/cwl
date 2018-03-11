@@ -1,9 +1,10 @@
-package cwllib
+package process
 
 import (
 	"errors"
 	"github.com/alecthomas/units"
 	"github.com/buchanae/cwl"
+	"github.com/buchanae/cwl/expr"
 	"github.com/google/uuid"
 	"path/filepath"
 	"strings"
@@ -24,7 +25,7 @@ const MaxContentsBytes = 64 * units.Kilobyte
 // such as dirname, checksum, size, etc. If f.Contents is given, the
 // file will be created via fs.Create(). if `loadContents` is true,
 // the file contents will be loaded via fs.Contents().
-func (job *Job) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
+func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
 
 	// http://www.commonwl.org/v1.0/CommandLineTool.html#File
 	// "As a special case, if the path field is provided but the location field is not,
@@ -48,7 +49,7 @@ func (job *Job) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
 	var x *cwl.File
 	var err error
 
-	fs := job.env.Filesystem()
+	fs := process.env.Filesystem()
 	if f.Contents != "" {
 		// Determine the file path of the literal.
 		// Use the path, or the basename, or generate a random name.
@@ -100,7 +101,7 @@ func (job *Job) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
 	return &f, nil
 }
 
-func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error {
+func (process *Process) resolveSecondaryFiles(file *cwl.File, x cwl.Expression) error {
 
 	// cwl spec:
 	// "If the value is an expression, the value of self in the expression
@@ -113,8 +114,8 @@ func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error
 	// or File or Directory objects. It is legal to reference an unchanged File
 	// or Directory object taken from input as a secondaryFile.
 	// TODO
-	if IsExpression(expr) {
-		job.eval(expr, file)
+	if expr.IsExpression(x) {
+		process.eval(x, file)
 	}
 
 	// cwl spec:
@@ -125,7 +126,7 @@ func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error
 	// "If string begins with one or more caret ^ characters, for each caret,
 	// remove the last file extension from the location (the last period . and all
 	// following characters).
-	pattern := string(expr)
+	pattern := string(x)
 	// TODO location or path? cwl spec says "path" but I'm suspicious.
 	location := file.Location
 
@@ -140,7 +141,7 @@ func (job *Job) resolveSecondaryFiles(file *cwl.File, expr cwl.Expression) error
 	}
 
 	// TODO does LoadContents apply to secondary files? not in the spec
-	f, err := job.resolveFile(sec, false)
+	f, err := process.resolveFile(sec, false)
 	if err != nil {
 		return err
 	}

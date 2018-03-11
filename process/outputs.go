@@ -1,4 +1,4 @@
-package cwllib
+package process
 
 import (
 	"github.com/buchanae/cwl"
@@ -9,8 +9,8 @@ import (
 /*** CWL output binding code ***/
 
 // Outputs binds cwl.Tool output descriptors to concrete values.
-func (job *Job) Outputs() (cwl.Values, error) {
-	outdoc, err := job.env.Filesystem().Contents("cwl.output.json")
+func (process *Process) Outputs() (cwl.Values, error) {
+	outdoc, err := process.env.Filesystem().Contents("cwl.output.json")
 	if err != nil && err != ErrFileNotFound {
 		return nil, err
 	}
@@ -20,8 +20,8 @@ func (job *Job) Outputs() (cwl.Values, error) {
 	}
 
 	values := cwl.Values{}
-	for _, out := range job.tool.Outputs {
-		v, err := job.bindOutput(out.Type, out.OutputBinding, out.SecondaryFiles, nil)
+	for _, out := range process.tool.Outputs {
+		v, err := process.bindOutput(out.Type, out.OutputBinding, out.SecondaryFiles, nil)
 		if err != nil {
 			return nil, errf(`failed to bind value for "%s": %s`, out.ID, err)
 		}
@@ -31,7 +31,7 @@ func (job *Job) Outputs() (cwl.Values, error) {
 }
 
 // bindOutput binds the output value for a single CommandOutput.
-func (job *Job) bindOutput(
+func (process *Process) bindOutput(
 	types []cwl.OutputType,
 	binding *cwl.CommandOutputBinding,
 	secondaryFiles []cwl.Expression,
@@ -41,12 +41,12 @@ func (job *Job) bindOutput(
 
 	if binding != nil && len(binding.Glob) > 0 {
 		// glob patterns may be expressions. evaluate them.
-		globs, err := job.evalGlobPatterns(binding.Glob)
+		globs, err := process.evalGlobPatterns(binding.Glob)
 		if err != nil {
 			return nil, errf("failed to evaluate glob expressions: %s", err)
 		}
 
-		files, err := job.matchFiles(globs, binding.LoadContents)
+		files, err := process.matchFiles(globs, binding.LoadContents)
 		if err != nil {
 			return nil, errf("failed to match files: %s", err)
 		}
@@ -54,7 +54,7 @@ func (job *Job) bindOutput(
 	}
 
 	if binding != nil && binding.OutputEval != "" {
-		val, err = job.eval(binding.OutputEval, val)
+		val, err = process.eval(binding.OutputEval, val)
 		if err != nil {
 			return nil, errf("failed to evaluate outputEval: %s", err)
 		}
@@ -119,7 +119,7 @@ Loop:
 				}
 				f := y[0]
 				for _, expr := range secondaryFiles {
-					err := job.resolveSecondaryFiles(f, expr)
+					err := process.resolveSecondaryFiles(f, expr)
 					if err != nil {
 						return nil, errf("failed to resolve secondary files: %s", err)
 					}
@@ -152,7 +152,7 @@ Loop:
 				if !item.CanInterface() {
 					return nil, errf("can't get interface of array item")
 				}
-				r, err := job.bindOutput(z.Items, z.OutputBinding, nil, item.Interface())
+				r, err := process.bindOutput(z.Items, z.OutputBinding, nil, item.Interface())
 				if err != nil {
 					return nil, err
 				}
@@ -170,11 +170,11 @@ Loop:
 
 // matchFiles executes the list of glob patterns, returning a list of matched files.
 // matchFiles must return a non-nil list on success, even if no files are matched.
-func (job *Job) matchFiles(globs []string, loadContents bool) ([]*cwl.File, error) {
+func (process *Process) matchFiles(globs []string, loadContents bool) ([]*cwl.File, error) {
 	// it's important this slice isn't nil, because the outputEval field
 	// expects it to be non-null during expression evaluation.
 	files := []*cwl.File{}
-	fs := job.env.Filesystem()
+	fs := process.env.Filesystem()
 
 	// resolve all the globs into file objects.
 	for _, pattern := range globs {
@@ -192,7 +192,7 @@ func (job *Job) matchFiles(globs []string, loadContents bool) ([]*cwl.File, erro
 				Size:     m.Size,
 			}
 
-			f, err := job.resolveFile(v, loadContents)
+			f, err := process.resolveFile(v, loadContents)
 			if err != nil {
 				return nil, err
 			}
@@ -209,12 +209,12 @@ func (job *Job) matchFiles(globs []string, loadContents bool) ([]*cwl.File, erro
 // cwl spec:
 // "If an expression is provided, the expression must return a string or an array
 //  of strings, which will then be evaluated as one or more glob patterns."
-func (job *Job) evalGlobPatterns(patterns []cwl.Expression) ([]string, error) {
+func (process *Process) evalGlobPatterns(patterns []cwl.Expression) ([]string, error) {
 	var out []string
 
 	for _, pattern := range patterns {
 		// TODO what is "self" here?
-		val, err := job.eval(pattern, nil)
+		val, err := process.eval(pattern, nil)
 		if err != nil {
 			return nil, err
 		}

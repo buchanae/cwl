@@ -4,9 +4,9 @@ import (
   "fmt"
   "encoding/json"
   "github.com/buchanae/cwl"
-  "github.com/buchanae/cwl/cwllib"
-  "github.com/buchanae/cwl/cwllib/env/simple"
-  exec "github.com/buchanae/cwl/cwllib/exec/simple"
+  "github.com/buchanae/cwl/process"
+  "github.com/buchanae/cwl/process/env/simple"
+  exec "github.com/buchanae/cwl/process/exec/simple"
   "os"
   "github.com/spf13/cobra"
 )
@@ -76,7 +76,7 @@ func run(path, inputsPath string) error {
   }
 
   env := simple.NewSimpleEnv()
-  job, err := cwllib.NewJob(tool, vals, env)
+  job, err := process.NewProcess(tool, vals, env)
   if err != nil {
     return err
   }

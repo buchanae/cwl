@@ -1,4 +1,4 @@
-package cwllib
+package process
 
 import (
 	"fmt"
@@ -9,13 +9,13 @@ import (
 
 /*** CWL tool command line argument building code ***/
 
-func (job *Job) Command() ([]string, error) {
+func (process *Process) Command() ([]string, error) {
 
-	args := make([]*binding, len(job.bindings))
-	copy(args, job.bindings)
+	args := make([]*binding, len(process.bindings))
+	copy(args, process.bindings)
 
 	// Add "CommandLineTool.arguments"
-	for i, arg := range job.tool.Arguments {
+	for i, arg := range process.tool.Arguments {
 		if arg.ValueFrom == "" {
 			return nil, errf("valueFrom is required but missing for argument %d", i)
 		}
@@ -27,7 +27,7 @@ func (job *Job) Command() ([]string, error) {
 	// Evaluate "valueFrom" expression.
 	for _, b := range args {
 		if b.clb.ValueFrom != "" {
-			val, err := job.eval(b.clb.ValueFrom, b.value)
+			val, err := process.eval(b.clb.ValueFrom, b.value)
 			if err != nil {
 				return nil, errf("failed to eval argument value: %s", err)
 			}
@@ -38,7 +38,7 @@ func (job *Job) Command() ([]string, error) {
 	sort.Stable(bySortKey(args))
 
 	// Now collect the input bindings into command line arguments
-	cmd := append([]string{}, job.tool.BaseCommand...)
+	cmd := append([]string{}, process.tool.BaseCommand...)
 	for _, b := range args {
 		cmd = append(cmd, bindArgs(b)...)
 	}

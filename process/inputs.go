@@ -1,4 +1,4 @@
-package cwllib
+package process
 
 import (
 	"github.com/buchanae/cwl"
@@ -33,7 +33,7 @@ type binding struct {
 // `clb` is the cwl.CommandLineBinding describing how to bind this input.
 // `val` is the input value for this input key.
 // `key` is the sort key of the parent of this binding.
-func (job *Job) bindInput(
+func (process *Process) bindInput(
 	types []cwl.InputType,
 	clb *cwl.CommandLineBinding,
 	secondaryFiles []cwl.Expression,
@@ -75,7 +75,7 @@ Loop:
 
 			for i, val := range vals {
 				key := append(key, sortKey{getPos(z.InputBinding), i}...)
-				b, err := job.bindInput(z.Items, z.InputBinding, nil, val, key)
+				b, err := process.bindInput(z.Items, z.InputBinding, nil, val, key)
 				if err != nil {
 					return nil, err
 				}
@@ -111,7 +111,7 @@ Loop:
 				}
 
 				key := append(key, sortKey{getPos(field.InputBinding), i}...)
-				b, err := job.bindInput(field.Type, field.InputBinding, nil, val, key)
+				b, err := process.bindInput(field.Type, field.InputBinding, nil, val, key)
 				if err != nil {
 					return nil, err
 				}
@@ -194,12 +194,12 @@ Loop:
 				continue Loop
 			}
 
-			f, err := job.resolveFile(v, clb.LoadContents)
+			f, err := process.resolveFile(v, clb.LoadContents)
 			if err != nil {
 				return nil, err
 			}
 			for _, expr := range secondaryFiles {
-				job.resolveSecondaryFiles(f, expr)
+				process.resolveSecondaryFiles(f, expr)
 			}
 
 			return []*binding{
