@@ -7,20 +7,20 @@ import (
 
 /*** CWL input binding code ***/
 
-// binding binds an input type description (string, array, record, etc)
+// Binding binds an input type description (string, array, record, etc)
 // to a concrete input value. this information is used while building
 // command line args.
-type binding struct {
+type Binding struct {
 	clb *cwl.CommandLineBinding
 	// the bound type (resolved by matching the input value to one of many allowed types)
 	// can be nil, which means no matching type could be determined.
-	typ interface{}
+	Type interface{}
 	// the value from the input object
-	value cwl.Value
+	Value cwl.Value
 	// used to determine the ordering of command line flags.
 	// http://www.commonwl.org/v1.0/CommandLineTool.html#Input_binding
 	sortKey sortKey
-	nested  []*binding
+	nested  []*Binding
 }
 
 // bindInput binds an input descriptor to a concrete value.
@@ -39,14 +39,14 @@ func (process *Process) bindInput(
 	secondaryFiles []cwl.Expression,
 	val interface{},
 	key sortKey,
-) ([]*binding, error) {
+) ([]*Binding, error) {
 
 	// If no value was found, check if the type is allowed to be null.
 	// If so, return a binding.
 	if val == nil {
 		for _, t := range types {
 			if z, ok := t.(cwl.Null); ok {
-				return []*binding{
+				return []*Binding{
 					{clb, z, nil, key, nil},
 				}, nil
 			}
@@ -71,7 +71,7 @@ Loop:
 				continue Loop
 			}
 
-			var out []*binding
+			var out []*Binding
 
 			for i, val := range vals {
 				key := append(key, sortKey{getPos(z.InputBinding), i}...)
@@ -87,11 +87,11 @@ Loop:
 			}
 
 			if out != nil {
-				nested := make([]*binding, len(out))
+				nested := make([]*Binding, len(out))
 				copy(nested, out)
-				b := &binding{clb, z, val, key, nested}
+				b := &Binding{clb, z, val, key, nested}
 				// TODO revisit whether creating a nested tree (instead of flat) is always better/ok
-				return []*binding{b}, nil
+				return []*Binding{b}, nil
 			}
 
 		case cwl.InputRecord:
@@ -101,7 +101,7 @@ Loop:
 				continue Loop
 			}
 
-			var out []*binding
+			var out []*Binding
 
 			for i, field := range z.Fields {
 				val, ok := vals[field.Name]
@@ -122,9 +122,9 @@ Loop:
 			}
 
 			if out != nil {
-				nested := make([]*binding, len(out))
+				nested := make([]*Binding, len(out))
 				copy(nested, out)
-				b := &binding{clb, z, val, key, nested}
+				b := &Binding{clb, z, val, key, nested}
 				out = append(out, b)
 				return out, nil
 			}
@@ -138,7 +138,7 @@ Loop:
 			if err != nil {
 				continue Loop
 			}
-			return []*binding{
+			return []*Binding{
 				{clb, z, v, key, nil},
 			}, nil
 
@@ -147,7 +147,7 @@ Loop:
 			if err != nil {
 				continue Loop
 			}
-			return []*binding{
+			return []*Binding{
 				{clb, z, v, key, nil},
 			}, nil
 
@@ -156,7 +156,7 @@ Loop:
 			if err != nil {
 				continue Loop
 			}
-			return []*binding{
+			return []*Binding{
 				{clb, z, v, key, nil},
 			}, nil
 
@@ -165,7 +165,7 @@ Loop:
 			if err != nil {
 				continue Loop
 			}
-			return []*binding{
+			return []*Binding{
 				{clb, z, v, key, nil},
 			}, nil
 
@@ -174,7 +174,7 @@ Loop:
 			if err != nil {
 				continue Loop
 			}
-			return []*binding{
+			return []*Binding{
 				{clb, z, v, key, nil},
 			}, nil
 
@@ -184,7 +184,7 @@ Loop:
 				continue Loop
 			}
 
-			return []*binding{
+			return []*Binding{
 				{clb, z, v, key, nil},
 			}, nil
 
@@ -194,7 +194,7 @@ Loop:
 				continue Loop
 			}
 
-			f, err := process.resolveFile(v, clb.LoadContents)
+			f, err := process.resolveFile(v, clb.GetLoadContents())
 			if err != nil {
 				return nil, err
 			}
@@ -202,7 +202,7 @@ Loop:
 				process.resolveSecondaryFiles(f, expr)
 			}
 
-			return []*binding{
+			return []*Binding{
 				{clb, z, *f, key, nil},
 			}, nil
 
@@ -212,7 +212,7 @@ Loop:
 				continue Loop
 			}
 			// TODO resolve directory
-			return []*binding{
+			return []*Binding{
 				{clb, z, v, key, nil},
 			}, nil
 

@@ -49,7 +49,6 @@ func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, e
 	var x *cwl.File
 	var err error
 
-	fs := process.env.Filesystem()
 	if f.Contents != "" {
 		// Determine the file path of the literal.
 		// Use the path, or the basename, or generate a random name.
@@ -60,26 +59,26 @@ func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, e
 		if path == "" {
 			id, err := uuid.NewRandom()
 			if err != nil {
-				return nil, errf("failed to generate a random name for a file literal: %s", err)
+				return nil, errf("generating a random name for a file literal: %s", err)
 			}
 			path = id.String()
 		}
 
-		x, err = fs.Create(path, f.Contents)
+		x, err = process.fs.Create(path, f.Contents)
 		if err != nil {
-			return nil, errf("failed to create file from inline content: %s", err)
+			return nil, errf("creating file from inline content: %s", err)
 		}
 
 	} else {
-		x, err = fs.Info(f.Location)
+		x, err = process.fs.Info(f.Location)
 		if err != nil {
-			return nil, errf("failed to get file info: %s", err)
+			return nil, errf("getting file info for %q: %s", f.Location, err)
 		}
 
 		if loadContents {
-			f.Contents, err = fs.Contents(f.Location)
+			f.Contents, err = process.fs.Contents(f.Location)
 			if err != nil {
-				return nil, errf("failed to load file contents: %s", err)
+				return nil, errf("loading file contents: %s", err)
 			}
 		}
 	}
@@ -87,10 +86,13 @@ func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, e
 	// TODO clean this up. "x" was needed before a package reorg.
 	//      possibly can be removed now.
 	f.Location = x.Location
-	f.Path = x.Path
+	// TODO figure out how to stage files.
+	//      namespace inputs so they don't conflict.
+	f.Path = filepath.Join("/inputs", filepath.Base(x.Path))
 	f.Checksum = x.Checksum
 	f.Size = x.Size
 
+	// cwl spec:
 	// "If basename is provided, it is not required to match the value from location"
 	if f.Basename == "" {
 		f.Basename = filepath.Base(f.Path)

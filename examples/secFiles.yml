@@ -1,0 +1,16 @@
+cwlVersion: "v1.0"
+class: CommandLineTool
+
+requirements:
+  - class: ShellCommandRequirement
+
+baseCommand: ["cat", "hello*"]
+
+# TODO cwl lib binds input argument but cwltool doesn't
+inputs:
+  targets:
+    type: File
+    secondaryFiles: .idx
+
+# TODO cwl lib doesn't require outputs, but cwltool does
+outputs: []

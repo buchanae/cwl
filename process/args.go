@@ -11,7 +11,7 @@ import (
 
 func (process *Process) Command() ([]string, error) {
 
-	args := make([]*binding, len(process.bindings))
+	args := make([]*Binding, len(process.bindings))
 	copy(args, process.bindings)
 
 	// Add "CommandLineTool.arguments"
@@ -19,19 +19,19 @@ func (process *Process) Command() ([]string, error) {
 		if arg.ValueFrom == "" {
 			return nil, errf("valueFrom is required but missing for argument %d", i)
 		}
-		args = append(args, &binding{
+		args = append(args, &Binding{
 			arg, argType{}, nil, sortKey{arg.Position, i}, nil,
 		})
 	}
 
 	// Evaluate "valueFrom" expression.
 	for _, b := range args {
-		if b.clb.ValueFrom != "" {
-			val, err := process.eval(b.clb.ValueFrom, b.value)
+		if b.clb.GetValueFrom() != "" {
+			val, err := process.eval(b.clb.GetValueFrom(), b.Value)
 			if err != nil {
 				return nil, errf("failed to eval argument value: %s", err)
 			}
-			b.value = val
+			b.Value = val
 		}
 	}
 
@@ -43,22 +43,26 @@ func (process *Process) Command() ([]string, error) {
 		cmd = append(cmd, bindArgs(b)...)
 	}
 
+	if process.tool.RequiresShellCommand() {
+		cmd = []string{"/bin/sh", "-c", strings.Join(cmd, " ")}
+	}
+
 	return cmd, nil
 }
 
 // args converts a binding into a list of formatted command line arguments.
-func bindArgs(b *binding) []string {
-	switch b.typ.(type) {
+func bindArgs(b *Binding) []string {
+	switch b.Type.(type) {
 
 	case cwl.InputArray:
 		// cwl spec:
 		// "If itemSeparator is specified, add prefix and the join the array
 		// into a single string with itemSeparator separating the items..."
-		if b.clb != nil && b.clb.ItemSeparator != "" {
+		if b.clb.GetItemSeparator() != "" {
 
 			var nested []cwl.Value
 			for _, nb := range b.nested {
-				nested = append(nested, nb.value)
+				nested = append(nested, nb.Value)
 			}
 			return formatArgs(b.clb, nested...)
 
@@ -78,12 +82,12 @@ func bindArgs(b *binding) []string {
 
 	case cwl.String, cwl.Int, cwl.Long, cwl.Float, cwl.Double, cwl.FileType,
 		cwl.DirectoryType, argType:
-		return formatArgs(b.clb, b.value)
+		return formatArgs(b.clb, b.Value)
 
 	case cwl.Boolean:
 		// cwl spec:
 		// "boolean: If true, add prefix to the command line. If false, add nothing."
-		bv := b.value.(bool)
+		bv := b.Value.(bool)
 		if bv && b.clb != nil && b.clb.Prefix != "" {
 			return formatArgs(b.clb)
 		}
@@ -96,13 +100,11 @@ func bindArgs(b *binding) []string {
 // http://www.commonwl.org/v1.0/CommandLineTool.html#CommandLineBinding
 func formatArgs(clb *cwl.CommandLineBinding, args ...cwl.Value) []string {
 	sep := true
-	prefix := ""
-	join := ""
+	prefix := clb.GetPrefix()
+	join := clb.GetItemSeparator()
 
 	if clb != nil {
-		prefix = clb.Prefix
 		sep = clb.Separate.Value()
-		join = clb.ItemSeparator
 	}
 
 	var strargs []string
@@ -148,7 +150,7 @@ type sortKey []interface{}
 
 // bySortKey defines the rules for sorting bindings;
 // http://www.commonwl.org/v1.0/CommandLineTool.html#Input_binding
-type bySortKey []*binding
+type bySortKey []*Binding
 
 func (s bySortKey) Len() int      { return len(s) }
 func (s bySortKey) Swap(i, j int) { s[i], s[j] = s[j], s[i] }

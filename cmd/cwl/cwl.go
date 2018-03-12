@@ -1,14 +1,20 @@
 package main
 
 import (
+  "context"
   "fmt"
   "encoding/json"
   "github.com/buchanae/cwl"
   "github.com/buchanae/cwl/process"
-  "github.com/buchanae/cwl/process/env/simple"
-  exec "github.com/buchanae/cwl/process/exec/simple"
+  localfs "github.com/buchanae/cwl/process/fs/local"
+
+  tug "github.com/buchanae/tugboat"
+  "github.com/buchanae/tugboat/docker"
+  "github.com/buchanae/tugboat/storage/local"
+
   "os"
   "github.com/spf13/cobra"
+  "github.com/kr/pretty"
 )
 
 var root = cobra.Command{
@@ -75,23 +81,91 @@ func run(path, inputsPath string) error {
     return fmt.Errorf("can only build command line tools")
   }
 
-  env := simple.NewSimpleEnv()
-  job, err := process.NewProcess(tool, vals, env)
+  rt := process.Runtime{}
+  fs := localfs.NewLocal(".")
+
+  proc, err := process.NewProcess(tool, vals, rt, fs)
   if err != nil {
     return err
   }
 
-  cmd, err := job.Command()
+  cmd, err := proc.Command()
   if err != nil {
     return err
   }
 
-  err = exec.Exec(cmd)
-  if err != nil {
-    return err
+
+
+  task := &tug.Task{
+    ID: "cwl-test1",
+    ContainerImage: "alpine",
+    Command: cmd,
+    Stdout: "stdout.txt",
+    Stderr: "stderr.txt",
+    Workdir: "/cwl",
+    Volumes: []string{"/cwl"},
+
+    /* TODO need process.OutputBindings() */
+    Outputs: []tug.File{
+      {
+        URL: "output/cwl/",
+        Path: "/cwl",
+      },
+      {
+        URL: "output/stdout.txt",
+        Path: "stdout.txt",
+      },
+      {
+        URL: "output/stderr.txt",
+        Path: "stderr.txt",
+      },
+    },
   }
 
-  outvals, err := job.Outputs()
+  if d, ok := tool.RequiresDocker(); ok {
+    task.ContainerImage = d.Pull
+  }
+
+  files := []cwl.File{}
+  for _, in := range proc.InputBindings() {
+    if f, ok := in.Value.(cwl.File); ok {
+      files = append(files, flattenFiles(f)...)
+    }
+  }
+  for _, f := range files {
+    task.Inputs = append(task.Inputs, tug.File{
+      URL: f.Location,
+      // TODO
+      Path: f.Path,
+    })
+  }
+
+  ctx := context.Background()
+  store, _ := local.NewLocal()
+  log := tug.EmptyLogger{}
+  exec := &docker.Docker{
+    Logger: log,
+    NoPull: true,
+  }
+
+	stage, err := tug.NewStage("tug-workdir", 0755)
+  if err != nil {
+    panic(err)
+  }
+  //stage.LeaveDir = true
+  defer stage.RemoveAll()
+
+  err = tug.Run(ctx, task, stage, log, store, exec)
+  if err != nil {
+    fmt.Println("Error:", err)
+  } else {
+    fmt.Println("Success")
+  }
+
+  pretty.Println("CMD", cmd)
+
+  outfs := localfs.NewLocal("output/cwl/")
+  outvals, err := proc.Outputs(outfs)
   if err != nil {
     return err
   }
@@ -103,4 +177,16 @@ func run(path, inputsPath string) error {
   fmt.Println(string(b))
 
   return nil
+}
+
+func flattenFiles(file cwl.File) []cwl.File {
+  files := []cwl.File{file}
+  for _, fd := range file.SecondaryFiles {
+    // TODO fix the mismatch between cwl.File and *cwl.File
+    if f, ok := fd.(*cwl.File); ok {
+      pretty.Println("SEC", *f)
+      files = append(files, flattenFiles(*f)...)
+    }
+  }
+  return files
 }

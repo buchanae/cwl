@@ -52,7 +52,7 @@ func (l *Local) Create(path, contents string) (*cwl.File, error) {
   loc := filepath.Join(l.workdir, path)
   abs, err := filepath.Abs(loc)
   if err != nil {
-    return nil, errf("failed to get absolute path for %s: %s", loc, err)
+    return nil, errf("getting absolute path for %s: %s", loc, err)
   }
 
 	return &cwl.File{
@@ -79,7 +79,7 @@ func (l *Local) Info(loc string) (*cwl.File, error) {
 
   abs, err := filepath.Abs(loc)
   if err != nil {
-    return nil, errf("failed to get absolute path for %s: %s", loc, err)
+    return nil, errf("getting absolute path for %s: %s", loc, err)
   }
 
 	return &cwl.File{
@@ -92,6 +92,7 @@ func (l *Local) Info(loc string) (*cwl.File, error) {
 }
 
 func (l *Local) Contents(loc string) (string, error) {
+  loc = filepath.Join(l.workdir, loc)
 	fh, err := os.Open(loc)
   if os.IsNotExist(err) {
     return "", process.ErrFileNotFound

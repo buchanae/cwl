@@ -1,0 +1,3 @@
+targets:
+  class: File
+  location: hello.txt

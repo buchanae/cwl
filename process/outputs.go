@@ -9,8 +9,8 @@ import (
 /*** CWL output binding code ***/
 
 // Outputs binds cwl.Tool output descriptors to concrete values.
-func (process *Process) Outputs() (cwl.Values, error) {
-	outdoc, err := process.env.Filesystem().Contents("cwl.output.json")
+func (process *Process) Outputs(fs Filesystem) (cwl.Values, error) {
+	outdoc, err := fs.Contents("cwl.output.json")
 	if err != nil && err != ErrFileNotFound {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func (process *Process) Outputs() (cwl.Values, error) {
 
 	values := cwl.Values{}
 	for _, out := range process.tool.Outputs {
-		v, err := process.bindOutput(out.Type, out.OutputBinding, out.SecondaryFiles, nil)
+		v, err := process.bindOutput(fs, out.Type, out.OutputBinding, out.SecondaryFiles, nil)
 		if err != nil {
 			return nil, errf(`failed to bind value for "%s": %s`, out.ID, err)
 		}
@@ -32,6 +32,7 @@ func (process *Process) Outputs() (cwl.Values, error) {
 
 // bindOutput binds the output value for a single CommandOutput.
 func (process *Process) bindOutput(
+	fs Filesystem,
 	types []cwl.OutputType,
 	binding *cwl.CommandOutputBinding,
 	secondaryFiles []cwl.Expression,
@@ -46,7 +47,7 @@ func (process *Process) bindOutput(
 			return nil, errf("failed to evaluate glob expressions: %s", err)
 		}
 
-		files, err := process.matchFiles(globs, binding.LoadContents)
+		files, err := process.matchFiles(fs, globs, binding.LoadContents)
 		if err != nil {
 			return nil, errf("failed to match files: %s", err)
 		}
@@ -72,7 +73,7 @@ func (process *Process) bindOutput(
 		return nil, errf("missing value")
 	}
 
-	debug("value", val)
+	debug("output value", val)
 
 	// Bind the output value to one of the allowed types.
 Loop:
@@ -121,7 +122,7 @@ Loop:
 				for _, expr := range secondaryFiles {
 					err := process.resolveSecondaryFiles(f, expr)
 					if err != nil {
-						return nil, errf("failed to resolve secondary files: %s", err)
+						return nil, errf("resolving secondary files: %s", err)
 					}
 				}
 				return f, nil
@@ -152,7 +153,7 @@ Loop:
 				if !item.CanInterface() {
 					return nil, errf("can't get interface of array item")
 				}
-				r, err := process.bindOutput(z.Items, z.OutputBinding, nil, item.Interface())
+				r, err := process.bindOutput(fs, z.Items, z.OutputBinding, nil, item.Interface())
 				if err != nil {
 					return nil, err
 				}
@@ -170,11 +171,10 @@ Loop:
 
 // matchFiles executes the list of glob patterns, returning a list of matched files.
 // matchFiles must return a non-nil list on success, even if no files are matched.
-func (process *Process) matchFiles(globs []string, loadContents bool) ([]*cwl.File, error) {
+func (process *Process) matchFiles(fs Filesystem, globs []string, loadContents bool) ([]*cwl.File, error) {
 	// it's important this slice isn't nil, because the outputEval field
 	// expects it to be non-null during expression evaluation.
 	files := []*cwl.File{}
-	fs := process.env.Filesystem()
 
 	// resolve all the globs into file objects.
 	for _, pattern := range globs {

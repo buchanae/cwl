@@ -5,11 +5,6 @@ import (
 	"github.com/buchanae/cwl/expr"
 )
 
-type Env interface {
-	Runtime() Runtime
-	Filesystem() Filesystem
-}
-
 type Mebibyte int
 
 // TODO this is provided to expressions early on in process processing,
@@ -26,6 +21,7 @@ type Runtime struct {
 type Resources struct {
 	CoresMin,
 	CoresMax int
+
 	RAMMin,
 	RAMMax,
 	OutdirMin,
@@ -37,15 +33,16 @@ type Resources struct {
 type Process struct {
 	tool           *cwl.Tool
 	inputs         cwl.Values
-	env            Env
-	bindings       []*binding
+	runtime        Runtime
+	fs             Filesystem
+	bindings       []*Binding
 	expressionLibs []string
-	envvars        map[string]string
+	env            map[string]string
 	shell          bool
 	resources      Resources
 }
 
-func NewProcess(tool *cwl.Tool, inputs cwl.Values, env Env) (*Process, error) {
+func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*Process, error) {
 
 	err := cwl.ValidateTool(tool)
 	if err != nil {
@@ -57,8 +54,9 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, env Env) (*Process, error) {
 	process := &Process{
 		tool:    tool,
 		inputs:  inputs,
-		env:     env,
-		envvars: map[string]string{},
+		runtime: rt,
+		fs:      fs,
+		env:     map[string]string{},
 	}
 
 	// Bind inputs to values.
@@ -75,7 +73,7 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, env Env) (*Process, error) {
 		k := sortKey{getPos(in.InputBinding), i}
 		b, err := process.bindInput(in.Type, in.InputBinding, in.SecondaryFiles, val, k)
 		if err != nil {
-			return nil, errf("error while binding inputs: %s", err)
+			return nil, errf("binding input %q: %s", in.ID, err)
 		}
 		if b == nil {
 			return nil, errf("no binding found for input: %s", in.ID)
@@ -98,6 +96,20 @@ func (process *Process) Tool() *cwl.Tool {
 
 func (process *Process) Resources() Resources {
 	return process.resources
+}
+
+func (process *Process) InputBindings() []*Binding {
+	bindings := make([]*Binding, len(process.bindings))
+	copy(bindings, process.bindings)
+	return bindings
+}
+
+func (process *Process) Env() map[string]string {
+	env := map[string]string{}
+	for k, v := range process.env {
+		env[k] = v
+	}
+	return env
 }
 
 func (process *Process) loadReqs() error {
@@ -123,8 +135,6 @@ func (process *Process) loadReqs() error {
 			return errf("SchemaDefRequirement is not supported (yet)")
 		case cwl.InitialWorkDirRequirement:
 			return errf("InitialWorkDirRequirement is not supported (yet)")
-		default:
-			return errf("unknown requirement type")
 		}
 	}
 	return nil
@@ -140,13 +150,13 @@ func (process *Process) evalEnvVars(def map[string]cwl.Expression) error {
 		if !ok {
 			return errf(`EnvVar must evaluate to a string, got "%s"`, val)
 		}
-		process.envvars[k] = str
+		process.env[k] = str
 	}
 	return nil
 }
 
 func (process *Process) eval(x cwl.Expression, self interface{}) (interface{}, error) {
-	r := process.env.Runtime()
+	r := process.runtime
 	return expr.Eval(x, process.expressionLibs, map[string]interface{}{
 		"inputs": process.inputs,
 		"self":   self,

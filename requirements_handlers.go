@@ -22,6 +22,16 @@ func (l *loader) SeqToRequirementSlice(n node) ([]Requirement, error) {
 	return reqs, nil
 }
 
+// TODO this is wrong? test with:
+/*
+requirements:
+  class: ShellCommandRequirement
+
+which should be:
+
+requirements:
+  - class: ShellCommandRequirement
+*/
 func (l *loader) MappingToRequirementSlice(n node) ([]Requirement, error) {
 	var reqs []Requirement
 	for _, kv := range itermap(n) {
