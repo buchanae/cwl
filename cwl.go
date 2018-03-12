@@ -85,15 +85,15 @@ func LoadValuesBytes(b []byte) (Values, error) {
 		return nil, fmt.Errorf("parsing yaml: %s", err)
 	}
 
+	v := Values{}
 	if yamlnode == nil {
-		return nil, fmt.Errorf("empty yaml")
+		return v, nil
 	}
 
 	if len(yamlnode.Children) > 1 {
 		return nil, fmt.Errorf("unexpected child count")
 	}
 
-	v := Values{}
 	err = l.load(yamlnode.Children[0], &v)
 
 	if err != nil {

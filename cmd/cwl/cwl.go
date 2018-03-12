@@ -4,6 +4,7 @@ import (
   "context"
   "fmt"
   "encoding/json"
+  "strings"
   "github.com/buchanae/cwl"
   "github.com/buchanae/cwl/process"
   localfs "github.com/buchanae/cwl/process/fs/local"
@@ -14,7 +15,6 @@ import (
 
   "os"
   "github.com/spf13/cobra"
-  "github.com/kr/pretty"
 )
 
 var root = cobra.Command{
@@ -78,7 +78,7 @@ func run(path, inputsPath string) error {
 
   tool, ok := doc.(*cwl.Tool)
   if !ok {
-    return fmt.Errorf("can only build command line tools")
+    return fmt.Errorf("can only run command line tools")
   }
 
   rt := process.Runtime{}
@@ -104,6 +104,7 @@ func run(path, inputsPath string) error {
     Stderr: "stderr.txt",
     Workdir: "/cwl",
     Volumes: []string{"/cwl"},
+    Env: proc.Env(),
 
     /* TODO need process.OutputBindings() */
     Outputs: []tug.File{
@@ -162,7 +163,7 @@ func run(path, inputsPath string) error {
     fmt.Println("Success")
   }
 
-  pretty.Println("CMD", cmd)
+  fmt.Println(strings.Join(cmd, " "))
 
   outfs := localfs.NewLocal("output/cwl/")
   outvals, err := proc.Outputs(outfs)
@@ -184,7 +185,6 @@ func flattenFiles(file cwl.File) []cwl.File {
   for _, fd := range file.SecondaryFiles {
     // TODO fix the mismatch between cwl.File and *cwl.File
     if f, ok := fd.(*cwl.File); ok {
-      pretty.Println("SEC", *f)
       files = append(files, flattenFiles(*f)...)
     }
   }

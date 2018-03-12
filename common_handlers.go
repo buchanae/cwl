@@ -52,6 +52,21 @@ func (l *loader) ScalarToExpressionSlice(n node) ([]Expression, error) {
 	return []Expression{Expression(n.Value)}, nil
 }
 
+func (l *loader) MappingToExpressionMap(n node) (map[string]Expression, error) {
+	out := map[string]Expression{}
+	for _, kv := range itermap(n) {
+		k := kv.k
+		v := kv.v
+		expr := Expression("")
+		err := l.load(v, &expr)
+		if err != nil {
+			return nil, errf("loading expression map: %s", err)
+		}
+		out[k] = expr
+	}
+	return out, nil
+}
+
 func (l *loader) SeqToStringSlice(n node) ([]string, error) {
 	strs := []string{}
 	for _, c := range n.Children {

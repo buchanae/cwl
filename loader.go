@@ -3,7 +3,6 @@ package cwl
 import (
 	"fmt"
 	"github.com/commondream/yamlast"
-	"github.com/kr/pretty"
 	"github.com/spf13/cast"
 	"reflect"
 	"strings"
@@ -62,6 +61,10 @@ func (l *loader) load(n node, t interface{}) error {
 	if typ.Kind() == reflect.Slice {
 		typename = strings.Title(typ.Elem().Name())
 		typename += "Slice"
+	}
+	if typ.Kind() == reflect.Map {
+		typename = strings.Title(typ.Elem().Name())
+		typename += "Map"
 	}
 	handlerName := nodeKind + "To" + typename
 
@@ -126,11 +129,8 @@ func (l *loader) load(n node, t interface{}) error {
 	}
 
 	// No handler found.
-	return fmt.Errorf("unhandled type:\n  %s\n  %s\n  %s\n  %s",
-		handlerName,
-		fmtNode(n, ""),
-		typ,
-		pretty.Sprint("output rec", t))
+	//debug(handlerName)
+	return fmt.Errorf("unhandled type at line %d, col %d", n.Line+1, n.Column)
 }
 
 // loadMappingToStruct essentially unmarshals a YAML mapping
