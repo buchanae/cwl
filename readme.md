@@ -10,7 +10,7 @@ For details, see the [reference docs](https://godoc.org/github.com/buchanae/cwl)
 
 ## Subpackages
 
-The [process](./process) library contains experimental, unfinished code for processing CWL documents in order to execute commands and workflows. See the [process readme](./process/readme.md) for more.
+The [process](./process) library contains experimental, unfinished code for processing CWL documents in order to execute commands and workflows.
 
 The [expr](./expr) library contains utilities for parsing CWL expressions out of strings. This parser is not yet robust (see the known issues below).
 
