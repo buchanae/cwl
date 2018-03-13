@@ -6,6 +6,8 @@ This is a Go library and command line tool for working with the [common workflow
 The core library includes the data type
 present in the CWL spec (CommandLineTool, Workflow, etc.), with a few extra utilities for loading and working with CWL documents. 
 
+For details, see the [reference docs](https://godoc.org/github.com/buchanae/cwl).
+
 ## Subpackages
 
 The [process](./process) library contains experimental, unfinished code for processing CWL documents in order to execute commands and workflows. See the [process readme](./process/readme.md) for more.
