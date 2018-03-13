@@ -23,7 +23,6 @@ TODO
 - test unrecognized fields are ignored (possibly with warning)
 - optional checksum calculation for filesystems
 - resource requests
-- environment variables
 - initial work dir
 - time limit on JS evaluation
 

@@ -52,7 +52,7 @@ func (l *loader) MappingToValue(n node) (Value, error) {
 	return vals, nil
 }
 
-func (l *loader) MappingToValues(n node) (Values, error) {
+func (l *loader) MappingToValueMap(n node) (map[string]Value, error) {
 	vals := Values{}
 	for _, kv := range itermap(n) {
 		k := kv.k
