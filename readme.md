@@ -14,10 +14,6 @@ The [process](./process) library contains experimental, unfinished code for proc
 
 The [expr](./expr) library contains utilities for parsing CWL expressions out of strings. This parser is not yet robust (see the known issues below).
 
-## CLI
-
-The command line tool ("cwl") includes a few commands for loading, inspecting, and experimental support for running commands. See the [releases](https://github.com/buchanae/cwl/releases) page to download the command line tool binary.
-
 ## Alpha quality
 
 At the time of this writing, this library is only a couple weeks old. I feel that the core CWL document loading library is fairly stable, but I can't promise that there aren't plenty of bugs lurking. 
@@ -25,6 +21,10 @@ At the time of this writing, this library is only a couple weeks old. I feel tha
 The command line tool is far from stable, and needs work before becoming useful.
 
 The [process](./process) library is highly experimental. Processing CWL tools and workflows in a robust manner is not a trivial task.
+
+## CLI
+
+The `cwl` command line tool includes a few commands for loading, inspecting, and experimental support for running commands. See the [releases](https://github.com/buchanae/cwl/releases) page to download the command line tool binary.
 
 ## Usage (CLI)
 
