@@ -74,7 +74,7 @@ go run main.go
 
 The CWL spec allows multiple different types for some fields, e.g. `CommandLineTool.inputs` may be a string, a list of strings, a map of string to string, a map of string to object, and so on. This is rather difficult to program against, especially in a statically typed language without generics or union types (i.e. Go).
 
-This library normalizes all fields to a single type, often prefering a list where a string and map might be allowed. In the example above, [`CommandLineTool.inputs` is a list](https://godoc.org/github.com/buchanae/cwl#Tool).
+This library normalizes all fields to a single type, often prefering a list where a string and map might be allowed. In the example above, [`CommandLineTool.inputs`](https://godoc.org/github.com/buchanae/cwl#Tool) is a list.
 
 Similarly, many fields might be a [CWL expression](http://www.commonwl.org/v1.0/CommandLineTool.html#Expressions). In this library, any field which *might* be an expression has the type [`Expression`](https://godoc.org/github.com/buchanae/cwl#Expression).
 
