@@ -6,6 +6,7 @@ import (
   "encoding/json"
   "strings"
   "github.com/buchanae/cwl"
+  "github.com/buchanae/cwl/version"
   "github.com/buchanae/cwl/process"
   localfs "github.com/buchanae/cwl/process/fs/local"
 
@@ -28,6 +29,18 @@ func init() {
     Args: cobra.ExactArgs(1),
     RunE: func(cmd *cobra.Command, args []string) error {
       return dump(args[0])
+    },
+  }
+  root.AddCommand(cmd)
+}
+
+func init() {
+  cmd := &cobra.Command{
+    Use: "version",
+    Args: cobra.NoArgs,
+    RunE: func(cmd *cobra.Command, args []string) error {
+      fmt.Println(version.String())
+      return nil
     },
   }
   root.AddCommand(cmd)
