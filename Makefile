@@ -29,7 +29,7 @@ cross-compile:
 		for GOARCH in amd64; do \
 			GOOS=$$GOOS GOARCH=$$GOARCH go build -a \
 				-ldflags '$(VERSION_LDFLAGS)' \
-				-o build/bin/cwl-$$GOOS-$$GOARCH .; \
+				-o build/bin/cwl-$$GOOS-$$GOARCH ./cmd/cwl; \
 		done; \
 	done
 
