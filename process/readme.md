@@ -1,6 +1,6 @@
 This library contains code for processing and executing CWL documents, such as CommandLineTools.
 
-This code is experimental, young, and buggy, however it is able to bind inputs, generate command line arguments, and bind outputs.
+This code is experimental, young, and buggy, however it is able to bind inputs, generate command line arguments, and bind outputs. Currently the focus is on supporting CommandLineTool processing. Last checked (3/14/2018), about 15/68 conformance tests were passing.
 
 ## Example
 
