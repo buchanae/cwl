@@ -32,6 +32,7 @@ func (d DocumentRef) MarshalText() ([]byte, error) {
 	return []byte(d.Location), nil
 }
 
+type Any struct{}
 type Null struct{}
 type Boolean struct{}
 type Int struct{}
@@ -72,6 +73,7 @@ type Directory struct {
 func (File) filedir()      {}
 func (Directory) filedir() {}
 
+func (Any) String() string           { return "any" }
 func (Null) String() string          { return "null" }
 func (Boolean) String() string       { return "boolean" }
 func (Int) String() string           { return "int" }
@@ -90,6 +92,7 @@ func (OutputRecord) String() string  { return "record" }
 func (OutputEnum) String() string    { return "enum" }
 func (OutputArray) String() string   { return "array" }
 
+func (Any) MarshalText() ([]byte, error)           { return []byte("any"), nil }
 func (Null) MarshalText() ([]byte, error)          { return []byte("null"), nil }
 func (Boolean) MarshalText() ([]byte, error)       { return []byte("boolean"), nil }
 func (Int) MarshalText() ([]byte, error)           { return []byte("int"), nil }
@@ -116,6 +119,7 @@ type InputType interface {
 	inputtype()
 }
 
+func (Any) inputtype()           {}
 func (Null) inputtype()          {}
 func (Boolean) inputtype()       {}
 func (Int) inputtype()           {}
@@ -134,6 +138,7 @@ type OutputType interface {
 	outputtype()
 }
 
+func (Any) outputtype()           {}
 func (Null) outputtype()          {}
 func (Boolean) outputtype()       {}
 func (Int) outputtype()           {}
@@ -154,6 +159,7 @@ type cwltype interface {
 	cwltype()
 }
 
+func (Any) cwltype()           {}
 func (Null) cwltype()          {}
 func (Boolean) cwltype()       {}
 func (Int) cwltype()           {}

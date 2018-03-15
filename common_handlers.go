@@ -260,6 +260,8 @@ func (l *loader) scalarToType(name string, isInput bool) cwltype {
 	switch name {
 	case "":
 		return nil
+	case "any":
+		t = Any{}
 	case "null":
 		t = Null{}
 	case "boolean":
