@@ -2,7 +2,13 @@ package cwl
 
 import (
 	"fmt"
+	"regexp"
 )
+
+// YAML allows all these values for booleans
+// ...because the world needed more than true/false?
+var yamlTrueRX = regexp.MustCompile(`y|Y|yes|Yes|YES|true|True|TRUE|on|On|ON`)
+var yamlFalseRX = regexp.MustCompile(`n|N|no|No|NO|false|False|FALSE|off|Off|OFF`)
 
 func (l *loader) ScalarToCommandOutput(n node) (CommandOutput, error) {
 	o := CommandOutput{}
@@ -22,15 +28,24 @@ func (l *loader) ScalarToCommandLineBinding(n node) (CommandLineBinding, error) 
 	}, nil
 }
 
-func (l *loader) ScalarToOptOut(n node) (OptOut, error) {
-	switch n.Value {
-	case "true":
-		return OptOut{v: true, set: true}, nil
-	case "false":
-		return OptOut{v: false, set: true}, nil
-	default:
-		return OptOut{}, fmt.Errorf("invalid boolean value: %s", n.Value)
+func (l *loader) ScalarToBool(n node) (bool, error) {
+	if yamlTrueRX.MatchString(n.Value) {
+		return true, nil
 	}
+	if yamlFalseRX.MatchString(n.Value) {
+		return false, nil
+	}
+	return false, fmt.Errorf("invalid boolean value: %s", n.Value)
+}
+
+func (l *loader) ScalarToOptOut(n node) (OptOut, error) {
+	if yamlTrueRX.MatchString(n.Value) {
+		return OptOut{v: true, set: true}, nil
+	}
+	if yamlFalseRX.MatchString(n.Value) {
+		return OptOut{v: false, set: true}, nil
+	}
+	return OptOut{}, fmt.Errorf("invalid boolean value: %s", n.Value)
 }
 
 func (l *loader) MappingToCommandLineBindingPtr(n node) (*CommandLineBinding, error) {
