@@ -91,6 +91,36 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*
 	return process, nil
 }
 
+func (process *Process) Stdout() (string, error) {
+	i, err := process.eval(process.tool.Stdout, nil)
+	if err != nil {
+		return "", wrap(err, "evaluating stdout expression")
+	}
+	if i == nil {
+		return "", nil
+	}
+	str, ok := i.(string)
+	if !ok {
+		return "", errf("stdout expression returned a non-string value")
+	}
+	return str, nil
+}
+
+func (process *Process) Stderr() (string, error) {
+	i, err := process.eval(process.tool.Stderr, nil)
+	if err != nil {
+		return "", wrap(err, "evaluating stderr expression")
+	}
+	if i == nil {
+		return "", nil
+	}
+	str, ok := i.(string)
+	if !ok {
+		return "", errf("stderr expression returned a non-string value")
+	}
+	return str, nil
+}
+
 func (process *Process) Tool() *cwl.Tool {
 	return process.tool
 }
