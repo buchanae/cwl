@@ -17,25 +17,28 @@ import (
   //gsstore "github.com/buchanae/tugboat/storage/gs"
 
   "github.com/spf13/cobra"
+  "github.com/rs/xid"
 )
 
 func init() {
   outdir := "cwl-output"
+  debug := false
 
   cmd := &cobra.Command{
     Use: "run <doc.cwl> <inputs.json>",
     Args: cobra.ExactArgs(2),
     RunE: func(cmd *cobra.Command, args []string) error {
-      return run(args[0], args[1], outdir)
+      return run(args[0], args[1], outdir, debug)
     },
   }
   root.AddCommand(cmd)
   f := cmd.Flags()
 
   f.StringVar(&outdir, "outdir", outdir, "")
+  f.BoolVar(&debug, "debug", debug, "")
 }
 
-func run(path, inputsPath, outdir string) error {
+func run(path, inputsPath, outdir string, debug bool) error {
   vals, err := cwl.LoadValuesFile(inputsPath)
   if err != nil {
     return err
@@ -71,11 +74,11 @@ func run(path, inputsPath, outdir string) error {
   }
 
   fs := localfs.NewLocal(inputsDir)
+  fs.CalcChecksum = true
   //fs, err := gsfs.NewGS("buchanae-funnel")
   if err != nil {
     return err
   }
-
 
   proc, err := process.NewProcess(tool, vals, rt, fs)
   if err != nil {
@@ -87,16 +90,13 @@ func run(path, inputsPath, outdir string) error {
     return err
   }
 
-
-
   task := &tug.Task{
-    ID: "cwl-test1",
-    ContainerImage: "alpine",
+    ID: "cwl-test1-" + xid.New().String(),
+    //ContainerImage: "alpine",
+    ContainerImage: "python:2",
     Command: cmd,
-    Stdout: "stdout.txt",
-    Stderr: "stderr.txt",
     Workdir: "/cwl",
-    Volumes: []string{"/cwl"},
+    Volumes: []string{"/cwl", "/tmp"},
     Env: proc.Env(),
 
     /* TODO need process.OutputBindings() */
@@ -105,15 +105,24 @@ func run(path, inputsPath, outdir string) error {
         URL: outdir,
         Path: "/cwl",
       },
-      {
-        URL: outdir + "/stdout.txt",
-        Path: "stdout.txt",
-      },
-      {
-        URL: outdir + "/stderr.txt",
-        Path: "stderr.txt",
-      },
     },
+  }
+  task.Env["HOME"] = "/cwl"
+  task.Env["TMPDIR"] = "/tmp"
+
+  stdout, err := proc.Stdout()
+  if err != nil {
+    return err
+  }
+  stderr, err := proc.Stderr()
+  if err != nil {
+    return err
+  }
+  if stdout != "" {
+    task.Stdout = "/cwl/" + stdout
+  }
+  if stderr != "" {
+    task.Stderr = "/cwl/" + stderr
   }
 
   if d, ok := tool.RequiresDocker(); ok {
@@ -137,7 +146,12 @@ func run(path, inputsPath, outdir string) error {
   ctx := context.Background()
   store, _ := local.NewLocal()
   //store, _ := gsstore.NewGS("buchanae-funnel")
-  log := tug.EmptyLogger{}
+  var log tug.Logger
+  if debug {
+    log = tug.StderrLogger{}
+  } else {
+    log = tug.EmptyLogger{}
+  }
   exec := &docker.Docker{
     Logger: log,
     NoPull: true,
@@ -152,7 +166,7 @@ func run(path, inputsPath, outdir string) error {
 
   err = tug.Run(ctx, task, stage, log, store, exec)
   if err != nil {
-    fmt.Fprintln(os.Stderr, "Error:", err)
+    return err
   } else {
     fmt.Fprintln(os.Stderr, "Success")
   }
@@ -160,6 +174,7 @@ func run(path, inputsPath, outdir string) error {
   //fmt.Println(strings.Join(cmd, " "))
 
   outfs := localfs.NewLocal(outdir)
+  outfs.CalcChecksum = true
   //outfs, err := gsfs.NewGS("buchanae-cwl-output")
   if err != nil {
     return err

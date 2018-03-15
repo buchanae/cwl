@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+  "io/ioutil"
 	"os"
 	"path/filepath"
 	"crypto/sha1"
@@ -14,14 +15,17 @@ import (
 
 type Local struct {
 	workdir string
+  CalcChecksum bool
 }
 
 func NewLocal(workdir string) *Local {
-	return &Local{workdir}
+	return &Local{workdir, false}
 }
 
 func (l *Local) Glob(pattern string) ([]*cwl.File, error) {
 	var out []*cwl.File
+
+  pattern = filepath.Join(l.workdir, pattern)
 
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
@@ -86,11 +90,19 @@ func (l *Local) Info(loc string) (*cwl.File, error) {
     return nil, errf("getting absolute path for %s: %s", loc, err)
   }
 
+  checksum := ""
+  if l.CalcChecksum {
+    b, err := ioutil.ReadFile(loc)
+    if err != nil {
+      return nil, errf("calculating checksum for %s: %s", loc, err)
+    }
+    checksum = "sha1$" + fmt.Sprintf("%x", sha1.Sum(b))
+  }
+
 	return &cwl.File{
 		Location: abs,
 		Path:     abs,
-		// TODO allow config to optionally enable calculating checksum for local files
-		Checksum: "",
+		Checksum: checksum,
 		Size:     st.Size(),
 	}, nil
 }

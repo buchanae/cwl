@@ -73,8 +73,6 @@ func (process *Process) bindOutput(
 		return nil, errf("missing value")
 	}
 
-	debug("output value", val)
-
 	// Bind the output value to one of the allowed types.
 Loop:
 	for _, t := range types {
@@ -110,12 +108,9 @@ Loop:
 				return v, nil
 			}
 		case cwl.FileType:
-			debug("trying to match File")
-
 			switch y := val.(type) {
 			case []*cwl.File:
 				if len(y) != 1 {
-					debug("array is not a single file")
 					continue Loop
 				}
 				f := y[0]
@@ -137,11 +132,8 @@ Loop:
 		case cwl.DirectoryType:
 			// TODO
 		case cwl.OutputArray:
-			debug("trying to match OutputArray")
-
 			typ := reflect.TypeOf(val)
 			if typ.Kind() != reflect.Slice {
-				debug("value is not an array")
 				continue Loop
 			}
 
