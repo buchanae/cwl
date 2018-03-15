@@ -13,6 +13,10 @@ func errf(msg string, args ...interface{}) error {
 	return fmt.Errorf(msg, args...)
 }
 
+func wrap(err error, msg string, args ...interface{}) error {
+	return errf("%s: %s", fmt.Sprintf(msg, args...), err)
+}
+
 // getPos is a helper for accessing the Position field
 // of a possibly nil CommandLineBinding
 func getPos(in *cwl.CommandLineBinding) int {
