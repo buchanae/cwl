@@ -10,9 +10,10 @@ type Mebibyte int
 // TODO this is provided to expressions early on in process processing,
 //      but it won't have real values from a scheduler until much later.
 type Runtime struct {
-	Outdir     string
-	Tmpdir     string
-	Cores      int
+	Outdir string
+	Tmpdir string
+	// TODO make these all strings?
+	Cores      string
 	RAM        Mebibyte
 	OutdirSize Mebibyte
 	TmpdirSize Mebibyte

@@ -52,7 +52,24 @@ func run(path, inputsPath, outdir string) error {
     return fmt.Errorf("can only run command line tools")
   }
 
+  // TODO hack. need to think carefully about how resource requirement and runtime
+  //      actually get scheduled.
+  var resources *cwl.ResourceRequirement
+	reqs := append([]cwl.Requirement{}, tool.Requirements...)
+	reqs = append(reqs, tool.Hints...)
+  for _, req := range reqs {
+    if r, ok := req.(cwl.ResourceRequirement); ok {
+      resources = &r
+    }
+  }
+
   rt := process.Runtime{}
+  // TODO related to the resource requirement search above. basically a hack
+  //      for the conformance tests, for now.
+  if resources != nil {
+    rt.Cores = string(resources.CoresMin)
+  }
+
   fs := localfs.NewLocal(inputsDir)
   //fs, err := gsfs.NewGS("buchanae-funnel")
   if err != nil {
