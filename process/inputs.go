@@ -200,8 +200,8 @@ Loop:
 			if err != nil {
 				return nil, err
 			}
-      // TODO figure out a good way to do this.
-      f.Path = "/inputs/" + f.Path
+			// TODO figure out a good way to do this.
+			f.Path = "/inputs/" + f.Path
 			for _, expr := range secondaryFiles {
 				process.resolveSecondaryFiles(f, expr)
 			}

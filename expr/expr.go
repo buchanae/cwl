@@ -113,9 +113,9 @@ func EvalParts(parts []*Part, libs []string, data map[string]interface{}) (inter
 		return nil, nil
 	}
 
-  for key, val := range data {
-    vm.Set(key, val)
-  }
+	for key, val := range data {
+		vm.Set(key, val)
+	}
 
 	if len(parts) == 1 {
 		part := parts[0]
@@ -125,14 +125,14 @@ func EvalParts(parts []*Part, libs []string, data map[string]interface{}) (inter
 			return part.Raw, nil
 		}
 
-    // Expression or JS function body.
-    // Can return any type.
-    code := strings.Join(libs, "\n")
-    if part.IsFuncBody {
-      code = "(function(){" + part.Expr + "})()"
-    } else {
-      code = "(function(){ return " + part.Expr + "; })()"
-    }
+		// Expression or JS function body.
+		// Can return any type.
+		code := strings.Join(libs, "\n")
+		if part.IsFuncBody {
+			code = "(function(){" + part.Expr + "})()"
+		} else {
+			code = "(function(){ return " + part.Expr + "; })()"
+		}
 
 		val, err := vm.Run(code)
 		if err != nil {

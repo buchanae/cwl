@@ -88,10 +88,10 @@ func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, e
 	f.Location = x.Location
 	// TODO figure out how to stage files.
 	//      namespace inputs so they don't conflict.
-  //      remember, the args building depends on this path, so it must happen
-  //      in the Process code.
+	//      remember, the args building depends on this path, so it must happen
+	//      in the Process code.
 	//f.Path = filepath.Join("/inputs", filepath.Base(x.Path))
-  f.Path = filepath.Base(x.Path)
+	f.Path = filepath.Base(x.Path)
 	f.Checksum = x.Checksum
 	f.Size = x.Size
 
