@@ -19,6 +19,7 @@ func (l *loader) MappingToWorkflowInputSlice(n node) ([]WorkflowInput, error) {
 			if err != nil {
 				return nil, err
 			}
+			i.ID = k
 		case yamlast.ScalarNode:
 			err := l.load(v, &i.Type)
 			if err != nil {
@@ -49,6 +50,7 @@ func (l *loader) MappingToWorkflowOutputSlice(n node) ([]WorkflowOutput, error) 
 			if err != nil {
 				return nil, err
 			}
+			o.ID = k
 
 		case yamlast.ScalarNode:
 			err := l.load(v, &o.Type)
@@ -70,11 +72,12 @@ func (l *loader) MappingToStepSlice(n node) ([]Step, error) {
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		step := Step{ID: k}
+		step := Step{}
 		err := l.load(v, &step)
 		if err != nil {
 			return nil, err
 		}
+		step.ID = k
 		steps = append(steps, step)
 	}
 	return steps, nil
@@ -124,6 +127,7 @@ func (l *loader) MappingToStepInputSlice(n node) ([]StepInput, error) {
 			if err != nil {
 				return nil, err
 			}
+			in.ID = k
 
 		case yamlast.ScalarNode:
 			in.Source = []string{v.Value}

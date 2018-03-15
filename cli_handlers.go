@@ -106,10 +106,11 @@ func (l *loader) MappingToCommandInputSlice(n node) ([]CommandInput, error) {
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		i := CommandInput{ID: k}
+		i := CommandInput{}
 		if err := l.load(v, &i); err != nil {
 			return nil, err
 		}
+		i.ID = k
 		inputs = append(inputs, i)
 	}
 
@@ -122,10 +123,11 @@ func (l *loader) MappingToCommandOutputSlice(n node) ([]CommandOutput, error) {
 	for _, kv := range itermap(n) {
 		k := kv.k
 		v := kv.v
-		o := CommandOutput{ID: k}
+		o := CommandOutput{}
 		if err := l.load(v, &o); err != nil {
 			return nil, err
 		}
+		o.ID = k
 		outputs = append(outputs, o)
 	}
 
