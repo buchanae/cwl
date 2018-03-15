@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/buchanae/cwl"
 	"github.com/kr/pretty"
+	"os"
+	"strings"
 )
 
 // errf makes fmt.Errorf shorter
@@ -20,6 +22,12 @@ func getPos(in *cwl.CommandLineBinding) int {
 	return in.Position
 }
 
-func debug(i ...interface{}) {
-	pretty.Println(i...)
+func debug(args ...interface{}) {
+	var fmts []string
+	var formatters []interface{}
+	for _, arg := range args {
+		fmts = append(fmts, "%# v")
+		formatters = append(formatters, pretty.Formatter(arg))
+	}
+	fmt.Fprintf(os.Stderr, strings.Join(fmts, " ")+"\n", formatters...)
 }

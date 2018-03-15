@@ -1,4 +1,4 @@
 tarfile:
   class: File
-  path: hello.tar
-extractfile: goodbye.txt
+  path: other.tar
+extractfile: inp.cwl

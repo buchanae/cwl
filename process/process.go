@@ -64,14 +64,14 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*
 	// Since every part of a tool depends on "inputs" being available to expressions,
 	// nothing can be done on a Process without a valid inputs binding,
 	// which is why we bind in the Process constructor.
-	for i, in := range tool.Inputs {
+	for _, in := range tool.Inputs {
 		val := inputs[in.ID]
 		if val == nil {
 			val = in.Default
 		}
 
-		k := sortKey{getPos(in.InputBinding), i}
-		b, err := process.bindInput(in.Type, in.InputBinding, in.SecondaryFiles, val, k)
+		k := sortKey{getPos(in.InputBinding)}
+		b, err := process.bindInput(in.ID, in.Type, in.InputBinding, in.SecondaryFiles, val, k)
 		if err != nil {
 			return nil, errf("binding input %q: %s", in.ID, err)
 		}

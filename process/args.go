@@ -20,7 +20,7 @@ func (process *Process) Command() ([]string, error) {
 			return nil, errf("valueFrom is required but missing for argument %d", i)
 		}
 		args = append(args, &Binding{
-			arg, argType{}, nil, sortKey{arg.Position, i}, nil,
+			arg, argType{}, nil, sortKey{arg.Position}, nil, "",
 		})
 	}
 
@@ -36,6 +36,7 @@ func (process *Process) Command() ([]string, error) {
 	}
 
 	sort.Stable(bySortKey(args))
+	debug("ARGS", args)
 
 	// Now collect the input bindings into command line arguments
 	cmd := append([]string{}, process.tool.BaseCommand...)
@@ -156,6 +157,13 @@ func (s bySortKey) Len() int      { return len(s) }
 func (s bySortKey) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s bySortKey) Less(i, j int) bool {
 	z := compareKey(s[i].sortKey, s[j].sortKey)
+	// cwl spec
+	//  If and only if two bindings have the same sort key,
+	// the tie must be broken using the ordering of the field or parameter name
+	// immediately containing the leaf binding.
+	if z == 0 {
+		return s[i].name < s[j].name
+	}
 	return z == -1
 }
 

@@ -64,6 +64,10 @@ func (l *Local) Create(path, contents string) (*cwl.File, error) {
 }
 
 func (l *Local) Info(loc string) (*cwl.File, error) {
+  if !filepath.IsAbs(loc) {
+    loc = filepath.Join(l.workdir, loc)
+  }
+
 	st, err := os.Stat(loc)
   if os.IsNotExist(err) {
     return nil, process.ErrFileNotFound

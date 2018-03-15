@@ -21,6 +21,7 @@ type Binding struct {
 	// http://www.commonwl.org/v1.0/CommandLineTool.html#Input_binding
 	sortKey sortKey
 	nested  []*Binding
+	name    string
 }
 
 // bindInput binds an input descriptor to a concrete value.
@@ -28,12 +29,13 @@ type Binding struct {
 // bindInput is called recursively for types which have subtypes,
 // such as array, record, etc.
 //
-// `fs` provides access to the filesystem.
+// `name` is the field or parameter name.
 // `types` is the list of types allowed by this input.
 // `clb` is the cwl.CommandLineBinding describing how to bind this input.
 // `val` is the input value for this input key.
 // `key` is the sort key of the parent of this binding.
 func (process *Process) bindInput(
+	name string,
 	types []cwl.InputType,
 	clb *cwl.CommandLineBinding,
 	secondaryFiles []cwl.Expression,
@@ -47,7 +49,7 @@ func (process *Process) bindInput(
 		for _, t := range types {
 			if z, ok := t.(cwl.Null); ok {
 				return []*Binding{
-					{clb, z, nil, key, nil},
+					{clb, z, nil, key, nil, name},
 				}, nil
 			}
 		}
@@ -74,8 +76,8 @@ Loop:
 			var out []*Binding
 
 			for i, val := range vals {
-				key := append(key, sortKey{getPos(z.InputBinding), i}...)
-				b, err := process.bindInput(z.Items, z.InputBinding, nil, val, key)
+				subkey := append(key, sortKey{getPos(z.InputBinding), i}...)
+				b, err := process.bindInput("", z.Items, z.InputBinding, nil, val, subkey)
 				if err != nil {
 					return nil, err
 				}
@@ -89,7 +91,7 @@ Loop:
 			if out != nil {
 				nested := make([]*Binding, len(out))
 				copy(nested, out)
-				b := &Binding{clb, z, val, key, nested}
+				b := &Binding{clb, z, val, key, nested, name}
 				// TODO revisit whether creating a nested tree (instead of flat) is always better/ok
 				return []*Binding{b}, nil
 			}
@@ -110,8 +112,8 @@ Loop:
 					continue Loop
 				}
 
-				key := append(key, sortKey{getPos(field.InputBinding), i}...)
-				b, err := process.bindInput(field.Type, field.InputBinding, nil, val, key)
+				subkey := append(key, sortKey{getPos(field.InputBinding), i}...)
+				b, err := process.bindInput(field.Name, field.Type, field.InputBinding, nil, val, subkey)
 				if err != nil {
 					return nil, err
 				}
@@ -124,7 +126,7 @@ Loop:
 			if out != nil {
 				nested := make([]*Binding, len(out))
 				copy(nested, out)
-				b := &Binding{clb, z, val, key, nested}
+				b := &Binding{clb, z, val, key, nested, name}
 				out = append(out, b)
 				return out, nil
 			}
@@ -139,7 +141,7 @@ Loop:
 				continue Loop
 			}
 			return []*Binding{
-				{clb, z, v, key, nil},
+				{clb, z, v, key, nil, name},
 			}, nil
 
 		case cwl.Int:
@@ -148,7 +150,7 @@ Loop:
 				continue Loop
 			}
 			return []*Binding{
-				{clb, z, v, key, nil},
+				{clb, z, v, key, nil, name},
 			}, nil
 
 		case cwl.Long:
@@ -157,7 +159,7 @@ Loop:
 				continue Loop
 			}
 			return []*Binding{
-				{clb, z, v, key, nil},
+				{clb, z, v, key, nil, name},
 			}, nil
 
 		case cwl.Float:
@@ -166,7 +168,7 @@ Loop:
 				continue Loop
 			}
 			return []*Binding{
-				{clb, z, v, key, nil},
+				{clb, z, v, key, nil, name},
 			}, nil
 
 		case cwl.Double:
@@ -175,7 +177,7 @@ Loop:
 				continue Loop
 			}
 			return []*Binding{
-				{clb, z, v, key, nil},
+				{clb, z, v, key, nil, name},
 			}, nil
 
 		case cwl.String:
@@ -185,7 +187,7 @@ Loop:
 			}
 
 			return []*Binding{
-				{clb, z, v, key, nil},
+				{clb, z, v, key, nil, name},
 			}, nil
 
 		case cwl.FileType:
@@ -203,7 +205,7 @@ Loop:
 			}
 
 			return []*Binding{
-				{clb, z, *f, key, nil},
+				{clb, z, *f, key, nil, name},
 			}, nil
 
 		case cwl.DirectoryType:
@@ -213,7 +215,7 @@ Loop:
 			}
 			// TODO resolve directory
 			return []*Binding{
-				{clb, z, v, key, nil},
+				{clb, z, v, key, nil, name},
 			}, nil
 
 		}
