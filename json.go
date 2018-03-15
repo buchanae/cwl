@@ -10,14 +10,14 @@ import (
 func (i File) MarshalJSON() ([]byte, error) {
 	type Wrap File
 	return json.Marshal(struct {
-		Type string `json:"type"`
+		Class string `json:"class"`
 		Wrap
 	}{"File", Wrap(i)})
 }
 func (i Directory) MarshalJSON() ([]byte, error) {
 	type Wrap Directory
 	return json.Marshal(struct {
-		Type string `json:"type"`
+		Class string `json:"class"`
 		Wrap
 	}{"Directory", Wrap(i)})
 }
