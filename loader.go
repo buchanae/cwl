@@ -130,7 +130,7 @@ func (l *loader) load(n node, t interface{}) error {
 
 	// No handler found.
 	//debug(handlerName)
-	return fmt.Errorf("unhandled type at line %d, col %d", n.Line+1, n.Column)
+	return fmt.Errorf("unhandled type at line %d, col %d", n.Line+1, n.Column+1)
 }
 
 // loadMappingToStruct essentially unmarshals a YAML mapping
