@@ -35,9 +35,8 @@ type InlineJavascriptRequirement struct {
 	ExpressionLib []string `json:"expressionLib,omitempty"`
 }
 
-type InputSchema struct{}
 type SchemaDefRequirement struct {
-	Types []InputSchema `json:"types,omitempty"`
+	Types []SchemaType `json:"types,omitempty"`
 }
 
 type SoftwareRequirement struct {

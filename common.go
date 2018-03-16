@@ -32,6 +32,17 @@ func (d DocumentRef) MarshalText() ([]byte, error) {
 	return []byte(d.Location), nil
 }
 
+type TypeRef struct {
+	Location string
+}
+
+func (t TypeRef) String() string {
+	return t.Location
+}
+func (t TypeRef) MarshalText() ([]byte, error) {
+	return []byte(t.Location), nil
+}
+
 type Any struct{}
 type Null struct{}
 type Boolean struct{}
@@ -132,6 +143,7 @@ func (DirectoryType) inputtype() {}
 func (InputRecord) inputtype()   {}
 func (InputEnum) inputtype()     {}
 func (InputArray) inputtype()    {}
+func (TypeRef) inputtype()       {}
 
 type OutputType interface {
 	String() string
@@ -153,6 +165,7 @@ func (Stdout) outputtype()        {}
 func (OutputRecord) outputtype()  {}
 func (OutputEnum) outputtype()    {}
 func (OutputArray) outputtype()   {}
+func (TypeRef) outputtype()       {}
 
 type cwltype interface {
 	String() string
@@ -177,6 +190,7 @@ func (InputArray) cwltype()    {}
 func (OutputRecord) cwltype()  {}
 func (OutputEnum) cwltype()    {}
 func (OutputArray) cwltype()   {}
+func (TypeRef) cwltype()       {}
 
 type Requirement interface {
 	requirement()
@@ -228,3 +242,14 @@ func (o *OptOut) Set(v bool) {
 func (o *OptOut) MarshalText() ([]byte, error) {
 	return []byte(fmt.Sprintf("%t", o.Value())), nil
 }
+
+type SchemaType interface {
+	schematype()
+}
+
+func (InputRecord) schematype()  {}
+func (InputEnum) schematype()    {}
+func (InputArray) schematype()   {}
+func (OutputRecord) schematype() {}
+func (OutputEnum) schematype()   {}
+func (OutputArray) schematype()  {}

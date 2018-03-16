@@ -33,6 +33,17 @@ func (t *Tool) RequiresInlineJavascript() ([]string, bool) {
 	return nil, false
 }
 
+func (t *Tool) RequiresSchemaDef() (*SchemaDefRequirement, bool) {
+	reqs := append([]Requirement{}, t.Requirements...)
+	reqs = append(reqs, t.Hints...)
+	for _, req := range reqs {
+		if r, ok := req.(SchemaDefRequirement); ok {
+			return &r, true
+		}
+	}
+	return nil, false
+}
+
 func (clb *CommandLineBinding) GetLoadContents() bool {
 	if clb == nil {
 		return false

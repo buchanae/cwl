@@ -303,10 +303,40 @@ func (l *loader) scalarToType(name string, isInput bool) cwltype {
 			t = OutputArray{}
 		}
 	default:
-		return nil
+		return TypeRef{name}
 	}
 
 	return t
+}
+
+func (l *loader) MappingToSchemaType(n node) (SchemaType, error) {
+	typeVal, ok := findValue(n, "type")
+	if !ok {
+		return nil, fmt.Errorf("missing schema type")
+	}
+	// TODO?
+	//n = transformTypeNode(n)
+
+	// TODO support output types?
+	switch typeVal.Value {
+	case "record":
+		t := InputRecord{}
+		err := l.load(n, &t)
+		return t, err
+
+	case "array":
+		t := InputArray{}
+		err := l.load(n, &t)
+		return t, err
+
+	case "enum":
+		t := InputEnum{}
+		err := l.load(n, &t)
+		return t, err
+
+	default:
+		return nil, fmt.Errorf("unknown schema type: %s", typeVal.Value)
+	}
 }
 
 /* These are here to avoid the automatic loading of slice types in the loader */
