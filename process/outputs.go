@@ -40,7 +40,6 @@ func (process *Process) bindOutput(
 ) (interface{}, error) {
 	var err error
 
-	debug("output eval 2", binding)
 	if binding != nil && len(binding.Glob) > 0 {
 		// glob patterns may be expressions. evaluate them.
 		globs, err := process.evalGlobPatterns(binding.Glob)
@@ -56,7 +55,6 @@ func (process *Process) bindOutput(
 	}
 
 	if binding != nil && binding.OutputEval != "" {
-		debug("output eval", binding.OutputEval)
 		val, err = process.eval(binding.OutputEval, val)
 		if err != nil {
 			return nil, errf("failed to evaluate outputEval: %s", err)

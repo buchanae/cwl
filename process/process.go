@@ -1,6 +1,7 @@
 package process
 
 import (
+	"encoding/json"
 	"github.com/buchanae/cwl"
 	"github.com/buchanae/cwl/expr"
 	"github.com/rs/xid"
@@ -208,6 +209,21 @@ func (process *Process) evalEnvVars(def map[string]cwl.Expression) error {
 }
 
 func (process *Process) eval(x cwl.Expression, self interface{}) (interface{}, error) {
+	if self != nil {
+		// Need to convert Go variable naming to JSON. Easiest way to to marshal to JSON,
+		// then unmarshal into a map.
+		j, err := json.Marshal(self)
+		if err != nil {
+			return nil, wrap(err, `marshaling "self" for JS evaluation`)
+		}
+		var selfData interface{}
+		err = json.Unmarshal(j, &selfData)
+		if err != nil {
+			return nil, wrap(err, `marshaling "self" for JS evaluation`)
+		}
+		self = selfData
+	}
+
 	r := process.runtime
 	return expr.Eval(x, process.expressionLibs, map[string]interface{}{
 		"inputs": process.inputs,

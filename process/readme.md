@@ -50,3 +50,6 @@ func main() {
   fmt.Println(cmd)
 }
 ```
+
+### TODO / Questions
+- `This may be a relative reference, in which case it must be resolved using the base IRI of the document.` Does this mean relative to the inputs document?
