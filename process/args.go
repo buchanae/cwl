@@ -11,8 +11,13 @@ import (
 
 func (process *Process) Command() ([]string, error) {
 
-	args := make([]*Binding, len(process.bindings))
-	copy(args, process.bindings)
+	args := make([]*Binding, 0, len(process.bindings))
+	//copy(args, process.bindings)
+	for _, b := range process.bindings {
+		if b.clb != nil {
+			args = append(args, b)
+		}
+	}
 
 	// Add "CommandLineTool.arguments"
 	for i, arg := range process.tool.Arguments {
@@ -36,7 +41,7 @@ func (process *Process) Command() ([]string, error) {
 	}
 
 	sort.Stable(bySortKey(args))
-	debug(args)
+	//debug(args)
 
 	// Now collect the input bindings into command line arguments
 	cmd := append([]string{}, process.tool.BaseCommand...)
@@ -48,6 +53,7 @@ func (process *Process) Command() ([]string, error) {
 		cmd = []string{"/bin/sh", "-c", strings.Join(cmd, " ")}
 	}
 
+	//debug("COMMAND", cmd)
 	return cmd, nil
 }
 

@@ -90,6 +90,8 @@ func run(path, inputsPath, outdir string, debug bool) error {
     return err
   }
 
+  //fmt.Fprintln(os.Stderr, cmd)
+
   workdir := "/cwl"
   // TODO necessary for cwl conformance tests
   image := "python:2"
@@ -166,10 +168,19 @@ func run(path, inputsPath, outdir string, debug bool) error {
 
   err = tug.Run(ctx, task, stage, log, store, exec)
   if err != nil {
-    return err
-  } else {
-    fmt.Fprintln(os.Stderr, "Success")
+    if e, ok := err.(*tug.ExecError); ok {
+      for _, code := range tool.SuccessCodes {
+        if e.ExitCode == code {
+          err = nil
+        }
+      }
+    }
   }
+  if err != nil {
+    return err
+  }
+
+  fmt.Fprintln(os.Stderr, "Success")
 
   //fmt.Println(strings.Join(cmd, " "))
 
