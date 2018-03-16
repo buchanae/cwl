@@ -100,6 +100,10 @@ func Eval(e cwl.Expression, libs []string, data map[string]interface{}) (interfa
 	return EvalParts(Parse(e), libs, data)
 }
 
+// TODO bah! unhappy about exporting a special null value.
+//      maybe otto's type conversion needs a fix?
+var Null = otto.NullValue()
+
 // EvalParts evaluates a string which has been parsed by Parse().
 // If the parts do not represent an expression, the original raw string
 // is returned. This is a low-level function, it's better to use EvalString().

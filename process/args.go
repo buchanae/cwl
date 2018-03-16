@@ -36,6 +36,7 @@ func (process *Process) Command() ([]string, error) {
 	}
 
 	sort.Stable(bySortKey(args))
+	debug(args)
 
 	// Now collect the input bindings into command line arguments
 	cmd := append([]string{}, process.tool.BaseCommand...)

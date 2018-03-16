@@ -209,25 +209,28 @@ func (process *Process) evalEnvVars(def map[string]cwl.Expression) error {
 }
 
 func (process *Process) eval(x cwl.Expression, self interface{}) (interface{}, error) {
-	if self != nil {
-		// Need to convert Go variable naming to JSON. Easiest way to to marshal to JSON,
-		// then unmarshal into a map.
-		j, err := json.Marshal(self)
+
+	inputsData := map[string]interface{}{}
+	for _, b := range process.bindings {
+		v, err := toJSONMap(b.Value)
 		if err != nil {
-			return nil, wrap(err, `marshaling "self" for JS evaluation`)
+			return nil, wrap(err, `mashaling "%s" for JS eval`, b.name)
 		}
-		var selfData interface{}
-		err = json.Unmarshal(j, &selfData)
-		if err != nil {
-			return nil, wrap(err, `marshaling "self" for JS evaluation`)
+		if v == nil {
+			v = expr.Null
 		}
-		self = selfData
+		inputsData[b.name] = v
+	}
+
+	selfData, err := toJSONMap(self)
+	if err != nil {
+		return nil, wrap(err, `marshaling "self" for JS eval`)
 	}
 
 	r := process.runtime
 	return expr.Eval(x, process.expressionLibs, map[string]interface{}{
-		"inputs": process.inputs,
-		"self":   self,
+		"inputs": inputsData,
+		"self":   selfData,
 		"runtime": map[string]interface{}{
 			"outdir":     r.Outdir,
 			"tmpdir":     r.Tmpdir,
@@ -237,4 +240,24 @@ func (process *Process) eval(x cwl.Expression, self interface{}) (interface{}, e
 			"tmpdirSize": r.TmpdirSize,
 		},
 	})
+}
+
+func toJSONMap(v interface{}) (interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+
+	// Need to convert Go variable naming to JSON. Easiest way to to marshal to JSON,
+	// then unmarshal into a map.
+	j, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	var data interface{}
+	err = json.Unmarshal(j, &data)
+	if err != nil {
+		return nil, wrap(err, `marshaling data for JS evaluation`)
+	}
+	return data, nil
 }
