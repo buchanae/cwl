@@ -108,6 +108,7 @@ func (l *Local) Info(loc string) (*cwl.File, error) {
 }
 
 func (l *Local) Contents(loc string) (string, error) {
+  fmt.Println("contents", loc, l.workdir)
   loc = filepath.Join(l.workdir, loc)
 	fh, err := os.Open(loc)
   if os.IsNotExist(err) {

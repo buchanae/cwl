@@ -90,43 +90,43 @@ func run(path, inputsPath, outdir string, debug bool) error {
     return err
   }
 
+  workdir := "/cwl"
+  // TODO necessary for cwl conformance tests
+  image := "python:2"
+
+  if d, ok := tool.RequiresDocker(); ok {
+    image = d.Pull
+    if d.OutputDirectory != "" {
+      workdir = d.OutputDirectory
+    }
+  }
+
   task := &tug.Task{
     ID: "cwl-test1-" + xid.New().String(),
-    //ContainerImage: "alpine",
-    ContainerImage: "python:2",
+    ContainerImage: image,
     Command: cmd,
-    Workdir: "/cwl",
-    Volumes: []string{"/cwl", "/tmp"},
+    Workdir: workdir,
+    Volumes: []string{workdir, "/tmp"},
     Env: proc.Env(),
 
     /* TODO need process.OutputBindings() */
     Outputs: []tug.File{
       {
         URL: outdir,
-        Path: "/cwl",
+        Path: workdir,
       },
     },
   }
-  task.Env["HOME"] = "/cwl"
+  task.Env["HOME"] = workdir
   task.Env["TMPDIR"] = "/tmp"
 
-  stdout, err := proc.Stdout()
-  if err != nil {
-    return err
-  }
-  stderr, err := proc.Stderr()
-  if err != nil {
-    return err
-  }
+  stdout := proc.Stdout()
+  stderr := proc.Stderr()
   if stdout != "" {
-    task.Stdout = "/cwl/" + stdout
+    task.Stdout = workdir + "/" + stdout
   }
   if stderr != "" {
-    task.Stderr = "/cwl/" + stderr
-  }
-
-  if d, ok := tool.RequiresDocker(); ok {
-    task.ContainerImage = d.Pull
+    task.Stderr = workdir + "/" + stderr
   }
 
   files := []cwl.File{}

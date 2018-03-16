@@ -3,6 +3,7 @@ package process
 import (
 	"github.com/buchanae/cwl"
 	"github.com/buchanae/cwl/expr"
+	"github.com/rs/xid"
 )
 
 type Mebibyte int
@@ -41,6 +42,8 @@ type Process struct {
 	env            map[string]string
 	shell          bool
 	resources      Resources
+	stdout         string
+	stderr         string
 }
 
 func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*Process, error) {
@@ -88,37 +91,55 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*
 		return nil, err
 	}
 
+	stdoutI, err := process.eval(process.tool.Stdout, nil)
+	if err != nil {
+		return nil, wrap(err, "evaluating stdout expression")
+	}
+
+	stderrI, err := process.eval(process.tool.Stderr, nil)
+	if err != nil {
+		return nil, wrap(err, "evaluating stderr expression")
+	}
+
+	var stdoutStr, stderrStr string
+	var ok bool
+
+	if stdoutI != nil {
+		stdoutStr, ok = stdoutI.(string)
+		if !ok {
+			return nil, errf("stdout expression returned a non-string value")
+		}
+	}
+
+	if stderrI != nil {
+		stderrStr, ok = stderrI.(string)
+		if !ok {
+			return nil, errf("stderr expression returned a non-string value")
+		}
+	}
+
+	for _, out := range process.tool.Outputs {
+		if len(out.Type) == 1 {
+			if _, ok := out.Type[0].(cwl.Stdout); ok && stdoutStr == "" {
+				stdoutStr = "stdout-" + xid.New().String()
+			}
+			if _, ok := out.Type[0].(cwl.Stderr); ok && stderrStr == "" {
+				stderrStr = "stderr-" + xid.New().String()
+			}
+		}
+	}
+	process.stdout = stdoutStr
+	process.stderr = stderrStr
+
 	return process, nil
 }
 
-func (process *Process) Stdout() (string, error) {
-	i, err := process.eval(process.tool.Stdout, nil)
-	if err != nil {
-		return "", wrap(err, "evaluating stdout expression")
-	}
-	if i == nil {
-		return "", nil
-	}
-	str, ok := i.(string)
-	if !ok {
-		return "", errf("stdout expression returned a non-string value")
-	}
-	return str, nil
+func (process *Process) Stdout() string {
+	return process.stdout
 }
 
-func (process *Process) Stderr() (string, error) {
-	i, err := process.eval(process.tool.Stderr, nil)
-	if err != nil {
-		return "", wrap(err, "evaluating stderr expression")
-	}
-	if i == nil {
-		return "", nil
-	}
-	str, ok := i.(string)
-	if !ok {
-		return "", errf("stderr expression returned a non-string value")
-	}
-	return str, nil
+func (process *Process) Stderr() string {
+	return process.stderr
 }
 
 func (process *Process) Tool() *cwl.Tool {

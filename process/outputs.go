@@ -40,6 +40,7 @@ func (process *Process) bindOutput(
 ) (interface{}, error) {
 	var err error
 
+	debug("output eval 2", binding)
 	if binding != nil && len(binding.Glob) > 0 {
 		// glob patterns may be expressions. evaluate them.
 		globs, err := process.evalGlobPatterns(binding.Glob)
@@ -55,6 +56,7 @@ func (process *Process) bindOutput(
 	}
 
 	if binding != nil && binding.OutputEval != "" {
+		debug("output eval", binding.OutputEval)
 		val, err = process.eval(binding.OutputEval, val)
 		if err != nil {
 			return nil, errf("failed to evaluate outputEval: %s", err)
@@ -66,6 +68,38 @@ func (process *Process) bindOutput(
 			if _, ok := t.(cwl.Null); ok {
 				return nil, nil
 			}
+		}
+	}
+
+	for _, t := range types {
+		switch t.(type) {
+		// TODO validate stdout/err can only be at root
+		//      validate that stdout/err doesn't occur more than once
+		case cwl.Stdout:
+			files, err := process.matchFiles(fs, []string{process.stdout}, false)
+			if err != nil {
+				return nil, errf("failed to match files: %s", err)
+			}
+			if len(files) == 0 {
+				return nil, errf(`failed to match stdout file "%s"`, process.stdout)
+			}
+			if len(files) > 1 {
+				return nil, errf(`matched multiple stdout files "%s"`, process.stdout)
+			}
+			return files[0], nil
+
+		case cwl.Stderr:
+			files, err := process.matchFiles(fs, []string{process.stderr}, false)
+			if err != nil {
+				return nil, errf("failed to match files: %s", err)
+			}
+			if len(files) == 0 {
+				return nil, errf(`failed to match stderr file "%s"`, process.stderr)
+			}
+			if len(files) > 1 {
+				return nil, errf(`matched multiple stderr files "%s"`, process.stderr)
+			}
+			return files[0], nil
 		}
 	}
 
@@ -122,6 +156,7 @@ Loop:
 				}
 				return f, nil
 
+				// TODO returning both pointer and non-pointer
 			case *cwl.File:
 				return y, nil
 			case cwl.File:
@@ -155,6 +190,7 @@ Loop:
 
 		case cwl.OutputRecord:
 			// TODO
+
 		}
 	}
 
@@ -214,12 +250,20 @@ func (process *Process) evalGlobPatterns(patterns []cwl.Expression) ([]string, e
 		switch z := val.(type) {
 		case string:
 			out = append(out, z)
-		case []string:
-			out = append(out, z...)
+		case []cwl.Value:
+			for _, val := range z {
+				z, ok := val.(string)
+				if !ok {
+					return nil, errf(
+						"glob expression returned an invalid type. Only string or []string "+
+							"are allowed. Got: %#v", z)
+				}
+				out = append(out, z)
+			}
 		default:
 			return nil, errf(
 				"glob expression returned an invalid type. Only string or []string "+
-					"are allowed. Got: %s", val)
+					"are allowed. Got: %#v", z)
 		}
 	}
 	return out, nil
