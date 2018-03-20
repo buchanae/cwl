@@ -54,12 +54,18 @@ func LoadDocumentBytes(b []byte, base string, r Resolver) (Document, error) {
 		return nil, fmt.Errorf("unexpected child count")
 	}
 
-	// Dump the tree for debugging.
-	//dump(yamlnode, "")
-
 	// Being recursively processing the tree.
 	var d Document
-	err = l.load(yamlnode.Children[0], &d)
+	start := node(yamlnode.Children[0])
+	start, err = l.preprocess(start)
+	if err != nil {
+		return nil, err
+	}
+
+	// Dump the tree for debugging.
+	//dump(start, "")
+
+	err = l.load(start, &d)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +100,13 @@ func LoadValuesBytes(b []byte) (Values, error) {
 		return nil, fmt.Errorf("unexpected child count")
 	}
 
-	err = l.load(yamlnode.Children[0], &v)
+	start := node(yamlnode.Children[0])
+	start, err = l.preprocess(start)
+	if err != nil {
+		return nil, err
+	}
 
+	err = l.load(start, &v)
 	if err != nil {
 		return nil, err
 	}

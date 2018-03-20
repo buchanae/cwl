@@ -67,6 +67,21 @@ func (l *loader) MappingToExpressionMap(n node) (map[string]Expression, error) {
 	return out, nil
 }
 
+func (l *loader) SeqToExpressionMap(n node) (map[string]Expression, error) {
+	out := map[string]Expression{}
+	for _, c := range n.Children {
+		item := map[string]Expression{}
+		err := l.load(c, &item)
+		if err != nil {
+			return nil, errf("loading expression map: %s", err)
+		}
+		for k, v := range item {
+			out[k] = v
+		}
+	}
+	return out, nil
+}
+
 func (l *loader) SeqToStringSlice(n node) ([]string, error) {
 	strs := []string{}
 	for _, c := range n.Children {
@@ -206,9 +221,7 @@ func (l *loader) MappingToOutputTypeSlice(n node) ([]OutputType, error) {
 
 func (l *loader) ScalarToInputTypeSlice(n node) ([]InputType, error) {
 
-	debug(n)
 	n = transformTypeNode(n)
-	debug(n)
 
 	if n.Kind != yamlast.ScalarNode {
 		var out []InputType

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/commondream/yamlast"
 	"github.com/kr/pretty"
+	"os"
 	"strings"
 )
 
@@ -40,7 +41,7 @@ func fmtNode(n *yamlast.Node, indent string) string {
 
 // Dump the YAML tree for debugging.
 func dump(n *yamlast.Node, indent string) {
-	fmt.Printf("%s\n", fmtNode(n, indent))
+	fmt.Fprintf(os.Stderr, "%s\n", fmtNode(n, indent))
 	for _, c := range n.Children {
 		dump(c, indent+"  ")
 	}

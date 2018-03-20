@@ -70,7 +70,6 @@ func (l *loader) loadReqByName(name string, n node) (Requirement, error) {
 		r := EnvVarRequirement{}
 		err := l.load(n, &r)
 		return r, err
-		// TODO
 	case "shellcommandrequirement":
 		s := ShellCommandRequirement{}
 		err := l.load(n, &s)

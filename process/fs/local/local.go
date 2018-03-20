@@ -31,13 +31,13 @@ func (l *Local) Glob(pattern string) ([]*cwl.File, error) {
 
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
-		return nil, err
+		return nil, errf("%s: %s", err, pattern)
 	}
 
 	for _, match := range matches {
 		f, err := l.Info(match)
 		if err != nil {
-			return nil, err
+			return nil, errf("%s: %s", err, match)
 		}
 		out = append(out, f)
 	}
