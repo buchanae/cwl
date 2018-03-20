@@ -73,7 +73,9 @@ Loop:
 				continue Loop
 			}
 
-			var out []*Binding
+			// The input array is allowed to be empty,
+			// so this must be a non-nil slice.
+			out := []*Binding{}
 
 			for i, val := range vals {
 				subkey := append(key, sortKey{getPos(z.InputBinding), i}...)
@@ -88,13 +90,11 @@ Loop:
 				out = append(out, b...)
 			}
 
-			if out != nil {
-				nested := make([]*Binding, len(out))
-				copy(nested, out)
-				b := &Binding{clb, z, val, key, nested, name}
-				// TODO revisit whether creating a nested tree (instead of flat) is always better/ok
-				return []*Binding{b}, nil
-			}
+			nested := make([]*Binding, len(out))
+			copy(nested, out)
+			b := &Binding{clb, z, val, key, nested, name}
+			// TODO revisit whether creating a nested tree (instead of flat) is always better/ok
+			return []*Binding{b}, nil
 
 		case cwl.InputRecord:
 			vals, ok := val.(map[string]cwl.Value)

@@ -47,7 +47,7 @@ type Process struct {
 	stderr         string
 }
 
-func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*Process, error) {
+func NewProcess(tool *cwl.Tool, values cwl.Values, rt Runtime, fs Filesystem) (*Process, error) {
 
 	err := cwl.ValidateTool(tool)
 	if err != nil {
@@ -58,11 +58,14 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*
 	//      could be useful to know separately from all the other processing.
 	process := &Process{
 		tool:    tool,
-		inputs:  inputs,
+		inputs:  values,
 		runtime: rt,
 		fs:      fs,
 		env:     map[string]string{},
 	}
+
+	// Set default input values.
+	setDefaults(values, tool.Inputs)
 
 	// Bind inputs to values.
 	//
@@ -70,11 +73,7 @@ func NewProcess(tool *cwl.Tool, inputs cwl.Values, rt Runtime, fs Filesystem) (*
 	// nothing can be done on a Process without a valid inputs binding,
 	// which is why we bind in the Process constructor.
 	for _, in := range tool.Inputs {
-		val := inputs[in.ID]
-		if val == nil {
-			val = in.Default
-		}
-
+		val := values[in.ID]
 		k := sortKey{getPos(in.InputBinding)}
 		b, err := process.bindInput(in.ID, in.Type, in.InputBinding, in.SecondaryFiles, val, k)
 		if err != nil {
@@ -260,4 +259,14 @@ func toJSONMap(v interface{}) (interface{}, error) {
 		return nil, wrap(err, `marshaling data for JS evaluation`)
 	}
 	return data, nil
+}
+
+// setDefaults sets the default input values based on the CommandInput.Default.
+func setDefaults(values cwl.Values, inputs []cwl.CommandInput) {
+	for _, in := range inputs {
+		_, ok := values[in.ID]
+		if !ok && in.Default != nil {
+			values[in.ID] = in.Default
+		}
+	}
 }

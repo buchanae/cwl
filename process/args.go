@@ -62,6 +62,13 @@ func bindArgs(b *Binding) []string {
 	switch b.Type.(type) {
 
 	case cwl.InputArray:
+		// cwl conformance test:
+		// Test [67/68] Test that empty array input does not add anything to command line
+		arr := b.Value.([]cwl.Value)
+		if len(arr) == 0 {
+			return nil
+		}
+
 		// cwl spec:
 		// "If itemSeparator is specified, add prefix and the join the array
 		// into a single string with itemSeparator separating the items..."
