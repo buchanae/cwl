@@ -36,7 +36,12 @@ type InlineJavascriptRequirement struct {
 }
 
 type SchemaDefRequirement struct {
-	Types []SchemaType `json:"types,omitempty"`
+	Types []SchemaDef `json:"types,omitempty"`
+}
+
+type SchemaDef struct {
+	Name string `json:"name,omitempty"`
+	Type SchemaType
 }
 
 type SoftwareRequirement struct {

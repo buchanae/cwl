@@ -33,14 +33,14 @@ func (d DocumentRef) MarshalText() ([]byte, error) {
 }
 
 type TypeRef struct {
-	Location string
+	Name string
 }
 
 func (t TypeRef) String() string {
-	return t.Location
+	return t.Name
 }
 func (t TypeRef) MarshalText() ([]byte, error) {
-	return []byte(t.Location), nil
+	return []byte(t.Name), nil
 }
 
 type Any struct{}
@@ -128,6 +128,7 @@ func (DocumentRef) doctype()    {}
 type InputType interface {
 	String() string
 	inputtype()
+	cwltype()
 }
 
 func (Any) inputtype()           {}
@@ -148,6 +149,7 @@ func (TypeRef) inputtype()       {}
 type OutputType interface {
 	String() string
 	outputtype()
+	cwltype()
 }
 
 func (Any) outputtype()           {}
@@ -168,7 +170,6 @@ func (OutputArray) outputtype()   {}
 func (TypeRef) outputtype()       {}
 
 type cwltype interface {
-	String() string
 	cwltype()
 }
 
@@ -245,6 +246,7 @@ func (o *OptOut) MarshalText() ([]byte, error) {
 
 type SchemaType interface {
 	schematype()
+	cwltype()
 }
 
 func (InputRecord) schematype()  {}

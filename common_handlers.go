@@ -206,7 +206,9 @@ func (l *loader) MappingToOutputTypeSlice(n node) ([]OutputType, error) {
 
 func (l *loader) ScalarToInputTypeSlice(n node) ([]InputType, error) {
 
+	debug(n)
 	n = transformTypeNode(n)
+	debug(n)
 
 	if n.Kind != yamlast.ScalarNode {
 		var out []InputType
@@ -257,7 +259,7 @@ func (l *loader) ScalarToOutputTypeSlice(n node) ([]OutputType, error) {
 func (l *loader) scalarToType(name string, isInput bool) cwltype {
 
 	var t cwltype
-	switch name {
+	switch strings.ToLower(name) {
 	case "":
 		return nil
 	case "any":
@@ -303,39 +305,44 @@ func (l *loader) scalarToType(name string, isInput bool) cwltype {
 			t = OutputArray{}
 		}
 	default:
+		// TODO possibly only create TypeRef for types staring with "#" or otherwise
+		//      looking like IRI/URI format?
 		return TypeRef{name}
 	}
 
 	return t
 }
 
-func (l *loader) MappingToSchemaType(n node) (SchemaType, error) {
+func (l *loader) MappingToSchemaDef(n node) (SchemaDef, error) {
 	typeVal, ok := findValue(n, "type")
 	if !ok {
-		return nil, fmt.Errorf("missing schema type")
+		return SchemaDef{}, fmt.Errorf("missing type for schema def")
 	}
-	// TODO?
-	//n = transformTypeNode(n)
+
+	name := findKey(n, "name")
+	if name == "" {
+		return SchemaDef{}, fmt.Errorf("missing name for schema def")
+	}
 
 	// TODO support output types?
 	switch typeVal.Value {
 	case "record":
 		t := InputRecord{}
 		err := l.load(n, &t)
-		return t, err
+		return SchemaDef{Name: name, Type: t}, err
 
 	case "array":
 		t := InputArray{}
 		err := l.load(n, &t)
-		return t, err
+		return SchemaDef{Name: name, Type: t}, err
 
 	case "enum":
 		t := InputEnum{}
 		err := l.load(n, &t)
-		return t, err
+		return SchemaDef{Name: name, Type: t}, err
 
 	default:
-		return nil, fmt.Errorf("unknown schema type: %s", typeVal.Value)
+		return SchemaDef{}, fmt.Errorf("unknown schema type: %s", typeVal.Value)
 	}
 }
 
@@ -374,8 +381,8 @@ func transformTypeNode(n node) node {
 		return n
 	}
 
-	name := strings.ToLower(n.Value)
-	name = strings.TrimSpace(name)
+	//name := strings.ToLower(n.Value)
+	name := strings.TrimSpace(n.Value)
 
 	isNullable := false
 	isArray := false
