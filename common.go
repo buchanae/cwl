@@ -68,7 +68,7 @@ type File struct {
 	Nameroot       string    `json:"nameroot,omitempty"`
 	Nameext        string    `json:"nameext,omitempty"`
 	Checksum       string    `json:"checksum,omitempty"`
-	Size           int64     `json:"size,omitempty"`
+	Size           int64     `json:"size"`
 	Format         string    `json:"format,omitempty"`
 	Contents       string    `json:"contents,omitempty"`
 	SecondaryFiles []FileDir `json:"secondaryFiles,omitempty"`
