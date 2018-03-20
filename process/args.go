@@ -11,15 +11,15 @@ import (
 
 func (process *Process) Command() ([]string, error) {
 
+	// Copy "Tool.Inputs" bindings
 	args := make([]*Binding, 0, len(process.bindings))
-	//copy(args, process.bindings)
 	for _, b := range process.bindings {
 		if b.clb != nil {
 			args = append(args, b)
 		}
 	}
 
-	// Add "CommandLineTool.arguments"
+	// Add "Tool.Arguments"
 	for i, arg := range process.tool.Arguments {
 		if arg.ValueFrom == "" {
 			return nil, errf("valueFrom is required but missing for argument %d", i)
@@ -64,6 +64,7 @@ func bindArgs(b *Binding) []string {
 	case cwl.InputArray:
 		// cwl conformance test:
 		// Test [67/68] Test that empty array input does not add anything to command line
+		// TODO unhandled panic here
 		arr := b.Value.([]cwl.Value)
 		if len(arr) == 0 {
 			return nil
@@ -94,7 +95,7 @@ func bindArgs(b *Binding) []string {
 	case cwl.InputRecord:
 		// TODO
 
-	case cwl.String, cwl.Int, cwl.Long, cwl.Float, cwl.Double, cwl.FileType,
+	case cwl.Any, cwl.String, cwl.Int, cwl.Long, cwl.Float, cwl.Double, cwl.FileType,
 		cwl.DirectoryType, argType:
 		return formatArgs(b.clb, b.Value)
 

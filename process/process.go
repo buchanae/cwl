@@ -151,6 +151,7 @@ func (process *Process) Resources() Resources {
 }
 
 func (process *Process) InputBindings() []*Binding {
+	// TODO copying slice, but still using pointers. deep copy?
 	bindings := make([]*Binding, len(process.bindings))
 	copy(bindings, process.bindings)
 	return bindings

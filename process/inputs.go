@@ -44,7 +44,7 @@ func (process *Process) bindInput(
 ) ([]*Binding, error) {
 
 	// If no value was found, check if the type is allowed to be null.
-	// If so, return a binding.
+	// If so, return a binding, otherwise fail.
 	if val == nil {
 		for _, t := range types {
 			if z, ok := t.(cwl.Null); ok {
@@ -53,9 +53,6 @@ func (process *Process) bindInput(
 				}, nil
 			}
 		}
-	}
-
-	if val == nil {
 		return nil, errf("failed to bind input, missing value")
 	}
 
@@ -131,11 +128,12 @@ Loop:
 				return out, nil
 			}
 
+		case cwl.Any:
+			return []*Binding{
+				{clb, z, val, key, nil, name},
+			}, nil
+
 		case cwl.Boolean:
-			// TODO if-statement above means val should never be nil at this point?
-			if val == nil {
-				continue Loop
-			}
 			v, err := cast.ToBoolE(val)
 			if err != nil {
 				continue Loop
