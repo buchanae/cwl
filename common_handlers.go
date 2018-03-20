@@ -70,14 +70,18 @@ func (l *loader) MappingToExpressionMap(n node) (map[string]Expression, error) {
 func (l *loader) SeqToExpressionMap(n node) (map[string]Expression, error) {
 	out := map[string]Expression{}
 	for _, c := range n.Children {
-		item := map[string]Expression{}
+
+		type envdef struct {
+			Name  string     `json:"envName"`
+			Value Expression `json:"envValue"`
+		}
+
+		item := envdef{}
 		err := l.load(c, &item)
 		if err != nil {
 			return nil, errf("loading expression map: %s", err)
 		}
-		for k, v := range item {
-			out[k] = v
-		}
+		out[item.Name] = item.Value
 	}
 	return out, nil
 }
