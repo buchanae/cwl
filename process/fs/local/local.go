@@ -22,8 +22,8 @@ func NewLocal(workdir string) *Local {
 	return &Local{workdir, false}
 }
 
-func (l *Local) Glob(pattern string) ([]*cwl.File, error) {
-	var out []*cwl.File
+func (l *Local) Glob(pattern string) ([]cwl.File, error) {
+	var out []cwl.File
 
 	pattern = filepath.Join(l.workdir, pattern)
 
@@ -43,24 +43,25 @@ func (l *Local) Glob(pattern string) ([]*cwl.File, error) {
 	return out, nil
 }
 
-func (l *Local) Create(path, contents string) (*cwl.File, error) {
+func (l *Local) Create(path, contents string) (cwl.File, error) {
+  var x cwl.File
 	if path == "" {
-		return nil, errf("can't create file with empty path")
+		return x, errf("can't create file with empty path")
 	}
 
 	b := []byte(contents)
 	size := int64(len(b))
 	if units.MetricBytes(size) > process.MaxContentsBytes {
-		return nil, errf("contents is max allowed size (%s)", process.MaxContentsBytes)
+		return x, errf("contents is max allowed size (%s)", process.MaxContentsBytes)
 	}
 
 	loc := filepath.Join(l.workdir, path)
 	abs, err := filepath.Abs(loc)
 	if err != nil {
-		return nil, errf("getting absolute path for %s: %s", loc, err)
+		return x, errf("getting absolute path for %s: %s", loc, err)
 	}
 
-	return &cwl.File{
+	return cwl.File{
 		Location: abs,
 		Path:     path,
 		Checksum: "sha1$" + fmt.Sprintf("%x", sha1.Sum(b)),
@@ -68,39 +69,40 @@ func (l *Local) Create(path, contents string) (*cwl.File, error) {
 	}, nil
 }
 
-func (l *Local) Info(loc string) (*cwl.File, error) {
+func (l *Local) Info(loc string) (cwl.File, error) {
+  var x cwl.File
 	if !filepath.IsAbs(loc) {
 		loc = filepath.Join(l.workdir, loc)
 	}
 
 	st, err := os.Stat(loc)
 	if os.IsNotExist(err) {
-		return nil, process.ErrFileNotFound
+		return x, process.ErrFileNotFound
 	}
 	if err != nil {
-		return nil, err
+		return x, err
 	}
 
 	// TODO make this work with directories
 	if st.IsDir() {
-		return nil, errf("can't call Info() on a directory: %s", loc)
+		return x, errf("can't call Info() on a directory: %s", loc)
 	}
 
 	abs, err := filepath.Abs(loc)
 	if err != nil {
-		return nil, errf("getting absolute path for %s: %s", loc, err)
+		return x, errf("getting absolute path for %s: %s", loc, err)
 	}
 
 	checksum := ""
 	if l.CalcChecksum {
 		b, err := ioutil.ReadFile(loc)
 		if err != nil {
-			return nil, errf("calculating checksum for %s: %s", loc, err)
+			return x, errf("calculating checksum for %s: %s", loc, err)
 		}
 		checksum = "sha1$" + fmt.Sprintf("%x", sha1.Sum(b))
 	}
 
-	return &cwl.File{
+	return cwl.File{
 		Location: abs,
 		Path:     abs,
 		Checksum: checksum,

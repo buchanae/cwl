@@ -205,7 +205,7 @@ Loop:
 			}
 
 			return []*Binding{
-				{clb, z, *f, key, nil, name},
+				{clb, z, f, key, nil, name},
 			}, nil
 
 		case cwl.DirectoryType:

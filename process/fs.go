@@ -13,10 +13,10 @@ import (
 var ErrFileNotFound = errors.New("file not found")
 
 type Filesystem interface {
-	Create(path, contents string) (*cwl.File, error)
-	Info(loc string) (*cwl.File, error)
+	Create(path, contents string) (cwl.File, error)
+	Info(loc string) (cwl.File, error)
 	Contents(loc string) (string, error)
-	Glob(pattern string) ([]*cwl.File, error)
+	Glob(pattern string) ([]cwl.File, error)
 }
 
 const MaxContentsBytes = 64 * units.Kilobyte
@@ -25,7 +25,9 @@ const MaxContentsBytes = 64 * units.Kilobyte
 // such as dirname, checksum, size, etc. If f.Contents is given, the
 // file will be created via fs.Create(). if `loadContents` is true,
 // the file contents will be loaded via fs.Contents().
-func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, error) {
+func (process *Process) resolveFile(f cwl.File, loadContents bool) (cwl.File, error) {
+	// TODO revisit pointer to File
+	var x cwl.File
 
 	// http://www.commonwl.org/v1.0/CommandLineTool.html#File
 	// "As a special case, if the path field is provided but the location field is not,
@@ -37,16 +39,15 @@ func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, e
 	}
 
 	if f.Location == "" && f.Contents == "" {
-		return nil, errf("location and contents are empty")
+		return x, errf("location and contents are empty")
 	}
 
 	// If both location and contents are set, one will get overwritten.
 	// Can't know which one the caller intended, so fail instead.
 	if f.Location != "" && f.Contents != "" {
-		return nil, errf("location and contents are both non-empty")
+		return x, errf("location and contents are both non-empty")
 	}
 
-	var x *cwl.File
 	var err error
 
 	if f.Contents != "" {
@@ -59,26 +60,26 @@ func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, e
 		if path == "" {
 			id, err := uuid.NewRandom()
 			if err != nil {
-				return nil, errf("generating a random name for a file literal: %s", err)
+				return x, errf("generating a random name for a file literal: %s", err)
 			}
 			path = id.String()
 		}
 
 		x, err = process.fs.Create(path, f.Contents)
 		if err != nil {
-			return nil, errf("creating file from inline content: %s", err)
+			return x, errf("creating file from inline content: %s", err)
 		}
 
 	} else {
 		x, err = process.fs.Info(f.Location)
 		if err != nil {
-			return nil, errf("getting file info for %q: %s", f.Location, err)
+			return x, errf("getting file info for %q: %s", f.Location, err)
 		}
 
 		if loadContents {
 			f.Contents, err = process.fs.Contents(f.Location)
 			if err != nil {
-				return nil, errf("loading file contents: %s", err)
+				return x, errf("loading file contents: %s", err)
 			}
 		}
 	}
@@ -103,10 +104,10 @@ func (process *Process) resolveFile(f cwl.File, loadContents bool) (*cwl.File, e
 	f.Nameroot, f.Nameext = splitname(f.Basename)
 	f.Dirname = filepath.Dir(f.Path)
 
-	return &f, nil
+	return f, nil
 }
 
-func (process *Process) resolveSecondaryFiles(file *cwl.File, x cwl.Expression) error {
+func (process *Process) resolveSecondaryFiles(file cwl.File, x cwl.Expression) error {
 
 	// cwl spec:
 	// "If the value is an expression, the value of self in the expression

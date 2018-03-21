@@ -314,7 +314,6 @@ func (r *runner) runWorkflow(wf *cwl.Workflow, vals cwl.Values) (cwl.Values, err
         stepvals[in.ID] = link.value()
       }
 
-      // TODO failing because of the cwl.File vs *cwl.File mixup
       debug("STEP VALS", stepvals)
       outvals, err := r.runDoc(step.Run, stepvals)
       if err != nil {

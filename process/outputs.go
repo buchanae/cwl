@@ -141,7 +141,7 @@ Loop:
 			}
 		case cwl.FileType:
 			switch y := val.(type) {
-			case []*cwl.File:
+			case []cwl.File:
 				if len(y) != 1 {
 					continue Loop
 				}
@@ -154,9 +154,6 @@ Loop:
 				}
 				return f, nil
 
-				// TODO returning both pointer and non-pointer
-			case *cwl.File:
-				return y, nil
 			case cwl.File:
 				return y, nil
 			default:
@@ -197,10 +194,10 @@ Loop:
 
 // matchFiles executes the list of glob patterns, returning a list of matched files.
 // matchFiles must return a non-nil list on success, even if no files are matched.
-func (process *Process) matchFiles(fs Filesystem, globs []string, loadContents bool) ([]*cwl.File, error) {
+func (process *Process) matchFiles(fs Filesystem, globs []string, loadContents bool) ([]cwl.File, error) {
 	// it's important this slice isn't nil, because the outputEval field
 	// expects it to be non-null during expression evaluation.
-	files := []*cwl.File{}
+	files := []cwl.File{}
 
 	// resolve all the globs into file objects.
 	for _, pattern := range globs {
