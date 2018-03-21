@@ -95,7 +95,9 @@ func (r *runner) runTool(tool *cwl.Tool, vals cwl.Values) (cwl.Values, error) {
     }
   }
 
-  rt := process.Runtime{}
+  rt := process.Runtime{
+    Outdir: "/cwl",
+  }
   // TODO related to the resource requirement search above. basically a hack
   //      for the conformance tests, for now.
   if resources != nil {
