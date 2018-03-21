@@ -53,7 +53,6 @@ type Step struct {
 	In  []StepInput  `json:"in,omitempty"`
 	Out []StepOutput `json:"out,omitempty"`
 
-	// TODO can be a file reference. need DocumentReference type.
 	Run Document `json:"run,omitempty"`
 
 	Scatter       []string      `json:"scatter,omitempty"`
