@@ -13,6 +13,9 @@ func (l *loader) preprocess(n node) (node, error) {
 			v := n.Children[i+1]
 			switch k.Value {
 			case "$import":
+	      if _, ok := l.resolver.(noResolver); ok {
+          return n, nil
+        }
 				b, _, err := l.resolver.Resolve(l.base, v.Value)
 				if err != nil {
 					return nil, err
@@ -25,6 +28,9 @@ func (l *loader) preprocess(n node) (node, error) {
 				return yamlnode.Children[0], nil
 
 			case "$include":
+	      if _, ok := l.resolver.(noResolver); ok {
+          return n, nil
+        }
 				b, _, err := l.resolver.Resolve(l.base, v.Value)
 				if err != nil {
 					return nil, err
