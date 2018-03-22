@@ -1,0 +1,15 @@
+doc: Test output of InitialWorkDir
+output:
+  OUTPUT:
+    checksum: sha1$aeb3d11bdf536511649129f4077d5cda6a324118
+    class: File
+    location: ref.fasta
+    secondaryFiles:
+    - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: ref.fasta.fai
+      size: 0
+    size: 12010
+tags:
+- docker
+- initial_work_dir

@@ -1,0 +1,5 @@
+doc: Test that workflow defaults override tool defaults
+output:
+  default_output: workflow_default
+tags:
+- required

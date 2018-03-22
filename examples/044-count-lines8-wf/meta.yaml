@@ -1,0 +1,5 @@
+doc: Test nested workflow
+output:
+  count_output: 16
+tags:
+- subworkflow

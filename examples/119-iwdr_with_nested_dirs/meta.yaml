@@ -1,0 +1,10 @@
+doc: Test InitialWorkDirRequirement with a nested directory structure from another
+  step
+output:
+  ya_empty:
+    checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: ya
+    size: 0
+tags:
+- initial_work_dir

@@ -1,0 +1,4 @@
+doc: Test explicitly passing null to Any type without a default value.
+output: null
+tags:
+- inline_javascript

@@ -1,0 +1,6 @@
+doc: Test valueFrom with constant value overriding provided array inputs
+output:
+  args:
+  - replacementValue
+tags:
+- inline_javascript

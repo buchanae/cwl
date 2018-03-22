@@ -1,0 +1,5 @@
+doc: Test default usage of Any in expressions.
+output:
+  output: 1
+tags:
+- inline_javascript

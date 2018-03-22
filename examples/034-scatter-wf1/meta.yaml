@@ -1,0 +1,9 @@
+doc: Test workflow scatter with single scatter parameter
+output:
+  out:
+  - foo one
+  - foo two
+  - foo three
+  - foo four
+tags:
+- scatter

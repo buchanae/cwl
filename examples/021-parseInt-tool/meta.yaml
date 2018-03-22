@@ -1,0 +1,5 @@
+doc: Test ExpressionTool with Docker-based expression engine
+output:
+  output: 42
+tags:
+- inline_javascript

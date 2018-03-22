@@ -1,0 +1,8 @@
+doc: Test command line with optional input (provided)
+output:
+  args:
+  - cat
+  - -n
+  - hello.txt
+tags:
+- required

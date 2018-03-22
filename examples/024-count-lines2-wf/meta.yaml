@@ -1,0 +1,5 @@
+doc: Test two step workflow with inline tools
+output:
+  count_output: 16
+tags:
+- inline_javascript

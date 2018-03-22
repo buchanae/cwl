@@ -1,0 +1,14 @@
+doc: Test that shell directives are quoted.
+output:
+  stderr_file:
+    checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: Any
+    size: 0
+  stdout_file:
+    checksum: sha1$1555252d52d4ec3262538a4426a83a99cfff4402
+    class: File
+    location: Any
+    size: 9
+tags:
+- shell_command

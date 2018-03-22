@@ -1,0 +1,9 @@
+doc: Test file literal output created by ExpressionTool
+output:
+  lit:
+    checksum: sha1$fea23663b9c8ed71968f86415b5ec091bb111448
+    class: File
+    location: a_file
+    size: 19
+tags:
+- inline_javascript

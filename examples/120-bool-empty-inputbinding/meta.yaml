@@ -1,0 +1,6 @@
+doc: Test that boolean flags do not appear on command line if inputBinding is empty
+  and not null
+output:
+  args: []
+tags:
+- required

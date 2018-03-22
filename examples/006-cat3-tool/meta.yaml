@@ -1,0 +1,9 @@
+doc: Test command execution in Docker with stdout redirection
+output:
+  output_file:
+    checksum: sha1$47a013e660d408619d894b20806b1d5086aab03b
+    class: File
+    location: output.txt
+    size: 13
+tags:
+- required

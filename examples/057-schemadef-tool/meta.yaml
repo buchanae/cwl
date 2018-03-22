@@ -1,0 +1,11 @@
+doc: |
+  Test SchemaDefRequirement definition used in tool parameter
+output:
+  output:
+    checksum: sha1$f12e6cfe70f3253f70b0dbde17c692e7fb0f1e5e
+    class: File
+    location: output.txt
+    size: 12
+tags:
+- schema_def
+- inline_javascript

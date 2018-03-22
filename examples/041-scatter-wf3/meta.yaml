@@ -1,0 +1,6 @@
+doc: Test workflow scatter with two scatter parameters, one of which is empty and
+  flat_crossproduct join method
+output:
+  out: []
+tags:
+- scatter

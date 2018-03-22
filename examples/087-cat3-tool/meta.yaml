@@ -1,0 +1,9 @@
+doc: Test file literal as input
+output:
+  output_file:
+    checksum: sha1$d0e04ff6c413c7d57f9a0ca0a33cd3ab52e2dd9c
+    class: File
+    location: output.txt
+    size: 18
+tags:
+- required

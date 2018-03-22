@@ -1,0 +1,6 @@
+doc: |
+  Test inline expressions
+output:
+  output: 16
+tags:
+- inline_javascript

@@ -1,0 +1,10 @@
+doc: Test that expressionLib requirement of individual tool step overrides expressionLib
+  of workflow.
+output:
+  out:
+    checksum: sha1$7448d8798a4380162d4b56f9b452e2f6f9e24e7a
+    class: File
+    location: whatever.txt
+    size: 2
+tags:
+- inline_javascript

@@ -1,0 +1,4 @@
+doc: Test that file path in $(inputs) for initialworkdir is in $(outdir).
+output: {}
+tags:
+- initial_work_dir

@@ -1,0 +1,15 @@
+doc: Test empty writable dir with InitialWorkDirRequirement inside Docker
+output:
+  out:
+    basename: emptyWritableDir
+    class: Directory
+    listing:
+    - basename: blurg
+      checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: blurg
+      size: 0
+    location: emptyWritableDir
+tags:
+- inline_javascript
+- initial_work_dir

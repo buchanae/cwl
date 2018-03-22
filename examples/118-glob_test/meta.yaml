@@ -1,0 +1,33 @@
+doc: Test that OutputBinding.glob is sorted as specified by POSIX
+output:
+  letters:
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: a
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: b
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: c
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: w
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: x
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: true
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: z
+    size: 0
+tags:
+- required

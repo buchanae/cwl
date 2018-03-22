@@ -1,0 +1,11 @@
+doc: |
+  Test format checking against ontology using equivalentClass.
+output:
+  output:
+    checksum: sha1$971d88faeda85a796752ecf752b7e2e34f1337ce
+    class: File
+    format: http://edamontology.org/format_1929
+    location: output.txt
+    size: 12010
+tags:
+- required

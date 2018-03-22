@@ -1,0 +1,7 @@
+doc: Test step input with multiple sources with multiple types
+output:
+  result: 12
+tags:
+- step_input
+- inline_javascript
+- multiple_input

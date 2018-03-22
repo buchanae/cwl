@@ -1,0 +1,5 @@
+doc: Test workflow scatter with single empty list parameter
+output:
+  out: []
+tags:
+- scatter

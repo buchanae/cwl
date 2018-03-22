@@ -1,0 +1,11 @@
+doc: |
+  Test support for reading cwl.output.json when running in a Docker container
+  and just 'path' is provided.
+output:
+  foo:
+    checksum: sha1$f1d2d2f924e986ac86fdf7b36c94bcdf32beec15
+    class: File
+    location: foo
+    size: 4
+tags:
+- shell_command

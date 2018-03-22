@@ -1,0 +1,11 @@
+doc: |
+  Test single step workflow with Scatter step and two data links connected to
+  same input, nested merge behavior
+output:
+  count_output:
+  - 32
+  - 2
+tags:
+- scatter
+- multiple_input
+- inline_javascript

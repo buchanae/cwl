@@ -1,0 +1,5 @@
+doc: Test explicitly passing null to Any type inputs with default values.
+output:
+  output: 1
+tags:
+- inline_javascript

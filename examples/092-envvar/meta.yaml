@@ -1,0 +1,4 @@
+doc: Test $HOME and $TMPDIR are set correctly
+output: {}
+tags:
+- shell_command

@@ -1,0 +1,6 @@
+doc: Test valueFrom on workflow step.
+output:
+  count_output: 16
+tags:
+- step_input
+- inline_javascript

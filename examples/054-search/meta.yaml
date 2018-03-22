@@ -1,0 +1,58 @@
+doc: |
+  Test InitialWorkDirRequirement linking input files and capturing secondaryFiles
+  on input and output.
+output:
+  indexedfile:
+    checksum: sha1$327fc7aedf4f6b69a42a7c8b808dc5a7aff61376
+    class: File
+    location: input.txt
+    secondaryFiles:
+    - checksum: sha1$553f3a09003a9f69623f03bec13c0b078d706023
+      class: File
+      location: input.txt.idx1
+      size: 1500
+    - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: input.idx2
+      size: 0
+    - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: input.txt.idx3
+      size: 0
+    - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: input.txt.idx4
+      size: 0
+    - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: input.txt.idx5
+      size: 0
+    - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: input.idx6.txt
+      size: 0
+    - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+      class: File
+      location: input.txt.idx7
+      size: 0
+    - checksum: sha1$47a013e660d408619d894b20806b1d5086aab03b
+      class: File
+      location: hello.txt
+      size: 13
+    - class: Directory
+      listing:
+      - basename: index
+        checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+        class: File
+        location: index
+        size: 0
+      location: input.txt_idx8
+    size: 1111
+  outfile:
+    checksum: sha1$e2dc9daaef945ac15f01c238ed2f1660f60909a0
+    class: File
+    location: result.txt
+    size: 142
+tags:
+- initial_work_dir
+- inline_javascript

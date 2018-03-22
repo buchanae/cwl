@@ -1,0 +1,8 @@
+doc: Test workflow scatter with two scatter parameters and nested_crossproduct join
+  method with second list empty
+output:
+  out:
+  - []
+  - []
+tags:
+- scatter

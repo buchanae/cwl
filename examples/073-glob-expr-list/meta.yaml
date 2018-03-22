@@ -1,0 +1,17 @@
+doc: Test support for returning multiple glob patterns from expression
+output:
+  files:
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: a
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: b
+    size: 0
+  - checksum: sha1$da39a3ee5e6b4b0d3255bfef95601890afd80709
+    class: File
+    location: c
+    size: 0
+tags:
+- required

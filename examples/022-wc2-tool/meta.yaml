@@ -1,0 +1,5 @@
+doc: Test outputEval to transform output
+output:
+  output: 16
+tags:
+- inline_javascript

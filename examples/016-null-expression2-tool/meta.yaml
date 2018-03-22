@@ -1,0 +1,4 @@
+doc: Test Any without defaults can be unspecified.
+output: null
+tags:
+- inline_javascript

@@ -1,0 +1,9 @@
+doc: Test workflow two input files with same name.
+output:
+  fileout:
+    checksum: sha1$a2d8d6e7b28295dc9977dc3bdb652ddd480995f0
+    class: File
+    location: out.txt
+    size: 25
+tags:
+- required

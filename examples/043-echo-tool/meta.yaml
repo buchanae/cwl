@@ -1,0 +1,6 @@
+doc: Test Any type input parameter
+output:
+  out: |
+    hello test env
+tags:
+- required

@@ -1,0 +1,6 @@
+doc: Test that provided parameter is not null in expression
+output:
+  out: |
+    f
+tags:
+- inline_javascript

@@ -1,0 +1,6 @@
+doc: Test that expression engine does not fail to evaluate reference to self with
+  unprovided input
+output:
+  args: []
+tags:
+- inline_javascript

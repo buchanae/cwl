@@ -1,0 +1,10 @@
+doc: |
+  Test InitialWorkDirRequirement with expression in filename.
+output:
+  outfile:
+    checksum: sha1$327fc7aedf4f6b69a42a7c8b808dc5a7aff61376
+    class: File
+    location: fish.txt
+    size: 1111
+tags:
+- initial_work_dir

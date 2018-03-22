@@ -1,0 +1,6 @@
+doc: Test that missing parameters are null (not undefined) in expression
+output:
+  out: |
+    t
+tags:
+- inline_javascript

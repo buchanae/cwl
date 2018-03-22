@@ -1,0 +1,9 @@
+doc: Test writable staged files.
+output:
+  outfile:
+    checksum: sha1$b769c7b2e316edd4b5eb2d24799b2c1f9d8c86e6
+    class: File
+    location: bob.txt
+    size: 1111
+tags:
+- initial_work_dir

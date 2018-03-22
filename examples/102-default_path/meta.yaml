@@ -1,0 +1,4 @@
+doc: Test warning instead of error when default path is not found
+output: {}
+tags:
+- required

@@ -1,0 +1,5 @@
+doc: Test embedded subworkflow
+output:
+  count_output: 16
+tags:
+- subworkflow

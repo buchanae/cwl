@@ -1,0 +1,7 @@
+doc: Test valueFrom on workflow step referencing other inputs
+output:
+  val: |
+    3
+tags:
+- step_input
+- inline_javascript

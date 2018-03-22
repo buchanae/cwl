@@ -1,0 +1,6 @@
+doc: Test that second expression in concatenated valueFrom is not ignored
+output:
+  out: |
+    a string
+tags:
+- inline_javascript

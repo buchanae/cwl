@@ -1,0 +1,7 @@
+doc: |
+  Test that no MultipleInputFeatureRequirement is necessary when
+  workflow step source is a single-item list
+output:
+  count_output: 32
+tags:
+- inline_javascript

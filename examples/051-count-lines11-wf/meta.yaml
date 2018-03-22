@@ -1,0 +1,5 @@
+doc: Test default value on step input parameter overridden by provided source
+output:
+  count_output: 1
+tags:
+- inline_javascript

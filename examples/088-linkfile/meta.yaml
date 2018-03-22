@@ -1,0 +1,10 @@
+doc: Test expression in InitialWorkDir listing
+output:
+  classfile:
+    checksum: sha1$e68df795c0686e9aa1a1195536bd900f5f417b18
+    class: File
+    location: Hello.class
+    size: 184
+tags:
+- inline_javascript
+- initial_work_dir

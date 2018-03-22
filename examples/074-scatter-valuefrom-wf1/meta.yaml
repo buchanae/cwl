@@ -1,0 +1,10 @@
+doc: Test workflow scatter with single scatter parameter and valueFrom on step input
+output:
+  out:
+  - foo one one
+  - foo one two
+  - foo one three
+  - foo one four
+tags:
+- scatter
+- step_input

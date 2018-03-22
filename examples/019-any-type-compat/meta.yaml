@@ -1,0 +1,11 @@
+doc: Testing Any type compatibility in outputSource
+output:
+  output1:
+  - hello
+  - world
+  output2:
+  - foo
+  - bar
+  output3: hello
+tags:
+- required

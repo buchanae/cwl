@@ -1,0 +1,5 @@
+doc: Testing the string 'null' does not trip up an Any without a default value.
+output:
+  output: 2
+tags:
+- inline_javascript

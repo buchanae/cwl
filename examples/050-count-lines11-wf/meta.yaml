@@ -1,0 +1,5 @@
+doc: Test use default value on step input parameter with null source
+output:
+  count_output: 16
+tags:
+- inline_javascript

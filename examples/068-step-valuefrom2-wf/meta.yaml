@@ -1,0 +1,8 @@
+doc: Test valueFrom on workflow step with multiple sources
+output:
+  val: |
+    3
+tags:
+- step_input
+- inline_javascript
+- multiple_input

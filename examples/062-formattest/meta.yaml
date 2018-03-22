@@ -1,0 +1,11 @@
+doc: |
+  Test simple format checking.
+output:
+  output:
+    checksum: sha1$97fe1b50b4582cebc7d853796ebd62e3e163aa3f
+    class: File
+    format: http://edamontology.org/format_2330
+    location: output.txt
+    size: 1111
+tags:
+- required

@@ -1,0 +1,10 @@
+doc: Test InitialWorkDirRequirement ExpressionEngineRequirement.engineConfig feature
+output:
+  foo:
+    checksum: sha1$63da67422622fbf9251a046d7a34b7ea0fd4fead
+    class: File
+    location: foo.txt
+    size: 22
+tags:
+- initial_work_dir
+- inline_javascript

@@ -1,0 +1,8 @@
+doc: |
+  Test single step workflow with Scatter step and two data links connected to
+  same input, flattened merge behavior. Workflow inputs are set as list
+output:
+  count_output: 34
+tags:
+- multiple_input
+- inline_javascript

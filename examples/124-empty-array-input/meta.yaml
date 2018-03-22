@@ -1,0 +1,5 @@
+doc: Test that empty array input does not add anything to command line
+output:
+  args: []
+tags:
+- required

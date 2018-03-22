@@ -1,0 +1,14 @@
+doc: Test valueFrom eval on scattered input parameter
+output:
+  out_message:
+  - checksum: sha1$98030575f6fc40e5021be5a8803a6bef94aee11f
+    class: File
+    location: Any
+    size: 16
+  - checksum: sha1$edcacd50778d98ae113015406b3195c165059dd8
+    class: File
+    location: Any
+    size: 16
+tags:
+- scatter
+- step_input

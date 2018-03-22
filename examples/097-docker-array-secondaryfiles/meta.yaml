@@ -1,0 +1,11 @@
+doc: Test secondaryFiles on array of files.
+output:
+  bai_list:
+    checksum: sha1$081fc0e57d6efa5f75eeb237aab1d04031132be6
+    class: File
+    location: fai.list
+    size: 386
+tags:
+- docker
+- inline_javascript
+- shell_command

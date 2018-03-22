@@ -1,0 +1,5 @@
+doc: Test workflow with default value for input parameter (missing)
+output:
+  count_output: 1
+tags:
+- inline_javascript

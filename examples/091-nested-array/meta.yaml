@@ -1,0 +1,9 @@
+doc: Test command line generation of array-of-arrays
+output:
+  echo:
+    checksum: sha1$3f786850e387550fdab836ed7e6dc881de23001b
+    class: File
+    location: echo.txt
+    size: 2
+tags:
+- required

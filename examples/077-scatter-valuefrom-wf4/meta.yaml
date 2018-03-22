@@ -1,0 +1,9 @@
+doc: Test workflow scatter with two scatter parameters and dotproduct join method
+  and valueFrom on step input
+output:
+  out:
+  - foo one one three
+  - foo one two four
+tags:
+- scatter
+- step_input
