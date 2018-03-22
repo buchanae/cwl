@@ -120,10 +120,16 @@ type Document interface {
 	Doctype() string
 }
 
+type Graph struct {
+	CWLVersion string `json:"cwlVersion,omitempty"`
+  Docs []Document `json:"$graph"`
+}
+
 func (Tool) Doctype()       string    { return "CommandLineTool" }
 func (Workflow) Doctype() string      { return "Workflow" }
 func (ExpressionTool) Doctype() string { return "ExpressionTool" }
 func (DocumentRef) Doctype() string   { return "DocumentRef" }
+func (Graph) Doctype() string { return "$graph" }
 
 type InputType interface {
 	String() string

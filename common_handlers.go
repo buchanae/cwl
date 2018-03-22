@@ -8,6 +8,19 @@ import (
 
 func (l *loader) MappingToDocument(n node) (Document, error) {
 
+  graphNodes, ok := findValue(n, "$graph")
+  if ok {
+    if graphNodes.Kind != yamlast.SequenceNode {
+      return nil, errf("$graph must be a list of objects")
+    }
+    graph := Graph{}
+    err := l.load(n, &graph)
+    if err != nil {
+      return nil, err
+    }
+    return graph, nil
+  }
+
 	class := findKey(n, "class")
 	switch strings.ToLower(class) {
 

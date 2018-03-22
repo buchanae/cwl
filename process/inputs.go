@@ -53,7 +53,7 @@ func (process *Process) bindInput(
 				}, nil
 			}
 		}
-		return nil, errf("failed to bind input, missing value")
+		return nil, errf("missing value")
 	}
 
 Loop:
@@ -221,5 +221,5 @@ Loop:
 		}
 	}
 
-	return nil, errf("failed to bind input, missing value")
+	return nil, errf("missing value")
 }

@@ -9,6 +9,7 @@ import (
 
 type dumpOpts struct {
   resolveSchemaDefs bool
+  noResolve bool
 }
 
 func init() {
@@ -25,10 +26,18 @@ func init() {
 
   f := cmd.Flags()
   f.BoolVar(&opts.resolveSchemaDefs, "resolve-schema-defs", opts.resolveSchemaDefs, "")
+  f.BoolVar(&opts.noResolve, "no-resolve", opts.noResolve, "")
 }
 
 func dump(opts dumpOpts, path string) error {
-  doc, err := cwl.Load(path)
+  var doc cwl.Document
+  var err error
+
+  if opts.noResolve {
+    doc, err = cwl.LoadWithResolver(path, cwl.NoResolve())
+  } else {
+    doc, err = cwl.Load(path)
+  }
   if err != nil {
     return err
   }
