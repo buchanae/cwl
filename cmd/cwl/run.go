@@ -340,7 +340,21 @@ func (r *runner) runWorkflow(wf *cwl.Workflow, vals cwl.Values) (cwl.Values, err
   }
 
   // TODO output values and binding
-  return nil, nil
+  outvals := cwl.Values{}
+  for _, out := range wf.Outputs {
+    // TODO handle multiple sources
+    if len(out.OutputSource) != 1 {
+      panic("multiple workflow output sources not implemented")
+    }
+    src := out.OutputSource[0]
+    link, ok := links[src]
+    if !ok {
+      return nil, fmt.Errorf("missing workflow output source link for %s", src)
+    }
+    outvals[out.ID] = link.value()
+  }
+
+  return outvals, nil
 }
 
 func takeReady(steps []cwl.Step, links map[string]Link) (ready, notready []cwl.Step) {
