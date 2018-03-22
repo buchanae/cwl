@@ -117,13 +117,13 @@ func (Stderr) MarshalText() ([]byte, error)        { return []byte("stderr"), ni
 func (Stdout) MarshalText() ([]byte, error)        { return []byte("stdout"), nil }
 
 type Document interface {
-	doctype()
+	Doctype() string
 }
 
-func (Tool) doctype()           {}
-func (Workflow) doctype()       {}
-func (ExpressionTool) doctype() {}
-func (DocumentRef) doctype()    {}
+func (Tool) Doctype()       string    { return "CommandLineTool" }
+func (Workflow) Doctype() string      { return "Workflow" }
+func (ExpressionTool) Doctype() string { return "ExpressionTool" }
+func (DocumentRef) Doctype() string   { return "DocumentRef" }
 
 type InputType interface {
 	String() string

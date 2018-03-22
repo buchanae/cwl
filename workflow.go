@@ -14,17 +14,20 @@ type Workflow struct {
 	Steps   []Step           `json:"steps,omitempty"`
 }
 
+// TODO exactly the same and CommandInput?
 type WorkflowInput struct {
 	ID         string `json:"id,omitempty"`
 	Label      string `json:"label,omitempty"`
 	Doc        string `json:"doc,omitempty"`
 	Streamable bool   `json:"streamable,omitempty"`
+	Default        Value               `json:"default,omitempty"`
+
+	Type           []InputType         `json:"type,omitempty"`
 
 	SecondaryFiles []Expression        `json:"secondaryFiles,omitempty"`
 	Format         []Expression        `json:"format,omitempty"`
+
 	InputBinding   *CommandLineBinding `json:"inputBinding,omitempty"`
-	Default        Value               `json:"default,omitempty"`
-	Type           []InputType         `json:"type,omitempty"`
 }
 
 type WorkflowOutput struct {

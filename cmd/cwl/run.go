@@ -2,7 +2,6 @@ package main
 
 import (
   "context"
-  "os"
   "fmt"
   "encoding/json"
   "path/filepath"
@@ -79,7 +78,7 @@ func (r *runner) runDoc(doc cwl.Document, vals cwl.Values) (cwl.Values, error) {
   case *cwl.Tool:
     return r.runTool(z, vals)
   default:
-    return nil, fmt.Errorf("running doc: unknown doc type")
+    return nil, fmt.Errorf(`running doc: unknown doc type "%s"`, doc.Doctype())
   }
 }
 
@@ -190,11 +189,11 @@ func (r *runner) runTool(tool *cwl.Tool, vals cwl.Values) (cwl.Values, error) {
     NoPull: true,
   }
 
-	stage, err := tug.NewStage("tug-workdir", 0755)
+	stage, err := tug.NewStage("cwl-workdir", 0755)
   if err != nil {
     panic(err)
   }
-  stage.LeaveDir = true
+  stage.LeaveDir = r.debug
   defer stage.RemoveAll()
 
   err = tug.Run(ctx, task, stage, log, store, exec)
@@ -210,8 +209,6 @@ func (r *runner) runTool(tool *cwl.Tool, vals cwl.Values) (cwl.Values, error) {
   if err != nil {
     return nil, err
   }
-
-  fmt.Fprintln(os.Stderr, "Success")
 
   //fmt.Println(strings.Join(cmd, " "))
 
