@@ -3,7 +3,7 @@ package main
 import (
   "fmt"
   "encoding/json"
-  "github.com/ghodss/yaml"
+  "github.com/go-yaml/yaml"
   "github.com/buchanae/cwl"
   "github.com/spf13/cobra"
 )
