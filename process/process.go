@@ -150,13 +150,6 @@ func (process *Process) Resources() Resources {
 	return process.resources
 }
 
-func (process *Process) InputBindings() []*Binding {
-	// TODO copying slice, but still using pointers. deep copy?
-	bindings := make([]*Binding, len(process.bindings))
-	copy(bindings, process.bindings)
-	return bindings
-}
-
 func (process *Process) Env() map[string]string {
 	env := map[string]string{}
 	for k, v := range process.env {

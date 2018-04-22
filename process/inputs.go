@@ -24,6 +24,13 @@ type Binding struct {
 	name    string
 }
 
+func (process *Process) InputBindings() []*Binding {
+	// TODO copying slice, but still using pointers. deep copy?
+	bindings := make([]*Binding, len(process.bindings))
+	copy(bindings, process.bindings)
+	return bindings
+}
+
 // bindInput binds an input descriptor to a concrete value.
 //
 // bindInput is called recursively for types which have subtypes,
