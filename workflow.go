@@ -14,7 +14,7 @@ type Workflow struct {
 	Steps   []Step           `json:"steps,omitempty"`
 }
 
-// TODO exactly the same and CommandInput?
+// TODO exactly the same as CommandInput? Changing in v1.1?
 type WorkflowInput struct {
 	ID         string `json:"id,omitempty"`
 	Label      string `json:"label,omitempty"`

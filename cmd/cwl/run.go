@@ -73,13 +73,18 @@ type runner struct {
 
 func (r *runner) runDoc(doc cwl.Document, vals cwl.Values) (cwl.Values, error) {
   switch z := doc.(type) {
-  case *cwl.Workflow:
-    return r.runWorkflow(z, vals)
   case *cwl.Tool:
     return r.runTool(z, vals)
+  case *cwl.Workflow:
+    return r.runWorkflow(z, vals)
   default:
     return nil, fmt.Errorf(`running doc: unknown doc type "%s"`, doc.Doctype())
   }
+}
+
+func (r *runner) runWorkflow(wf *cwl.Workflow, vals cwl.Values) (cwl.Values, error) {
+  process.DebugWorkflow(wf, vals)
+  return nil, nil
 }
 
 func (r *runner) runTool(tool *cwl.Tool, vals cwl.Values) (cwl.Values, error) {
@@ -234,154 +239,3 @@ func flattenFiles(file cwl.File) []cwl.File {
 }
 
 
-
-type Link interface {
-  linktype()
-  ready() bool
-  value() cwl.Value
-}
-
-type WorkflowInputLink struct {
-  Input cwl.WorkflowInput
-  Value cwl.Value
-}
-func (w *WorkflowInputLink) linktype() {}
-func (w *WorkflowInputLink) ready() bool {
-  return true
-}
-func (w *WorkflowInputLink) value() cwl.Value {
-  return w.Value
-}
-
-type WorkflowStepLink struct {
-  Step cwl.Step
-  Ready bool
-  Value cwl.Value
-}
-func (w *WorkflowStepLink) linktype() {}
-func (w *WorkflowStepLink) ready() bool {
-  return w.Ready
-}
-
-func (w *WorkflowStepLink) value() cwl.Value {
-  return w.Value
-}
-
-
-func (r *runner) runWorkflow(wf *cwl.Workflow, vals cwl.Values) (cwl.Values, error) {
-
-  links := map[string]Link{}
-
-  // TODO input binding
-  for _, in := range wf.Inputs {
-    val, ok := vals[in.ID]
-    if !ok {
-      return nil, fmt.Errorf("missing input value for %s", in.ID)
-    }
-    links[in.ID] = &WorkflowInputLink{in, val}
-  }
-
-  for _, step := range wf.Steps {
-    for _, out := range step.Out {
-      link := &WorkflowStepLink{Step: step}
-      links[step.ID +"/"+ out.ID] = link
-    }
-  }
-
-  // TODO lots of validation, including that all inputs have a valid link.
-
-  remaining := append([]cwl.Step{}, wf.Steps...)
-
-  for len(remaining) > 0 {
-    ready, notready := takeReady(remaining, links)
-    if len(ready) == 0 {
-      break
-    }
-    remaining = notready
-
-    for _, step := range ready {
-      debug("running step", step)
-      stepvals := cwl.Values{}
-
-      for _, in := range step.In {
-        // TODO handle multiple sources
-        if len(in.Source) != 1 {
-          panic("multiple sources not implemented")
-        }
-        src := in.Source[0]
-        link := links[src]
-        stepvals[in.ID] = link.value()
-      }
-
-      debug("STEP VALS", stepvals)
-      outvals, err := r.runDoc(step.Run, stepvals)
-      if err != nil {
-        return nil, err
-      }
-
-      for _, out := range step.Out {
-        linkID := step.ID +"/"+ out.ID
-        link := links[linkID].(*WorkflowStepLink)
-        val, ok := outvals[out.ID]
-        if !ok {
-          return nil, fmt.Errorf("missing output value for %s", linkID)
-        }
-        link.Value = val
-        link.Ready = true
-      }
-    }
-  }
-
-  if len(remaining) > 0 {
-    return nil, fmt.Errorf("failed mid-workflow, steps remaining")
-  }
-
-  // TODO output values and binding
-  outvals := cwl.Values{}
-  for _, out := range wf.Outputs {
-    // TODO handle multiple sources
-    if len(out.OutputSource) != 1 {
-      panic("multiple workflow output sources not implemented")
-    }
-    src := out.OutputSource[0]
-    link, ok := links[src]
-    if !ok {
-      return nil, fmt.Errorf("missing workflow output source link for %s", src)
-    }
-    outvals[out.ID] = link.value()
-  }
-
-  return outvals, nil
-}
-
-func takeReady(steps []cwl.Step, links map[string]Link) (ready, notready []cwl.Step) {
-  for _, step := range steps {
-    nr := notReady(step.In, links)
-    if nr == nil {
-      ready = append(ready, step)
-    } else {
-      notready = append(notready, step)
-    }
-  }
-  return ready, notready
-}
-
-// notReady returns step input links which are not ready.
-// notReady returns a nil slice if all links are ready.
-//
-// Note that notReady does not return an error when a link can't be found.
-// If a link can't be found, the input will never be ready, so be sure
-// to validate links beforehand.
-func notReady(inputs []cwl.StepInput, links map[string]Link) []Link {
-  var notReady []Link
-
-  for _, in := range inputs {
-    for _, src := range in.Source {
-      link, ok := links[src]
-      if !ok || !link.ready() {
-        notReady = append(notReady, link)
-      }
-    }
-  }
-  return notReady
-}
